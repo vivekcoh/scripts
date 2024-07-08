@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 """BackupNow for python"""
 
-# version 2024.06.03
+# version 2024.07.08
 
 # version history
 # ===============
@@ -27,6 +27,7 @@
 # 2024.03.08 - refactored status monitor loop, added -q --quickdemo mode
 # 2024.06.03 - fix unintended replication/archival
 # 2024.06.07 - added support for Entra ID (Open ID) authentication
+# 2024.07.08 - reintroduced -k, --keepLocalFor functionality
 #
 # extended error codes
 # ====================
@@ -507,6 +508,15 @@ jobData = {
     "runType": backupType,
     "usePolicyDefaults": True
 }
+
+if keepLocalFor is not None:
+    jobData['copyRunTargets'] = [
+        {
+            "type": "kLocal",
+            "daysToKeep": keepLocalFor
+        }
+    ]
+
 if backupType != 'kRegular':
     jobData['usePolicyDefaults'] = False
 

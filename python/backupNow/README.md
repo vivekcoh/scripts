@@ -65,8 +65,6 @@ Place all files in a folder together. then, run the main script like so:
 * -kr, --keepReplicaFor: (optional) days to keep replica for (defaults to policy settings)
 * -k, --keepLocalFor: (optional) days to keep local snapshot (defaults to policy settings)
 
-Note: -k, --keepLocalFor no longer has any affect in recent releases of 6.6 and later. Policy setting is enforced.
-
 ## Timing Parameters
 
 * -s, --sleeptimesecs: (optional) seconds to sleep between status queries (default is 360)

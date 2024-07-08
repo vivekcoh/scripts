@@ -62,7 +62,7 @@ Place all files in a folder together. then, run the main script like so:
 * -replicateTo: (optional) name of remote cluster to replicate to (default is to use policy setting)
 * -keepReplicaFor: (optional) days to keep replica for (default is to use policy setting)
 * -localOnly: (optional) skip replicas and archivals
-* -keepLocalFor: (optional) days to keep local snapshot (deprecated, does nothing)
+* -keepLocalFor: (optional) days to keep local snapshot
 
 ## Timing Parameters
 

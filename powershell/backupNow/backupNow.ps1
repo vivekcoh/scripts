@@ -1,4 +1,4 @@
-# version 2024.05.17
+# version 2024.07.08
 
 # version history
 # ===============
@@ -23,6 +23,7 @@
 # 2024.03.08 - refactored status monitor loop, added -quick mode
 # 2024.05.17 - added support for EntraID (Open ID) authentication
 # 2024.06.03 - fix unintended replication/archival
+# 2024.07.08 - reintroduced --keepLocalFor functionality
 #
 # extended error codes
 # ====================
@@ -440,7 +441,14 @@ if($objects){
 }
 
 $copyRunTargets = @()
-
+if($keepLocalFor){
+    $copyRunTargets = @(
+        @{
+            "type" = "kLocal";
+            "daysToKeep" = $keepLocalFor
+        }
+    )
+}
 
 # retrieve policy settings
 $policy = api get "protectionPolicies/$policyId" -timeout $timeoutSec

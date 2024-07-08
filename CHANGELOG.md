@@ -2,6 +2,8 @@
 
 ## 2024-07-08
 
+* [backupNow.ps1](https://github.com/cohesity/community-automation-samples/tree/main/powershell/backupNow) [`Update`] reintroduced -keepLocalFor functionality
+* [backupNow.py](https://github.com/cohesity/community-automation-samples/tree/main/python/backupNow) [`Update`] reintroduced -k, --keepLocalFor functionality
 * [mountOracleAsView.py](https://github.com/cohesity/community-automation-samples/tree/main/oracle/python/mountOracleAsView) [`Fix`] fixed snapshot sort order
 * [recoverNASVolume.ps1](https://github.com/cohesity/community-automation-samples/tree/main/powershell/recoverNASVolume) [`New`] recover NAS volume to original or new location
 

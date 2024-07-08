@@ -1,5 +1,9 @@
 # Change Log for cohesity/community-automation-samples
 
+## 2024-07-08
+
+* [recoverNASVolume.ps1](https://github.com/cohesity/community-automation-samples/tree/main/powershell/recoverNASVolume) [`New`] recover NAS volume to original or new location
+
 ## 2024-07-04
 
 * [validateServerBackups.ps1](https://github.com/cohesity/community-automation-samples/tree/main/powershell/validateServerBackups) [`Update`] validate all applicable backups if not objects are specified

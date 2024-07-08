@@ -2,6 +2,7 @@
 
 ## 2024-07-08
 
+* [mountOracleAsView.py](https://github.com/cohesity/community-automation-samples/tree/main/oracle/python/mountOracleAsView) [`Fix`] fixed snapshot sort order
 * [recoverNASVolume.ps1](https://github.com/cohesity/community-automation-samples/tree/main/powershell/recoverNASVolume) [`New`] recover NAS volume to original or new location
 
 ## 2024-07-04

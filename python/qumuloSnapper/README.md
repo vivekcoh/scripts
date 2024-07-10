@@ -33,7 +33,7 @@ The scripts will connect to Cohesity and inspect a NAS protection group. For eac
 
 ## Setup Instructions
 
-Register your Qumulo SMB shares and NFS exports as protection sources (of type NAS -> Mount Point) on your Cohesity cluster, and create a NAS protection group that protects them. Choose a policy for this protection group that specifies the desired retention of the backups, plus any replication or archiving requirements. Note that the frewuency of the backup will be controlled seperately (read on). Leave this protection group in a paused state ("pause future runs"), as the group will be run via API rather than by schedule. Note that if you have multiple Qumulo clusters, any protection group should only protect shares/exports from a `single` Qumulo cluster.
+Register your Qumulo SMB shares and NFS exports as protection sources (of type NAS -> Mount Point) on your Cohesity cluster, and create a NAS protection group that protects them. Choose a policy for this protection group that specifies the desired retention of the backups, plus any replication or archiving requirements. Note that the frequency of the backup will be controlled seperately (read on). Leave this protection group in a paused state ("pause future runs"), as the group will be run via API rather than by schedule. Note that if you have multiple Qumulo clusters, any protection group should only protect shares/exports from a `single` Qumulo cluster.
 
 ## Choose a Linux Host to Run the Scripts
 

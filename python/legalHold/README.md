@@ -53,6 +53,7 @@ To remove legal hold from a specific run (by run date):
 
 * -j, --jobname: protection job name
 * -id, --runid: (optional) run ID to operate on
+* -rl, --runidlist: (optional) text file containing run IDs (one per line)
 * -dt, --rundate: (optional) run date to operate on (e.g. '2024-01-03 23:30')
 * -a, --addhold: (optional) add legal holds
 * -r, --removehold: (optional) remove legal holds

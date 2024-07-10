@@ -25,6 +25,7 @@ parser.add_argument('-p', '--pushtoreplicas', action='store_true')
 parser.add_argument('-l', '--includelogs', action='store_true')
 parser.add_argument('-y', '--daysback', type=int, default=None)
 parser.add_argument('-id', '--runid', type=int, default=None)
+parser.add_argument('-rl', '--runidlist', type=str)
 parser.add_argument('-dt', '--rundate', type=str, default=None)
 
 args = parser.parse_args()
@@ -46,9 +47,31 @@ pushtoreplicas = args.pushtoreplicas
 includelogs = args.includelogs
 daysback = args.daysback
 runid = args.runid
+runidlist = args.runidlist
 rundate = args.rundate
 
-if (addhold is True or removehold is True) and rundate is None and runid is None:
+
+def gatherList(param=None, filename=None, name='items', required=True):
+    items = []
+    if param is not None:
+        for item in param:
+            items.append(item)
+    if filename is not None:
+        f = open(filename, 'r')
+        items += [int(s.strip()) for s in f.readlines() if s.strip() != '']
+        f.close()
+    if required is True and len(items) == 0:
+        print('no %s specified' % name)
+        exit()
+    return items
+
+
+runids = gatherList(runid, runidlist, name='runids', required=False)
+minrunid = 0
+if len(runids) > 0:
+    minrunid = min(runids)
+
+if (addhold is True or removehold is True) and rundate is None and len(runids) ==0:
     print('Please specify a rundate or runid when adding or removing a hold')
     exit(1)
 
@@ -100,7 +123,7 @@ else:
     actionString = 'checking'
 
 endUsecs = nowUsecs
-runFound = False
+
 while 1:
     runs = api('get', 'protectionRuns?jobId=%s&numRuns=%s&endTimeUsecs=%s&excludeTasks=true%s' % (v1JobId, numruns, endUsecs, tail))
     if len(runs) > 0:
@@ -119,11 +142,8 @@ while 1:
                 continue
             else:
                 runFound = True
-        if runid is not None:
-            if run['backupRun']['jobRunId'] != runid:
-                if run['backupRun']['jobRunId'] < runid and runFound is False:
-                    print('    Run with ID %s not found' % runid)
-                    exit(1)
+        if len(runids) > 0:
+            if run['backupRun']['jobRunId'] not in runids:
                 continue
             else:
                 runFound = True
@@ -136,7 +156,7 @@ while 1:
                 if 'holdForLegalPurpose' in copyRun and copyRun['holdForLegalPurpose'] is True:
                     held = True
         if copyRunsFound is True or held is True:
-            if (rundate is not None or runid is not None) and ((addhold and copyRunsFound is True and held is False) or (removehold and held is True)):
+            if (rundate is not None or len(runids) > 0) and ((addhold and copyRunsFound is True and held is False) or (removehold and held is True)):
                 runParams = {
                     "jobRuns": [
                         {

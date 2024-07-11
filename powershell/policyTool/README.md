@@ -42,6 +42,7 @@ To list policies:
 * -noPrompt: (optional) do not prompt for password
 * -clusterName: (optional) cluster to connect to when connect to when connecting through Helios
 * -mfaCode: (optional) OTP code for MFA
+* -noAuth: (optional) use existing authentication to cluster
 
 ## Other Parameters
 

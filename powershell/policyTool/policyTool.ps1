@@ -11,6 +11,7 @@ param (
     [Parameter()][switch]$mcm,
     [Parameter()][string]$mfaCode = $null,
     [Parameter()][string]$clusterName = $null,
+    [Parameter()][switch]$noAuth,
     [Parameter()][string]$policyName,
     [Parameter()][ValidateSet('list', 'create', 'edit', 'delete', 'addextension', 'deleteextension', 'logbackup', 'addreplica', 'deletereplica', 'addarchive', 'deletearchive', 'editretries', 'addfull', 'deletefull')][string]$action = 'list',
     [Parameter()][int]$retention,
@@ -34,29 +35,31 @@ $textInfo = (Get-Culture).TextInfo
 $frequentSchedules = @('Minutes', 'Hours', 'Days')
 
 # source the cohesity-api helper code
-. $(Join-Path -Path $PSScriptRoot -ChildPath cohesity-api.ps1)
+if(!$noAuth){
+    . $(Join-Path -Path $PSScriptRoot -ChildPath cohesity-api.ps1)
 
-if($cohesity_api.api_version -lt '2023.05.18'){
-    Write-Host "This script requires cohesity-api.ps1 version 2023.05.18 or higher, please visit https://github.com/cohesity/community-automation-samples/tree/main/powershell/cohesity-api to get the latest version" -ForegroundColor Yellow
-    exit
-}
-
-# authenticate
-apiauth -vip $vip -username $username -domain $domain -passwd $password -apiKeyAuthentication $useApiKey -mfaCode $mfaCode -heliosAuthentication $mcm -tenant $tenant -noPromptForPassword $noPrompt
-
-# select helios/mcm managed cluster
-if($USING_HELIOS){
-    if($clusterName){
-        $thisCluster = heliosCluster $clusterName
-    }else{
-        Write-Host "Please provide -clusterName when connecting through helios" -ForegroundColor Yellow
+    if($cohesity_api.api_version -lt '2023.05.18'){
+        Write-Host "This script requires cohesity-api.ps1 version 2023.05.18 or higher, please visit https://github.com/cohesity/community-automation-samples/tree/main/powershell/cohesity-api to get the latest version" -ForegroundColor Yellow
+        exit
+    }
+    
+    # authenticate
+    apiauth -vip $vip -username $username -domain $domain -passwd $password -apiKeyAuthentication $useApiKey -mfaCode $mfaCode -heliosAuthentication $mcm -tenant $tenant -noPromptForPassword $noPrompt
+    
+    # select helios/mcm managed cluster
+    if($USING_HELIOS){
+        if($clusterName){
+            $thisCluster = heliosCluster $clusterName
+        }else{
+            Write-Host "Please provide -clusterName when connecting through helios" -ForegroundColor Yellow
+            exit 1
+        }
+    }
+    
+    if(!$cohesity_api.authorized){
+        Write-Host "Not authenticated" -ForegroundColor Yellow
         exit 1
     }
-}
-
-if(!$cohesity_api.authorized){
-    Write-Host "Not authenticated" -ForegroundColor Yellow
-    exit 1
 }
 
 # outfile
@@ -267,7 +270,6 @@ if($action -eq 'edit'){
         "duration" = $retention
     }
     if($lockDuration -gt 0){
-        Write-Host $lockDuration
         if($cluster.clusterSoftwareVersion -lt '6.6.0d'){
             setApiProperty -object $policy -name 'dataLock' -value 'Compliance'
         }else{
@@ -865,7 +867,7 @@ if($updatedQuietTimes -eq $True){
 }
 
 # list policies
-"" | Out-File -FilePath $outfileName
+"----------------------------------" | Out-File -FilePath $outfileName -Append
 foreach($policy in $policies){
 
     $thisPolicyName = $policy.name

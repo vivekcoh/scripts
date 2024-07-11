@@ -1,5 +1,13 @@
 # Change Log for cohesity/community-automation-samples
 
+## 2024-07-11
+
+* [policyTool.ps1](https://github.com/cohesity/community-automation-samples/tree/main/powershell/policyTool) [`Update`] added -noAuth option for multi-policy edits
+
+## 2024-07-10
+
+* [legalHold.py](https://github.com/cohesity/community-automation-samples/tree/main/python/legalHold) [`Update`] added -rl, --runidlist parameter to allow input of a list of runids
+
 ## 2024-07-08
 
 * [backupNow.ps1](https://github.com/cohesity/community-automation-samples/tree/main/powershell/backupNow) [`Update`] reintroduced -keepLocalFor functionality

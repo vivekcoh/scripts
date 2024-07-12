@@ -574,7 +574,7 @@ def api(method, uri, data=None, quiet=None, mcm=None, mcmv2=None, v=1, reporting
                 responsejson = response.json()
             except Exception:  # ValueError as ve:
                 COHESITY_API['LAST_ERROR'] = response.reason
-                print('*** %s ***' % response.reason)
+                # print('*** %s ***' % response.reason)
                 return None
             if isinstance(responsejson, bool):
                 return ''

@@ -43,7 +43,8 @@ Place both files in a folder together and run the main script like so:
 * -y, --youngerthan: (optional) review only runs that are younger than X days
 * -o, --canceloutdated: (optional) cancel replications that are already due to expire
 * -a, --cancelall: (optional) cancel all replications
-* -j, --jobname: (optional) show/cancel for this job only
+* -j, --jobname: (optional) job name to check (repeat for multiple)
+* -l, --joblist: (optional) text file of job names to check (one per line)
 * -r, --remotecluster: (optional) only show/cancel for thiis remote cluster only
 * -n, --numRuns: (optional) number of runs per job to inspect (default is 9999)
 * -k, --daystokeep: (optional) show as outdated if original backup time is older than X days ago

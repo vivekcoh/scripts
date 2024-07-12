@@ -16,7 +16,8 @@ parser.add_argument('-i', '--useApiKey', action='store_true')
 parser.add_argument('-pwd', '--password', type=str, default=None)
 parser.add_argument('-np', '--noprompt', action='store_true')
 parser.add_argument('-m', '--mfacode', type=str, default=None)
-parser.add_argument('-j', '--jobname', type=str, default=None)
+parser.add_argument('-j', '--jobname', action='append', type=str)
+parser.add_argument('-l', '--joblist', type=str)
 parser.add_argument('-r', '--remotecluster', type=str, default=None)
 parser.add_argument('-a', '--cancelall', action='store_true')
 parser.add_argument('-o', '--canceloutdated', action='store_true')
@@ -37,7 +38,8 @@ useApiKey = args.useApiKey
 password = args.password
 noprompt = args.noprompt
 mfacode = args.mfacode
-jobname = args.jobname
+jobnames = args.jobname
+joblist = args.joblist
 remotecluster = args.remotecluster
 cancelall = args.cancelall
 canceloutdated = args.canceloutdated
@@ -69,6 +71,25 @@ if apiconnected() is False:
     print('authentication failed')
     exit(1)
 
+
+# gather server list
+def gatherList(param=None, filename=None, name='items', required=True):
+    items = []
+    if param is not None:
+        for item in param:
+            items.append(item)
+    if filename is not None:
+        f = open(filename, 'r')
+        items += [s.strip() for s in f.readlines() if s.strip() != '']
+        f.close()
+    if required is True and len(items) == 0:
+        print('no %s specified' % name)
+        exit()
+    return items
+
+
+jobnames = gatherList(jobnames, joblist, name='jobs', required=False)
+
 finishedStates = ['kCanceled', 'kSuccess', 'kFailure', 'kWarning']
 
 multiplier = 1024 * 1024
@@ -85,7 +106,8 @@ jobs = api('get', 'protectionJobs')
 for job in sorted(jobs, key=lambda job: job['name'].lower()):
     if 'isDeleted' not in job:  # and ('isActive' not in job or job['isActive'] is not False):
         jobId = job['id']
-        if jobname is None or job['name'].lower() == jobname.lower():
+        if len(jobnames) == 0 or job['name'].lower() in [j.lower() for j in jobnames]:
+        # if jobname is None or job['name'].lower() == jobname.lower():
             jobName = job['name']
             print("Getting tasks for %s" % jobName)
             # find runs with unfinished replication tasks

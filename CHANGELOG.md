@@ -1,5 +1,10 @@
 # Change Log for cohesity/community-automation-samples
 
+## 2024-07-12
+
+* [pyhesity.py](https://github.com/cohesity/community-automation-samples/tree/main/python/pyhesity) [`Fix`] minor cosmetic error
+* [replicationQueue.py](https://github.com/cohesity/community-automation-samples/tree/main/python/replicationQueue) [`Update`] added --joblist parameter
+
 ## 2024-07-11
 
 * [policyTool.ps1](https://github.com/cohesity/community-automation-samples/tree/main/powershell/policyTool) [`Update`] added -noAuth option for multi-policy edits

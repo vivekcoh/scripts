@@ -136,7 +136,7 @@ if($runningTasks.Keys.Count -gt 0){
     "`n`nStart Time           Job Name"
     "----------           --------"
     foreach($startTimeUsecs in ($runningTasks.Keys | Sort-Object)){
-        if((! $olderThan -or $startTimeUsecs -le $olderThanUsecs) -or (! $newerThan -or $startTimeUsecs -ge $newerThanUsecs)){
+        if((! $olderThan -or $startTimeUsecs -le $olderThanUsecs) -and (! $newerThan -or $startTimeUsecs -ge $newerThanUsecs)){
             $t = $runningTasks[$startTimeUsecs]
             if($t.status -notin $finishedStates){
                 "{0}   {1} ({2})" -f (usecsToDate $t.startTimeUsecs), $t.jobName, $t.jobId

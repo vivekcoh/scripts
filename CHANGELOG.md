@@ -2,6 +2,7 @@
 
 ## 2024-07-17
 
+* [archiveOldSnapshots.ps1](https://github.com/cohesity/community-automation-samples/tree/main/powershell/archiveOldSnapshots) [`Fix`] fixed date filtering issue
 * [s3](https://github.com/bseltz-cohesity/scripts/tree/master/s3) [`New`] Several scripts in python and bash for accessing Cohesity S3 views
 
 ## 2024-07-16

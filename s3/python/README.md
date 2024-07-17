@@ -7,7 +7,7 @@ Warning: this code is provided on a best effort basis and is not in any way offi
 These scripts use the boto3 python module. 
 
 ```bash
-python3 -m pip install boto
+python3 -m pip install boto3
 ```
 
 Some also require pyhesity.py located here: <https://github.com/cohesity/community-automation-samples/tree/main/python/pyhesity>. Place pyhesity.py in the same directory as the scripts, or in your python module path.

@@ -29,12 +29,23 @@ Place both files in a folder together and run the main script like so:
 # end example
 ```
 
-## Parameters
+## Authentication Parameters
 
-* -v, --vip: DNS or IP of the Cohesity cluster to connect to
-* -u, --username: username to authenticate to Cohesity cluster
-* -d, --domain: (optional) domain of username, defaults to local
-* -i, --useApiKey: (optional) use API Key authentication
-* -pwd, --password: (optional) specify password or API key
+* -v, --vip: (optional) DNS or IP of the Cohesity cluster to connect to (default is helios.cohesity.com)
+* -u, --username: (optional) username to authenticate to Cohesity cluster (default is helios)
+* -d, --domain: (optional) domain of username (defaults to local)
+* -t, --tenant: (optional) multi-tenancy tenant name
+* -i, --useApiKey: (optional) use API key for authentication
+* -pwd, --password: (optional) password or API key
+* -np, --noprompt: (optional) do not prompt for password
+* -mcm, --mcm: (optional) connect through MCM
+* -c, --clustername: (optional) helios/mcm cluster to connect to
+* -m, --mfacode: (optional) MFA code for authentication
+* -e --emailmfacode: (optional) send MFA code via email
+
+## Other Parameters
+
 * -n, --unit: (optional) GiB or TiB (default is TiB)
 * -y, --days: (optional) default is 31 days
+* -g, --usable: (optional) show values in estimated usable (rather than raw)
+* -s, --storagedomain: (optional) estimate usable based on the resiliency settings of a storage domain (default is DefaultStorageDomain)

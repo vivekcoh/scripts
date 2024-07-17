@@ -4,7 +4,7 @@ Warning: this code is provided on a best effort basis and is not in any way offi
 
 ## Dependencies
 
-These scripts use the boto3 python module. 
+These scripts use the boto3 python module.
 
 ```bash
 python3 -m pip install boto3

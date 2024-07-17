@@ -1,5 +1,14 @@
 # Change Log for cohesity/community-automation-samples
 
+## 2024-07-17
+
+* [s3](https://github.com/bseltz-cohesity/scripts/tree/master/s3) [`New`] Several scripts in python and bash for accessing Cohesity S3 views
+
+## 2024-07-16
+
+* [replicationQueue.ps1](https://github.com/bseltz-cohesity/scripts/tree/master/powershell/replicationQueue) [`Fix`] fixed time range bug
+* [deletedProtectionGroups.ps1](https://github.com/bseltz-cohesity/scripts/tree/master/powershell/deletedProtectionGroups) [`New`] remove deleted protection groups
+
 ## 2024-07-12
 
 * [pyhesity.py](https://github.com/cohesity/community-automation-samples/tree/main/python/pyhesity) [`Fix`] minor cosmetic error

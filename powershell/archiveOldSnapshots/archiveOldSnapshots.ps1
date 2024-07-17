@@ -55,7 +55,7 @@ if($jobNames.Length -eq 0){
 }
 
 # get archive target info
-$vaults = api get vaults | Where-Object { $_.name -eq $vault }
+$vaults = api get vaults | Where-Object { $_.name -eq $vault }  # ?includeFortKnoxVault=true
 if (!$vaults) {
     Write-Warning "Archive Target $vault not found"
     exit
@@ -109,78 +109,79 @@ foreach($jobName in $jobNames | Sort-Object -Unique){
     
                 $runDate = usecsToDate $run.copyRun[0].runStartTimeUsecs
                 $runDateShort = $runDate.ToString("yyyy-MM-dd")
-    
-                # local snapshots stats
-                $now = dateToUsecs $(get-date)
-                $startTimeUsecs = $run.copyRun[0].runStartTimeUsecs
-                $expireTimeUsecs = $run.copyRun[0].expiryTimeUsecs
-                $daysToExpire = [math]::Round(($expireTimeUsecs - $now) / 86400000000)
-    
-                # calculate archive expire time
-                if($keepFor -gt 0){
-                    $newExpireTimeUsecs = $startTimeUsecs + ([int]$keepFor * 86400000000)
-                }else{
-                    $newExpireTimeUsecs = $expireTimeUsecs
-                }
-                $daysToKeep = [math]::Round(($newExpireTimeUsecs - $now) / 86400000000)
-    
-                if($daysToKeep -lt 1){
-                    $needsArchive = $false
-                    $wouldExpire = $True
-                }
-    
-                if($needsArchive){
-    
-                    $thisrun = api get "/backupjobruns?allUnderHierarchy=true&exactMatchStartTimeUsecs=$startTimeUsecs&excludeTasks=true&id=$($job.id)"
-                    $jobUid = $thisrun.backupJobRuns.protectionRuns[0].backupRun.base.jobUid
-                    # create archive task definition
-                    $archiveTask = @{
-                        'jobRuns' = @(
-                            @{
-                                'copyRunTargets'    = @(
-                                    @{
-                                        'archivalTarget' = @{
-                                            'vaultId'   = $vaultId;
-                                            'vaultName' = $vaultName;
-                                            'vaultType' = $vaultType
-                                        };
-                                        'daysToKeep'     = [int] $daysToKeep;
-                                        'type'           = 'kArchival'
+                if($dates.Length -eq 0 -or $runDateShort -in $dates){
+                    # local snapshots stats
+                    $now = dateToUsecs $(get-date)
+                    $startTimeUsecs = $run.copyRun[0].runStartTimeUsecs
+                    $expireTimeUsecs = $run.copyRun[0].expiryTimeUsecs
+                    $daysToExpire = [math]::Round(($expireTimeUsecs - $now) / 86400000000)
+        
+                    # calculate archive expire time
+                    if($keepFor -gt 0){
+                        $newExpireTimeUsecs = $startTimeUsecs + ([int]$keepFor * 86400000000)
+                    }else{
+                        $newExpireTimeUsecs = $expireTimeUsecs
+                    }
+                    $daysToKeep = [math]::Round(($newExpireTimeUsecs - $now) / 86400000000)
+        
+                    if($daysToKeep -lt 1){
+                        $needsArchive = $false
+                        $wouldExpire = $True
+                    }
+        
+                    if($needsArchive){
+        
+                        $thisrun = api get "/backupjobruns?allUnderHierarchy=true&exactMatchStartTimeUsecs=$startTimeUsecs&excludeTasks=true&id=$($job.id)"
+                        $jobUid = $thisrun.backupJobRuns.protectionRuns[0].backupRun.base.jobUid
+                        # create archive task definition
+                        $archiveTask = @{
+                            'jobRuns' = @(
+                                @{
+                                    'copyRunTargets'    = @(
+                                        @{
+                                            'archivalTarget' = @{
+                                                'vaultId'   = $vaultId;
+                                                'vaultName' = $vaultName;
+                                                'vaultType' = $vaultType
+                                            };
+                                            'daysToKeep'     = [int] $daysToKeep;
+                                            'type'           = 'kArchival'
+                                        }
+                                    );
+                                    'runStartTimeUsecs' = $startTimeUsecs;
+                                    'jobUid'            = @{
+                                        "clusterId" = $jobUid.clusterId;
+                                        "clusterIncarnationId" = $jobUid.clusterIncarnationId;
+                                        "id" = $jobUid.objectId
                                     }
-                                );
-                                'runStartTimeUsecs' = $startTimeUsecs;
-                                'jobUid'            = @{
-                                    "clusterId" = $jobUid.clusterId;
-                                    "clusterIncarnationId" = $jobUid.clusterIncarnationId;
-                                    "id" = $jobUid.objectId
+                                }
+                            )
+                        }
+                        # If the Local Snapshot is not expiring soon...
+                        if($dates.Length -eq 0 -or $runDateShort -in $dates){
+                            if ($daysToExpire -gt $ifExpiringAfter) {
+                                $newExpireDate = (get-date).AddDays($daysToKeep).ToString('yyyy-MM-dd')
+                                if ($archive) {
+                                    Write-Host "$($jobName): archiving $runDate until $newExpireDate" -ForegroundColor Green
+                                    # execute archive task if arcvhive swaitch is set
+                                    $null = api put protectionRuns $archiveTask
+                                }
+                                else {
+                                    # or just display what we would do if archive switch is not set
+                                    Write-Host "$($jobName): would archive $runDate until $newExpireDate" -ForegroundColor Green
                                 }
                             }
-                        )
-                    }
-                    # If the Local Snapshot is not expiring soon...
-                    if($dates.Length -eq 0 -or $runDateShort -in $dates){
-                        if ($daysToExpire -gt $ifExpiringAfter) {
-                            $newExpireDate = (get-date).AddDays($daysToKeep).ToString('yyyy-MM-dd')
-                            if ($archive) {
-                                Write-Host "$($jobName): archiving $runDate until $newExpireDate" -ForegroundColor Green
-                                # execute archive task if arcvhive swaitch is set
-                                $null = api put protectionRuns $archiveTask
-                            }
+                            # otherwise tell us that we're not archiving since the snapshot is expiring soon
                             else {
-                                # or just display what we would do if archive switch is not set
-                                Write-Host "$($jobName): would archive $runDate until $newExpireDate" -ForegroundColor Green
+                                Write-Host "$($jobName): skipping $runDate (expiring in $daysToExpire days)" -ForegroundColor Gray
                             }
                         }
-                        # otherwise tell us that we're not archiving since the snapshot is expiring soon
-                        else {
-                            Write-Host "$($jobName): skipping $runDate (expiring in $daysToExpire days)" -ForegroundColor Gray
+                    }else{
+                        if($alreadyArchived){
+                            Write-Host "$($jobName): $runDate already archived or archiving..." -ForegroundColor Magenta
+                        }elseif($wouldExpire){
+                            Write-Host "$($jobName): skipping $runDate (archive would expire $(-$daysToKeep) days ago)" -ForegroundColor Magenta
                         }
-                    }
-                }else{
-                    if($alreadyArchived){
-                        Write-Host "$($jobName): $runDate already archived or archiving..." -ForegroundColor Magenta
-                    }elseif($wouldExpire){
-                        Write-Host "$($jobName): skipping $runDate (archive would expire $(-$daysToKeep) days ago)" -ForegroundColor Magenta
                     }
                 }
             }

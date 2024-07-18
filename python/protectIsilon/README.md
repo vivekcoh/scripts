@@ -44,6 +44,9 @@ Place both files in a folder together and run the main script like so:
 * -z, --zonename: (optional) protect specific zones (repeat for multiple zones)
 * -n, --volumename: (optional) protect specific volumes(repeat for multiple volumes)
 * -l, --volumelist: (optional) list of volume names in a text file
+* -ev, --excludevolumename: (optional) name of volume to exclude (repeat for multiple)
+* -el, --excludevolumelist: (optional) text file of volume names to exclude (one per line)
+* -ifs, --includerootifs: (optional) /ifs is skipped by default
 * -j, --jobname: name of the job to add the server to
 * -i, --include: (optional) file path to include (use multiple times for multiple paths)
 * -n, --includefile: (optional) a text file full of include paths

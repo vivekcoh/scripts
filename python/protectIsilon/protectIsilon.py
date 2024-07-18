@@ -16,6 +16,9 @@ parser.add_argument('-s', '--sourcename', type=str, required=True)
 parser.add_argument('-z', '--zonename', action='append', type=str)
 parser.add_argument('-n', '--volumename', action='append', type=str)
 parser.add_argument('-l', '--volumelist', type=str)
+parser.add_argument('-ev', '--excludevolumename', action='append', type=str)
+parser.add_argument('-el', '--excludevolumelist', type=str)
+parser.add_argument('-ifs', '--includerootifs', action='store_true')
 parser.add_argument('-j', '--jobname', type=str, required=True)
 parser.add_argument('-i', '--include', action='append', type=str)
 parser.add_argument('-f', '--includefile', type=str)
@@ -45,6 +48,9 @@ sourcename = args.sourcename          # name of registered isilon
 zonenames = args.zonename             # names of zones to protect
 volumenames = args.volumename         # namea of volumes to protect
 volumelist = args.volumelist          # file with volume names
+excludevolumenames = args.excludevolumename
+excludevolumelist = args.excludevolumelist
+includerootifs = args.includerootifs
 jobname = args.jobname                # name of protection job to add server to
 includes = args.include               # include path
 includefile = args.includefile        # file with include paths
@@ -62,6 +68,31 @@ cloudarchivedirect = args.cloudarchivedirect  # enable cloud archive direct
 incrementalsnapshotprefix = args.incrementalsnapshotprefix  # incremental snapshot prefix
 fullsnapshotprefix = args.fullsnapshotprefix  # full snapshot prefux
 encryptionenabled = args.encryptionenabled  # encryption enabled
+
+
+def gatherList(param=None, filename=None, name='items', required=True):
+    items = []
+    if param is not None:
+        for item in param:
+            items.append(item)
+    if filename is not None:
+        f = open(filename, 'r')
+        items += [s.strip() for s in f.readlines() if s.strip() != '']
+        f.close()
+    if required is True and len(items) == 0:
+        print('no %s specified' % name)
+        exit()
+    return items
+
+
+volumenames = gatherList(volumenames, volumelist, name='volumes', required=False)
+includes = gatherList(includes, includefile, name='includes', required=False)
+excludes = gatherList(excludes, excludefile, name='excludes', required=False)
+excludevolumenames = gatherList(excludevolumenames, excludevolumelist, name='excluded volumes', required=False)
+volumenames = [v.lower() for v in volumenames]
+excludevolumenames = [v.lower() for v in excludevolumenames]
+if includerootifs is not True:
+    excludevolumenames.append('/ifs')
 
 if pause:
     isPaused = True
@@ -84,31 +115,31 @@ if zonenames is None:
 else:
     zonenames = [z.lower() for z in zonenames]
 
-# read server file
-if volumenames is None:
-    volumenames = []
-if volumelist is not None:
-    f = open(volumelist, 'r')
-    volumenames += [s.strip() for s in f.readlines() if s.strip() != '']
-    f.close()
-volumenames = [v.lower() for v in volumenames]
+# # read server file
+# if volumenames is None:
+#     volumenames = []
+# if volumelist is not None:
+#     f = open(volumelist, 'r')
+#     volumenames += [s.strip() for s in f.readlines() if s.strip() != '']
+#     f.close()
+# volumenames = [v.lower() for v in volumenames]
 
 # read include file
 
-if includes is None:
-    includes = []
-if includefile is not None:
-    f = open(includefile, 'r')
-    includes += [e.strip() for e in f.readlines() if e.strip() != '']
-    f.close()
+# if includes is None:
+#     includes = []
+# if includefile is not None:
+#     f = open(includefile, 'r')
+#     includes += [e.strip() for e in f.readlines() if e.strip() != '']
+#     f.close()
 
 # read exclude file
-if excludes is None:
-    excludes = []
-if excludefile is not None:
-    f = open(excludefile, 'r')
-    excludes += [e.strip() for e in f.readlines() if e.strip() != '']
-    f.close()
+# if excludes is None:
+#     excludes = []
+# if excludefile is not None:
+#     f = open(excludefile, 'r')
+#     excludes += [e.strip() for e in f.readlines() if e.strip() != '']
+#     f.close()
 
 # authenticate to Cohesity
 apiauth(vip=vip, username=username, domain=domain, password=password, useApiKey=useApiKey)
@@ -129,7 +160,8 @@ for zone in source['nodes']:
     if len(zonenames) == 0 or zone['protectionSource']['name'].lower() in zonenames:
         if 'nodes' in zone and zone['nodes'] is not None and len(zone['nodes']) > 0:
             for volume in zone['nodes']:
-                if len(volumenames) == 0 or volume['protectionSource']['name'].lower() in volumenames:
+                thisvolumename = volume['protectionSource']['name'].lower()
+                if (len(volumenames) == 0 or thisvolumename in volumenames) and thisvolumename not in excludevolumenames:
                     objectids.append(volume['protectionSource']['id'])
                     foundVolumes.append(volume['protectionSource']['name'].lower())
 

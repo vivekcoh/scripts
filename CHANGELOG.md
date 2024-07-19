@@ -1,5 +1,14 @@
 # Change Log for cohesity/community-automation-samples
 
+## 2024-07-19
+
+* [protectIsilon.ps1](https://github.com/cohesity/community-automation-samples/tree/main/powershell/protectIsilon) [`New`] protect Isilon volumes using PowerShell
+* [protectIsilon.py](https://github.com/cohesity/community-automation-samples/tree/main/python/protectIsilon) [`Update`] modernized authentication
+
+## 2024-07-18
+
+* [clusterStorageStats.py](https://github.com/cohesity/community-automation-samples/tree/main/reports/python/clusterStorageStats) [`Update`] added "usable" output (vs raw)
+
 ## 2024-07-17
 
 * [archiveOldSnapshots.ps1](https://github.com/cohesity/community-automation-samples/tree/main/powershell/archiveOldSnapshots) [`Fix`] fixed date filtering issue

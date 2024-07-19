@@ -33,13 +33,23 @@ Place both files in a folder together and run the main script like so:
                    -s myisilon
 ```
 
-## Parameters
+## Authentication Parameters
 
-* -v, --vip: DNS or IP of the Cohesity cluster to connect to
-* -u, --username: username to authenticate to Cohesity cluster
-* -d, --domain: (optional) domain of username, defaults to local
+* -v, --vip: (optional) DNS or IP of the Cohesity cluster to connect to (default is helios.cohesity.com)
+* -u, --username: (optional) username to authenticate to Cohesity cluster (default is helios)
+* -d, --domain: (optional) domain of username (defaults to local)
+* -t, --tenant: (optional) multi-tenancy tenant name
 * -k, --useApiKey: (optional) use API key for authentication
 * -pwd, --password: (optional) password or API key
+* -np, --noprompt: (optional) do not prompt for password
+* -mcm, --mcm: (optional) connect through MCM
+* -c, --clustername: (optional) helios/mcm cluster to connect to
+* -m, --mfacode: (optional) MFA code for authentication
+* -em --emailmfacode: (optional) send MFA code via email
+
+## Other Parameters
+
+* -j, --jobname: name of the job to add the server to
 * -s, --sourcename: name of registered Isilon to protect
 * -z, --zonename: (optional) protect specific zones (repeat for multiple zones)
 * -n, --volumename: (optional) protect specific volumes(repeat for multiple volumes)
@@ -47,11 +57,14 @@ Place both files in a folder together and run the main script like so:
 * -ev, --excludevolumename: (optional) name of volume to exclude (repeat for multiple)
 * -el, --excludevolumelist: (optional) text file of volume names to exclude (one per line)
 * -ifs, --includerootifs: (optional) /ifs is skipped by default
-* -j, --jobname: name of the job to add the server to
 * -i, --include: (optional) file path to include (use multiple times for multiple paths)
 * -n, --includefile: (optional) a text file full of include paths
 * -x, --exclude: (optional) file path to exclude (use multiple times for multiple paths)
 * -f, --excludefile: (optional) a text file full of exclude file paths
+* -cl, --usechangelist: (optional) use Isilon change list for incremental backups (default is false)
+
+## New Job Parameters
+
 * -sd, --storagedomain: (optional) name of storage domain to create job in (default is DefaultStorageDomain)
 * -p, --policyname: (optional) name of protection policy to use for new job (only required for new job)
 * -tz, --timezone: (optional) time zone for new job (default is US/Eastern)
@@ -59,7 +72,7 @@ Place both files in a folder together and run the main script like so:
 * -is, --incrementalsla: (optional) incremental SLA minutes (default is 60)
 * -fs, --fullsla: (optional) full SLA minutes (default is 120)
 * -ei, --enableindexing: (optional) default is no indexing
-* -c, --cloudarchivedirect: (optional) use direct cloud archiving
+* -cad, --cloudarchivedirect: (optional) use direct cloud archiving
 * -ip, --incrementalsnapshotprefix: (optional) prefix of Netapp snapshot name
 * -fp, --fullsnapshotprefix: (optional) prefix of Netapp snapshot name
 * -enc, --encryptionenabled: (optional) enable in-flight encryption of data between the Isilon and Cohesity

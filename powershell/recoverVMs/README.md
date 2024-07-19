@@ -76,6 +76,7 @@ Place the files in a folder together and run the main script like so:
 * -noPrompt: (optional) Don't prompt to confirm
 * -taskName: (optional) name for recovery task
 * -dbg: (optional) debug mode, export JSON payload to file for analysis
+* -overwrite: (optional) overwrite existing VM
 
 Note: when restoring to a standalone ESXi host, review the object hierarchy of the registered ESXi host under protection sources to determine the following information, but typically:
 

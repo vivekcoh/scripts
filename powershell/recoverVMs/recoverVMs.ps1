@@ -3,16 +3,17 @@
 ### process commandline arguments
 [CmdletBinding()]
 param (
-    [Parameter()][string]$vip = 'helios.cohesity.com',  # the cluster to connect to (DNS name or IP)
-    [Parameter()][string]$username = 'helios',          # username (local or AD)
-    [Parameter()][string]$domain = 'local',             # local or AD domain
-    [Parameter()][switch]$useApiKey,                    # use API key for authentication
-    [Parameter()][string]$password,                     # optional password
-    [Parameter()][string]$tenant,                       # org to impersonate
-    [Parameter()][switch]$mcm,                          # connect through mcm
-    [Parameter()][string]$mfaCode = $null,              # mfa code
-    [Parameter()][switch]$emailMfaCode,                 # send mfa code via email
-    [Parameter()][string]$clusterName = $null,          # cluster to connect to via helios/mcm
+    [Parameter()][string]$vip='helios.cohesity.com',
+    [Parameter()][string]$username = 'helios',
+    [Parameter()][string]$domain = 'local',
+    [Parameter()][string]$tenant,
+    [Parameter()][switch]$useApiKey,
+    [Parameter()][string]$password,
+    [Parameter()][switch]$noPrompt,
+    [Parameter()][switch]$mcm,
+    [Parameter()][string]$mfaCode,
+    [Parameter()][switch]$emailMfaCode,
+    [Parameter()][string]$clusterName,
     [Parameter()][array]$vmName,
     [Parameter()][string]$vmlist = '', # list of VMs to recover
     [Parameter()][datetime]$recoverDate,
@@ -28,9 +29,9 @@ param (
     [Parameter()][switch]$detachNetwork,
     [Parameter()][switch]$poweron, # leave powered off by default
     [Parameter()][switch]$wait, # wait for restore tasks to complete
-    [Parameter()][switch]$noPrompt,
     [Parameter()][ValidateSet('InstantRecovery','CopyRecovery')][string]$recoveryType = 'InstantRecovery',
     [Parameter()][string]$taskName,
+    [Parameter()][switch]$overwrite,
     [Parameter()][switch]$dbg,
     [Parameter()][string]$vmTag,
     [Parameter()][string]$protectionGroup
@@ -62,23 +63,30 @@ $vmNames = @(gatherList -Param $vmName -FilePath $vmList -Name 'vms' -Required $
 ### source the cohesity-api helper code
 . $(Join-Path -Path $PSScriptRoot -ChildPath cohesity-api.ps1)
 
-# authenticate
-apiauth -vip $vip -username $username -domain $domain -passwd $password -apiKeyAuthentication $useApiKey -mfaCode $mfaCode -sendMfaCode $emailMfaCode -heliosAuthentication $mcm -regionid $region -tenant $tenant
-
-# select helios/mcm managed cluster
-if($USING_HELIOS){
-    if($clusterName){
-        $thisCluster = heliosCluster $clusterName
-    }else{
-        Write-Host "Please provide -clusterName when connecting through helios" -ForegroundColor Yellow
-        exit 1
-    }
+# authentication =============================================
+# demand clusterName for Helios/MCM
+if(($vip -eq 'helios.cohesity.com' -or $mcm) -and ! $clusterName){
+    Write-Host "-clusterName required when connecting to Helios/MCM" -ForegroundColor Yellow
+    exit 1
 }
 
+# authenticate
+apiauth -vip $vip -username $username -domain $domain -passwd $password -apiKeyAuthentication $useApiKey -mfaCode $mfaCode -sendMfaCode $emailMfaCode -heliosAuthentication $mcm -regionid $region -tenant $tenant -noPromptForPassword $noPrompt
+
+# exit on failed authentication
 if(!$cohesity_api.authorized){
     Write-Host "Not authenticated" -ForegroundColor Yellow
     exit 1
 }
+
+# select helios/mcm managed cluster
+if($USING_HELIOS){
+    $thisCluster = heliosCluster $clusterName
+    if(! $thisCluster){
+        exit 1
+    }
+}
+# end authentication =========================================
 
 # search for vm tags
 if($vmTag){
@@ -128,6 +136,7 @@ $restoreParams = @{
                     }
                 };
                 "powerOnVms"                 = $false;
+                "overwriteExistingVm"        = $false;
                 "continueOnError"            = $false;
                 "recoveryProcessType"        = "InstantRecovery"
             }
@@ -218,13 +227,6 @@ if($vCenterName){
         write-host "folder $folderName not found" -ForegroundColor Yellow
         exit
     }
-        
-    # $vmFolders = api get /vmwareFolders?resourcePoolId=$resourcePoolId`&vCenterId=$vCenterId
-    # $vmFolder = $vmFolders.vmFolders | Where-Object displayName -eq $folderName
-    # if(! $vmFolder){
-    #     write-host "folder $folderName not found" -ForegroundColor Yellow
-    #     exit
-    # }
 
     $restoreParams.vmwareParams.recoverVmParams.vmwareTargetParams.recoveryTargetConfig.recoverToNewSource = $True
     $restoreParams.vmwareParams.recoverVmParams.vmwareTargetParams.recoveryTargetConfig["newSourceConfig"] = @{
@@ -312,6 +314,11 @@ if($vlan){
         Write-Host "vlan $vlan not found" -ForegroundColor Yellow
         exit
     }
+}
+
+# overwrite existing vm
+if($overwrite){
+    $restoreParams.vmwareParams.recoverVmParams.vmwareTargetParams.overwriteExistingVm = $True
 }
 
 # prompt for confirmation

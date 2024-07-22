@@ -152,16 +152,15 @@ $html += '</span>
 $finishedStates = @('kCanceled', 'kSuccess', 'kFailure', 'kWarning')
 
 $vms = api get protectionSources/virtualMachines?protected=true
-$objects = $vms.name
 
-foreach($object in $objects){
-    $object = [string]$object
-    $search = api get "/searchvms?entityTypes=kAcropolis&entityTypes=kAWS&entityTypes=kAWSNative&entityTypes=kAzure&entityTypes=kAzureNative&entityTypes=kGCP&entityTypes=kHyperV&entityTypes=kHyperVVSS&entityTypes=kKVM&entityTypes=kVMware&vmName=$object"
+foreach($vm in $vms){
+    $object = $vm.name
+    $search = api get "/searchvms?entityTypes=kAcropolis&entityTypes=kAWS&entityTypes=kAWSNative&entityTypes=kAzure&entityTypes=kAzureNative&entityTypes=kGCP&entityTypes=kHyperV&entityTypes=kHyperVVSS&entityTypes=kKVM&entityTypes=kVMware&vmName=$object&entityIds=$($vm.id)"
     if(! $search.vms){
         Write-Host "$object no backups found" -ForegroundColor Yellow
     }else{
         # narrow search to exact name match
-        $search.vms = $search.vms | Where-Object {$_.vmDocument.objectName -eq $object}
+        $search.vms = $search.vms | Where-Object {$_.vmDocument.objectId.entity.id -eq $vm.id}
         if(! $search.vms){
             Write-Host "$object not found" -ForegroundColor Yellow
         }else{

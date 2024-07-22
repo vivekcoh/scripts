@@ -94,7 +94,7 @@ $dateString = (get-date).ToString('yyyy-MM-dd')
 $outfileName = "$($cluster.name)-$dateString-CrowdStrikeReport.csv"
 
 # headings
-"""Object Name"",""Environment"",""Protected"",""Useful Protection Group"",""Latest File""" | Out-File -FilePath $outfileName -Encoding utf8
+"""Object Name"",""Environment"",""Protected"",""Useful Protection Group"",""Latest Backup"",""Latest File""" | Out-File -FilePath $outfileName -Encoding utf8
 
 $volumeTypes = @(1, 6)
 
@@ -109,6 +109,7 @@ While($True){
         $script:fileList = @('')
         $latestFile = ''
         $usefulProtectionGroup = ''
+        $latestBackup = ''
         foreach($protectionInfo in $obj.objectProtectionInfos){
             foreach($pg in $protectionInfo.protectionGroups){
                 $protected = $True
@@ -152,10 +153,11 @@ While($True){
                 }
                 if($latestFile -ne '' -and $usefulProtectionGroup -eq ''){
                     $usefulProtectionGroup = $protectionGroup
+                    $latestBackup = usecsToDate $version.instanceId.jobStartTimeUsecs
                 }
             }
         }
-        """$($obj.name)"",""$($obj.environment)"",""$protected"",""$usefulProtectionGroup"",""$latestFile""" | Out-File -FilePath $outfileName -Append
+        """$($obj.name)"",""$($obj.environment)"",""$protected"",""$usefulProtectionGroup"",""$latestBackup"",""$latestFile""" | Out-File -FilePath $outfileName -Append
     }
     if($search.count -eq $search.paginationCookie){
         break

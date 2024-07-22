@@ -101,7 +101,7 @@ $volumeTypes = @(1, 6)
 $paginationCookie = 0
 
 While($True){
-    $search = api get -v2 "data-protect/search/objects?osTypes=kWindows&count=5&paginationCookie=$paginationCookie&count=$objectCount"
+    $search = api get -v2 "data-protect/search/objects?osTypes=kWindows&paginationCookie=$paginationCookie&count=$objectCount"
     foreach($obj in $search.objects){
         "{0} ({1})" -f $obj.name, $obj.environment
         $protectionGroup = ''

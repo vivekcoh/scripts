@@ -152,7 +152,6 @@ While($True){
                 }
                 if($latestFile -ne '' -and $usefulProtectionGroup -eq ''){
                     $usefulProtectionGroup = $protectionGroup
-                    # $protected = $True
                 }
             }
         }

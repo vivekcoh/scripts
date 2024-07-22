@@ -43,3 +43,8 @@ Place the files in a folder together and run the main script like so:
 * -mfaCode: (optional) TOTP MFA code
 * -emailMfaCode: (optional) send MFA code via email
 * -clusterName: (optional) cluster to connect to when connecting through Helios or MCM
+
+## Other Parameters
+
+* -objectCount: (optional) number of objects per API query (default is 100)
+* -matchPath: (optional) default is '/Windows/System32/drivers/CrowdStrike/C-00000291'

@@ -74,7 +74,7 @@ outfile = '%s-%s-CrowdStrikeReport.csv' % (cluster['name'], dateString)
 f = codecs.open(outfile, 'w')
 
 # headings
-f.write('"Object Name","Environment","Protected","Useful Protection Group","Latest File"\n')
+f.write('"Object Name","Environment","Protected","Useful Protection Group","Latest Backup","Latest File"\n')
 
 
 def listdir(dirPath, instance, volumeInfoCookie=None, volumeName=None, cookie=None):
@@ -124,6 +124,7 @@ while True:
         fileList = ['']
         latestFile = ''
         usefulProtectionGroup = ''
+        latestBackup = ''
         for protectionInfo in obj['objectProtectionInfos']:
             if protectionInfo['protectionGroups'] is None:
                 continue
@@ -174,7 +175,8 @@ while True:
 
                 if latestFile != '' and usefulProtectionGroup == '':
                     usefulProtectionGroup = protectionGroup
-        f.write('"%s","%s","%s","%s","%s"\n' % (obj['name'], obj['environment'], protected, usefulProtectionGroup, latestFile))
+                    latestBackup = usecsToDate(version['instanceId']['jobStartTimeUsecs'])
+        f.write('"%s","%s","%s","%s","%s","%s"\n' % (obj['name'], obj['environment'], protected, usefulProtectionGroup, latestBackup, latestFile))
     if str(search['count']) == str(search['paginationCookie']):
         break
     else:

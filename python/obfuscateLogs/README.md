@@ -37,5 +37,6 @@ To run parallelly:
 ## Parameters
 
 * -l, --logpath: path of folder containing logs (Required)
-* -p, --parallel: Launch parallel tasks for concurrent file processing (Optional)
-* -w, --workers: No. of concurrent processes to run if parallel processinf is selected. If it is not provided with '-p' argument then it will default to the number of processors on the machine.  (Optional)
+* -f, --freespacemultiplier: (optional) multiple of free space required for logpath (defailt is 3)
+* -p, --parallel: (optional) Launch parallel tasks for concurrent file processing
+* -w, --workers: (optional) No. of concurrent processes to run if parallel processing is selected. If it is not provided with '-p' argument then it will default to the number of processors on the machine

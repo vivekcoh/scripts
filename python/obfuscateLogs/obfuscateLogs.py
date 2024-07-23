@@ -191,18 +191,41 @@ def task_done(future):
     except Exception as e:
         print(f"Task generated an exception: {e}")
 
+def get_size(start_path = '.'):
+    total_size = 0
+    for dirpath, dirnames, filenames in os.walk(start_path):
+        for f in filenames:
+            fp = os.path.join(dirpath, f)
+            # skip if it is symbolic link
+            if not os.path.islink(fp):
+                total_size += os.path.getsize(fp)
+
+    return total_size
+
 if __name__ == '__main__':
     parser = argparse.ArgumentParser()
     parser.add_argument('-l', '--logpath', type=str, required=True)
     parser.add_argument('-w', '--workers', type=int, default=None, help='Number of worker processes')
     parser.add_argument('-p', '--parallel', action='store_true', help='Run in parallel using ProcessPoolExecutor')
+    parser.add_argument('-f', '--freespacemultiplier', type=int, default=3, help='require free space multiple')
     args = parser.parse_args()
     
     logpath = args.logpath
+    freespacemultiplier = args.freespacemultiplier
+
+    GiB = 1024 * 1024 * 1024
 
     if os.path.isdir(logpath) is False:
         print('logpath %s is not found' % logpath)
         exit(1)
+    logfoldersize = get_size(logpath)
+    freespace = shutil.disk_usage(logpath).free
+    if freespace < (logfoldersize * freespacemultiplier):
+        print('log folder path size is %s GiB' % round(logfoldersize / GiB, 2))
+        print('log folder free space is %s GiB' % round(freespace / GiB, 2))
+        print('at least %s GiB free space is recommended to proceed' % round(logfoldersize * freespacemultiplier / GiB, 2))
+        exit()
+    exit()
     start_time = time.time()
     walkdir(logpath, parallel=args.parallel, max_workers=args.workers)
     end_time = time.time()

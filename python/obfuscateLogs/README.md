@@ -30,6 +30,7 @@ Place your log files in a folder (the script will process all files in that fold
 ```
 
 To run parallelly:
+
 ```bash
 ./obfuscateLogs.py -l ~/mylogs/ -p
 ```

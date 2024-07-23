@@ -41,6 +41,7 @@ emailmfacode = args.emailmfacode
 objectcount = args.objectcount
 matchpath = args.matchpath
 
+startpath = matchpath[0:matchpath.rindex('/')]
 matchpath = matchpath.lower()
 
 # authentication =========================================================
@@ -84,14 +85,14 @@ def listdir(dirPath, instance, volumeInfoCookie=None, volumeName=None, cookie=No
     thisDirPath = quote_plus(dirPath).replace('%2F%2F', '%2F')
     if cookie is not None:
         if volumeName is not None:
-            dirList = api('get', '/vm/directoryList?%s&useLibrarian=%s&statFileEntries=%s&dirPath=%s&volumeInfoCookie=%s&volumeName=%s&cookie=%s' % (instance, useLibrarian, statfile, thisDirPath, volumeInfoCookie, volumeName, cookie))
+            dirList = api('get', '/vm/directoryList?%s&useLibrarian=%s&statFileEntries=%s&dirPath=%s&volumeInfoCookie=%s&volumeName=%s&cookie=%s' % (instance, useLibrarian, statfile, thisDirPath, volumeInfoCookie, volumeName, cookie), quiet=True)
         else:
-            dirList = api('get', '/vm/directoryList?%s&useLibrarian=%s&statFileEntries=%s&dirPath=%s&cookie=%s' % (instance, useLibrarian, statfile, thisDirPath, cookie))
+            dirList = api('get', '/vm/directoryList?%s&useLibrarian=%s&statFileEntries=%s&dirPath=%s&cookie=%s' % (instance, useLibrarian, statfile, thisDirPath, cookie), quiet=True)
     else:
         if volumeName is not None:
-            dirList = api('get', '/vm/directoryList?%s&useLibrarian=%s&statFileEntries=%s&dirPath=%s&volumeInfoCookie=%s&volumeName=%s' % (instance, useLibrarian, statfile, thisDirPath, volumeInfoCookie, volumeName))
+            dirList = api('get', '/vm/directoryList?%s&useLibrarian=%s&statFileEntries=%s&dirPath=%s&volumeInfoCookie=%s&volumeName=%s' % (instance, useLibrarian, statfile, thisDirPath, volumeInfoCookie, volumeName), quiet=True)
         else:
-            dirList = api('get', '/vm/directoryList?%s&useLibrarian=%s&statFileEntries=%s&dirPath=%s' % (instance, useLibrarian, statfile, thisDirPath))
+            dirList = api('get', '/vm/directoryList?%s&useLibrarian=%s&statFileEntries=%s&dirPath=%s' % (instance, useLibrarian, statfile, thisDirPath), quiet=True)
     if dirList and 'entries' in dirList:
         for entry in sorted(dirList['entries'], key=lambda e: e['name']):
             try:
@@ -165,9 +166,15 @@ while True:
                         volumeInfoCookie = volumeList['volumeInfoCookie']
                         for volume in sorted(volumeList['volumeInfos'], key=lambda v: v['name']):
                             volumeName = quote_plus(volume['name'])
-                            listdir('/', instance, volumeInfoCookie, volumeName)
+                            listdir('/%s' % startpath, instance, volumeInfoCookie, volumeName)
                 else:
-                    listdir('/', instance)
+                    driveletters = [d['mountPointVec'][0] for d in doc['objectId']['entity']['physicalEntity']['volumeInfoVec'] if 'mountPointVec' in d and d['mountPointVec'] is not None and len(d['mountPointVec']) > 0]
+                    for driveletter in driveletters:
+                        shortdriveletter = driveletter[0:1]
+                        listdir('/%s%s' % (shortdriveletter, startpath), instance)
+                        latestFile = sorted(fileList)[-1]
+                        if latestFile != '':
+                            break
 
                 latestFile = sorted(fileList)[-1]
                 if latestFile != '':

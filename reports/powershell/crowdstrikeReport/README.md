@@ -48,3 +48,4 @@ Place the files in a folder together and run the main script like so:
 
 * -objectCount: (optional) number of objects per API query (default is 100)
 * -matchPath: (optional) default is '/Windows/System32/drivers/CrowdStrike/C-00000291'
+* -statFiles: (optional) get last modified date of files (slower!)

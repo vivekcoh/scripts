@@ -89,3 +89,4 @@ Place both files in a folder together and run the main script like so:
 * -z, --pause: (optional) pause the job(s)
 * -r, --resume: (optional) resume the job(s)
 * -q, --noquiesce: (optional) disable app/crash consistent setting
+* -a, --alertonslaviolation: (optional) enable alert for SLA violation

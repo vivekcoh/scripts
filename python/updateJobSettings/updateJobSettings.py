@@ -27,6 +27,7 @@ parser.add_argument('-tz', '--timezone', type=str, default=None)
 parser.add_argument('-st', '--starttime', type=str, default=None)
 parser.add_argument('-is', '--incrementalsla', type=int, default=None)
 parser.add_argument('-fs', '--fullsla', type=int, default=None)
+parser.add_argument('-a', '--alertonslaviolation', action='store_true')
 parser.add_argument('-z', '--pause', action='store_true')
 parser.add_argument('-r', '--resume', action='store_true')
 parser.add_argument('-q', '--noquiesce', action='store_true')
@@ -54,6 +55,7 @@ fullsla = args.fullsla
 pause = args.pause
 resume = args.resume
 noquiesce = args.noquiesce
+alertonslaviolation = args.alertonslaviolation
 
 # authenticate
 apiauth(vip=vip, username=username, domain=domain, password=password, useApiKey=useApiKey, helios=mcm, prompt=(not noprompt), mfaCode=mfacode, tenantId=tenant)
@@ -103,7 +105,7 @@ if len(jobnames) == 0 and policyname is None and newpolicyname is not None:
     exit()
 
 # require change
-if newpolicyname is None and starttime is None and timezone is None and incrementalsla is None and fullsla is None and pause is not True and resume is not True and noquiesce is not True:
+if newpolicyname is None and starttime is None and timezone is None and incrementalsla is None and fullsla is None and alertonslaviolation is not True and pause is not True and resume is not True and noquiesce is not True:
     print('No changes requested\n')
     exit()
 
@@ -152,8 +154,8 @@ if starttime is not None:
 
 for job in sorted(jobs['protectionGroups'], key=lambda job: job['name'].lower()):
     changedJob = False
-    print('%s' % job['name'])
-    f.write('%s\n' % job['name'])
+    print('Updating %s' % job['name'])
+    f.write('Updating %s\n' % job['name'])
     if newpolicyname is not None:
         job['policyId'] = newpolicyid
         changedJob = True
@@ -206,7 +208,14 @@ for job in sorted(jobs['protectionGroups'], key=lambda job: job['name'].lower())
             if job['vmwareParams']['appConsistentSnapshot'] is True:
                 job['vmwareParams']['appConsistentSnapshot'] = False
                 changedJob = True
-
+    if alertonslaviolation is True:
+        if 'alertPolicy' not in job:
+            job['alertPolicy'] = {}
+        if 'backupRunStatus' not in job['alertPolicy']:
+            job['alertPolicy']['backupRunStatus'] = []
+        job['alertPolicy']['backupRunStatus'].append('kSlaViolation')
+        job['alertPolicy']['backupRunStatus'] = list(set(job['alertPolicy']['backupRunStatus']))
+        changedJob = True
     if changedJob is True:
         result = api('put', 'data-protect/protection-groups/%s' % job['id'], job, v=2)
 

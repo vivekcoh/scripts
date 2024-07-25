@@ -15,6 +15,8 @@ param (
     [Parameter()][array]$jobName, #jobs for which user wants to list/cancel replications
     [Parameter()][string]$joblist = '',
     [Parameter()][int]$numRuns = 999,
+    [Parameter()][datetime]$before,
+    [Parameter()][datetime]$after,
     [Parameter()][int]$olderThan,
     [Parameter()][int]$newerThan,
     [Parameter()][int]$daysToKeep = 0,
@@ -74,6 +76,12 @@ if(!$commit -and ($cancelAll -or $cancelOutdated)){
 }
 
 $now = Get-Date
+if($before){
+    $olderThanUsecs = dateToUsecs $before
+}
+if($after){
+    $newerThanUsecs = dateToUsecs $after
+}
 if($olderThan){
     $olderThanUsecs = dateToUsecs ($now.AddDays(-$olderThan))
 }
@@ -99,8 +107,6 @@ $finishedStates = @('kCanceled', 'kSuccess', 'kFailure', 'kWarning')
 $nowUsecs = dateToUsecs (get-date)
 
 $runningTasks = @{}
-
-
 
 foreach($job in $jobs | Sort-Object -Property name){
     $jobId = $job.id
@@ -136,7 +142,7 @@ if($runningTasks.Keys.Count -gt 0){
     "`n`nStart Time           Job Name"
     "----------           --------"
     foreach($startTimeUsecs in ($runningTasks.Keys | Sort-Object)){
-        if((! $olderThan -or $startTimeUsecs -le $olderThanUsecs) -and (! $newerThan -or $startTimeUsecs -ge $newerThanUsecs)){
+        if((! ($olderThan -or $before) -or $startTimeUsecs -le $olderThanUsecs) -and (! ($newerThan -or $after) -or $startTimeUsecs -ge $newerThanUsecs)){
             $t = $runningTasks[$startTimeUsecs]
             if($t.status -notin $finishedStates){
                 "{0}   {1} ({2})" -f (usecsToDate $t.startTimeUsecs), $t.jobName, $t.jobId

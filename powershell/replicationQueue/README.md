@@ -50,6 +50,8 @@ Place both files in a folder together and run the main script like so:
 * -cancelAll: (optional) cancel existing replication tasks
 * -cancelOutdated: (optional) cancel outdated replication tasks
 * -showFinished: (optional) also display completed replications
+* -before: (optional) only show/cancel replications before this date (e.g. '2024-07-22 00:00:00')
+* -after: (optional) only show/cancel replications after this date (e.g. '2024-07-22 00:00:00')
 * -olderThan: (optional) only show/cancel replications older than X days (use with -cancelall)
 * -newerThan: (optional) only show/cancel replications newer than X days (use with -cancelall)
 * -daysToKeep: (optional) consider outdated any replicas that will expire in X days or less (use with -canceloutdated)

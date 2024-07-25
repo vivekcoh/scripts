@@ -371,16 +371,20 @@ if 'errorCode' in response or 'error' in response:
 
 print("Cloning DB %s as %s..." % (sourcedb, targetdb))
 taskId = response['restoreTask']['performRestoreTaskState']['base']['taskId']
-status = api('get', '/restoretasks/%s' % taskId)
 
 if wait is True:
     finishedStates = ['kCanceled', 'kSuccess', 'kFailure']
-    while status[0]['restoreTask']['performRestoreTaskState']['base']['publicStatus'] not in finishedStates:
-        sleep(1)
-        status = api('get', '/restoretasks/%s' % taskId)
-    if status[0]['restoreTask']['performRestoreTaskState']['base']['publicStatus'] == 'kSuccess':
+    status = 'unknown'
+    while status not in finishedStates:
+        sleep(20)
+        try:
+            statusquery = api('get', '/restoretasks/%s' % taskId)
+            status = statusquery[0]['restoreTask']['performRestoreTaskState']['base']['publicStatus']
+        except Exception:
+            pass
+    if status == 'kSuccess':
         print('Clone Completed Successfully')
         exit(0)
     else:
-        print('Clone ended with state: %s' % status[0]['restoreTask']['performRestoreTaskState']['base']['publicStatus'])
+        print('Clone ended with state: %s' % status)
         exit(1)

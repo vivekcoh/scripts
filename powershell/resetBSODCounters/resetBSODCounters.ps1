@@ -70,7 +70,7 @@ if($servers.Count -eq 0){
     # end authentication =========================================
 
     # find servers protected by block-based physical protection groups
-    $jobs = api get -v2 "data-protect/protection-groups?environments=kPhysical"
+    $jobs = api get -v2 "data-protect/protection-groups?environments=kPhysical&isActive=true"
     $sources = api get "protectionSources/registrationInfo?environments=kPhysical"
     $winIds = @(($sources.rootNodes | Where-Object {$_.rootNode.physicalProtectionSource.hostType -eq 'kWindows'}).rootNode.id)
     $servers = @(($jobs.protectionGroups.physicalParams.volumeProtectionTypeParams.objects | Where-Object {$_.id -in $winIds}).name)

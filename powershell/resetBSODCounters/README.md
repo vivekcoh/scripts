@@ -24,11 +24,29 @@ $repoURL = 'https://raw.githubusercontent.com/cohesity/community-automation-samp
 
 Place all files in a folder together. And run the script like so:
 
+To automatically discover and process all windows hosts protected by block-based protection groups on a Cohesity cluster:
+
 ```powershell
 # example
 ./resetBSODCounters.ps1 -vip mycluster `
-                    -username myuser `
-                    -domain mydomain.net
+                        -username myuser `
+                        -domain mydomain.net
+# end example
+```
+
+or you can specify server names on the command line:
+
+```powershell
+# example
+./resetBSODCounters.ps1 -serverName server1, server2
+# end example
+```
+
+or provide a text file of server names (one per line)
+
+```powershell
+# example
+./resetBSODCounters.ps1 -serverList ./servers.txt
 # end example
 ```
 

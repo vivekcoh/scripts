@@ -1,7 +1,24 @@
 # Change Log for cohesity/community-automation-samples
 
+## 2024-07-25
+
+* [replicationQueue.ps1](https://github.com/cohesity/community-automation-samples/tree/main/powershell/replicationQueue) [`Update`] added -before and -after parameters
+* [cloneOracle.py](https://github.com/cohesity/community-automation-samples/tree/main/oracle/python/cloneOracle) [`Fix`] added resilience to timeouts while checking for completion status
+
+## 2024-07-24
+
+* [updateJobSettings.py](https://github.com/cohesity/community-automation-samples/tree/main/python/updateJobSettings) [`Update`] added -a (--alertonslaviolation) parameter
+* [downloadCcsM365MailboxItems.ps1](https://github.com/cohesity/community-automation-samples/tree/main/ccs/powershell/downloadCcsM365MailboxItems) [`New`] download mailbox items as PST from a CCS M365 mailbox.
+
+## 2024-07-23
+
+* [obfuscateLogs.py](https://github.com/cohesity/community-automation-samples/tree/main/python/obfuscateLogs) [`Update`] added -f (--freespacemultiplier) to check for enough free space
+* [crowdstrikeReport.ps1](https://github.com/cohesity/community-automation-samples/tree/main/reports/powershell/crowdstrikeReport) [`New`] report physical/virtual servers and their latest version of the affected CrowdStrike update file.
+* [crowdstrikeReport.py](https://github.com/cohesity/community-automation-samples/tree/main/reports/python/crowdstrikeReport) [`New`] report physical/virtual servers and their latest version of the affected CrowdStrike update file.
+
 ## 2024-07-19
 
+* [recoverVMs.ps1](https://github.com/cohesity/community-automation-samples/tree/main/powershell/recoverVMs) [`Update`] added -overwrite parameter
 * [protectIsilon.ps1](https://github.com/cohesity/community-automation-samples/tree/main/powershell/protectIsilon) [`New`] protect Isilon volumes using PowerShell
 * [protectIsilon.py](https://github.com/cohesity/community-automation-samples/tree/main/python/protectIsilon) [`Update`] modernized authentication
 

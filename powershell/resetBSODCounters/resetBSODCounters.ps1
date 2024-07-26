@@ -11,9 +11,11 @@ param (
     [Parameter()][switch]$mcm,
     [Parameter()][string]$mfaCode,
     [Parameter()][switch]$emailMfaCode,
+    [Parameter()][string]$clusterName,
     [Parameter()][array]$serverName,
     [Parameter()][string]$serverList,
-    [Parameter()][string]$clusterName
+    [Parameter()][switch]$restartAgent,
+    [Parameter()][switch]$reboot
 )
 
 # gather list from command line params and file
@@ -80,8 +82,15 @@ if($servers.Count -eq 0){
     Write-Host "No servers specified"
 }
 
+$myComputerName = $env:computername
+
 foreach ($server in $servers){
     $server = $server.ToString()
+    $thisServer = ($server -split '\.')[0]
+    if($thisServer -eq $myComputerName){
+        Write-Host "$server ==> skipping (this computer)" -ForegroundColor Yellow
+        continue
+    }
 
     # update registry key
     Write-Host "$server ==> updating registry"
@@ -97,13 +106,21 @@ foreach ($server in $servers){
     }
 
     # restart Cohesity agent
-    Write-Host "$server ==> restarting agent"
-    $filter = 'Name=' + "'" + 'CohesityAgent' + "'" + ''
-    $service = Get-WMIObject -ComputerName $server -Authentication PacketPrivacy -namespace "root\cimv2" -class Win32_Service -Filter $filter
-    $null = $service.StopService()
-    while ($service.Started){
-      Start-Sleep 5
-      $service = Get-WMIObject -ComputerName $server -Authentication PacketPrivacy -namespace "root\cimv2" -class Win32_Service -Filter $filter
+    if($restartAgent -and !$reboot){
+        Write-Host "$server ==> restarting agent"
+        $null = Invoke-Command -Computername $server -ScriptBlock {
+            Restart-Service -Name CohesityAgent
+        }
     }
-    $null = $service.StartService()
+
+    # reboot
+    if($reboot){
+        $thisServer = ($server -split '\.')[0]
+        if($thisServer -eq $myComputerName){
+            Write-Host "$server ==> skipping reboot (this computer)"
+        }else{
+            Write-Host "$server ==> Rebooting"
+            Restart-Computer -ComputerName $server -Force
+        }
+    }
 }

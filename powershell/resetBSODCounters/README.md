@@ -68,3 +68,5 @@ or provide a text file of server names (one per line)
 
 * -serverName: (optional) one or more server names to process (comma separated)
 * -serverList: (optional) text file of server names to process (one per line)
+* -restartAgent: (optional) restart Cohesity agent after registry update
+* -reboot: (optional) reboot server after registry update

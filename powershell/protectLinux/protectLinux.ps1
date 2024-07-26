@@ -312,18 +312,16 @@ foreach($sourceId in @([array]$sourceIds + [array]$newSourceIds) | Sort-Object -
                 "id" = $sourceId;
                 "name" = $node.protectionSource.name;
                 "filePaths" = @();
-                "usesPathLevelSkipNestedVolumeSetting" = $true;
                 "nestedVolumeTypesToSkip" = $null;
                 "followNasSymlinkTarget" = $false
-            }
+            } # "usesPathLevelSkipNestedVolumeSetting" = $true;
         }
 
         # skip nested mountpoint types
         if($sourceId -in $newSourceIds -or $replaceRules){
             if($skipNestedMountPointTypes.Count -gt 0){
-                $params.usesPathLevelSkipNestedVolumeSetting = $false
                 $params.nestedVolumeTypesToSkip = @($skipNestedMountPointTypes)
-            }
+            } # $params.usesPathLevelSkipNestedVolumeSetting = $false
         }
 
         # set directive file path if new or replace

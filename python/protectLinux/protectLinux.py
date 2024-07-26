@@ -302,12 +302,11 @@ for servername in servernames:
                 "id": physicalServer['protectionSource']['id'],
                 "name": physicalServer['protectionSource']['name'],
                 "filePaths": [],
-                "usesPathLevelSkipNestedVolumeSetting": False,
                 "nestedVolumeTypesToSkip": [
                     "autofs"
                 ],
                 "followNasSymlinkTarget": False
-            }
+            }  # "usesPathLevelSkipNestedVolumeSetting": False,
             print('  adding %s to job %s...' % (servername, jobname))
             newObject = True
 

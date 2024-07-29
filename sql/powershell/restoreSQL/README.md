@@ -122,6 +122,7 @@ Place both files in a folder together and run the main script like so:
 * -wait: Wait for the restore to complete and report end status (e.g. kSuccess)
 * -progress: display percent complete
 * -sleepTimeSecs: sleep between status queries (default is 30 seconds)
+* -returnErrorMessage: return error message to calling PowerShell session
 
 ## Always On Availability Groups
 

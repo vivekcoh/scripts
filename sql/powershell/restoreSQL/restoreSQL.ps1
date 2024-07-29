@@ -54,7 +54,8 @@ param (
     [Parameter()][switch]$restoreFromArchive,
     [Parameter()][int64]$sleepTimeSecs = 30,
     [Parameter()][string]$withClause,
-    [Parameter()][array]$sourceNodes                       # limit results to these AAG nodes
+    [Parameter()][array]$sourceNodes,                       # limit results to these AAG nodes
+    [Parameter()][switch]$returnErrorMessage
 )
 
 # handle alternate secondary data file locations
@@ -486,7 +487,7 @@ if($resume){
 $response = api post /recoverApplication $restoreTask
 
 if($response){
-    "Restoring $thisSourceInstance/$sourceDB to $targetServer/$targetInstance/$targetDB (Point in time: $restoreTime)"
+    Write-Host "Restoring $thisSourceInstance/$sourceDB to $targetServer/$targetInstance/$targetDB (Point in time: $restoreTime)"
 }else{
     exit 1
 }
@@ -504,12 +505,12 @@ if($wait -or $progress){
                 try{
                     $percentComplete = $progressMonitor.resultGroupVec[0].taskVec[0].progress.percentFinished
                     if($percentComplete -gt $lastProgress){
-                        "{0} percent complete" -f [math]::Round($percentComplete, 0)
+                        Write-Host "{0} percent complete" -f [math]::Round($percentComplete, 0)
                         $lastProgress = $percentComplete
                     }
                 }catch{
                     $percentComplete = 0
-                    "{0} percent complete" -f [math]::Round($percentComplete, 0)
+                    Write-Host "{0} percent complete" -f [math]::Round($percentComplete, 0)
                     $lastProgress = 0
                 }
             }
@@ -518,12 +519,16 @@ if($wait -or $progress){
             }
             Start-Sleep $sleepTimeSecs
         }
-        "restore ended with $status"
+        Write-Host "restore ended with $status"
         if($status -eq 'kSuccess'){
             exit 0
         }else{
             if($status -eq 'kFailure'){
-                Write-Host "Error Message: $($task.restoreTask.performRestoreTaskState.base.error.errorMsg)"
+                if($returnErrorMessage){
+                    $($task.restoreTask.performRestoreTaskState.base.error.errorMsg)
+                }else{
+                    Write-Host "Error Message: $($task.restoreTask.performRestoreTaskState.base.error.errorMsg)"
+                }
             }
             exit 1
         }

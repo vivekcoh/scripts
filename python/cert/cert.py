@@ -71,17 +71,17 @@ def get_cluster_version(ip):
     """
 
     # Supported release version for cert improvement
-    supported_version = ['6.8.1_u5_release']
+    supported_version = '6.8.1_u5_release'
 
     try:
         # Send an HTTP GET request with the cookies
         response = api('get', '/public/cluster')
 
         software_version = response['clusterSoftwareVersion'].split("-")[0]
-        if software_version not in supported_version:
-            logger.error(f"Cluster " + ip + " is not in Supported version")
+        if software_version < supported_version:
+            logger.error(f"Cluster " + ip + " is not a Supported version")
             return None
-        logger.info(f"Cluster "+ip+" is in supported version")
+        logger.info(f"Cluster "+ip+" is a supported version")
         return response
 
     except requests.exceptions.RequestException as e:

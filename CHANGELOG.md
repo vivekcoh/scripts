@@ -1,5 +1,15 @@
 # Change Log for cohesity/community-automation-samples
 
+## 2024-07-31
+
+* [clusterInfo.py](https://github.com/cohesity/community-automation-samples/tree/main/python/clusterInfo) [`Fix`] fixed crash when nodeInfo not available
+* [directoryQuota.ps1](https://github.com/cohesity/community-automation-samples/tree/main/powershell/directoryQuota) [`Update`] added paging to API call
+* [restoreSQL.ps1](https://github.com/cohesity/community-automation-samples/tree/main/sql/restoreSQL) [`Update`] added -returnErrorMessage option
+
+## 2024-07-30
+
+* [cert.py](https://github.com/cohesity/community-automation-samples/tree/main/python/cert) [`Update`] updated supported version check
+
 ## 2024-07-26
 
 * [resetBSODCounters.ps1](https://github.com/cohesity/community-automation-samples/tree/main/powershell/resetBSODCounters) [`New`] reset BSOD counter for CBT driver on Windows

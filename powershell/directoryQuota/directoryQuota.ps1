@@ -24,7 +24,8 @@ param (
     [Parameter(ValueFromPipeline = $true)][array]$path,
     [Parameter()][string]$pathList,
     [Parameter()][int64]$quotaLimitGiB = 0,
-    [Parameter()][int64]$quotaAlertGiB = 0
+    [Parameter()][int64]$quotaAlertGiB = 0,
+    [Parameter()][int64]$pageCount = 1000
 )
 
 # source the cohesity-api helper code
@@ -76,22 +77,34 @@ if($path){
 }
 if($paths.Length -eq 0 -or $quotaLimitGiB -eq 0){
     # show existing quotas
-    $quotas = api get "viewDirectoryQuotas?viewName=$viewName"
-    if(! $quotas.quotas){
-        Write-Host "No quotas found"
+    $cookie = $null
+    while($True){
+        if($cookie){
+            $quotas = api get "viewDirectoryQuotas?viewName=$viewName&pageCount=$pageCount&cookie=$cookie"
+        }else{
+            $quotas = api get "viewDirectoryQuotas?viewName=$viewName&pageCount=$pageCount"
+        }
+        if(! $quotas.quotas){
+            Write-Host "No quotas found"
+        }
+    
+        $pLimitGiB = @{l='Limit(GiB)';e={[math]::Round($_.policy.hardLimitBytes / (1024 * 1024 * 1024),2)}}  
+        $pAlertGiB = @{l='Alert(GiB)';e={if($_.policy.alertLimitBytes){
+            [math]::Round($_.policy.alertLimitBytes / (1024 * 1024 * 1024),2)}else{
+                ""
+            }}}
+        $pDirPath = @{l='Directory'; e={$_.dirPath}}
+        $pUsageGiB = @{l='Usage(GiB)'; e={[math]::Round($_.usageBytes / (1024 * 1024 * 1024),2)}}
+        if($paths.Length -gt 0 -and $quotas.PSObject.Properties['quotas']){
+            $quotas.quotas = $quotas.quotas | Where-Object {$_.dirPath -in $paths}
+        }
+        $quotas.quotas | Select-Object -Property $pDirPath, $pUsageGiB, $pLimitGiB, $pAlertGiB
+        if($quotas.PSObject.Properties['cookie']){
+            $cookie = $quotas.cookie
+        }else{
+            break
+        }
     }
-
-    $pLimitGiB = @{l='Limit(GiB)';e={[math]::Round($_.policy.hardLimitBytes / (1024 * 1024 * 1024),2)}}  
-    $pAlertGiB = @{l='Alert(GiB)';e={if($_.policy.alertLimitBytes){
-        [math]::Round($_.policy.alertLimitBytes / (1024 * 1024 * 1024),2)}else{
-            ""
-        }}}
-    $pDirPath = @{l='Directory'; e={$_.dirPath}}
-    $pUsageGiB = @{l='Usage(GiB)'; e={[math]::Round($_.usageBytes / (1024 * 1024 * 1024),2)}}
-    if($paths.Length -gt 0 -and $quotas.PSObject.Properties['quotas']){
-        $quotas.quotas = $quotas.quotas | Where-Object {$_.dirPath -in $paths}
-    }
-    $quotas.quotas | Select-Object -Property $pDirPath, $pUsageGiB, $pLimitGiB, $pAlertGiB
 }
 
 foreach($dirpath in $paths){

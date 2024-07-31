@@ -61,6 +61,11 @@ function gatherList($Param=$null, $FilePath=$null, $Required=$True, $Name='items
 
 $jobNames = @(gatherList -Param $jobName -FilePath $jobList -Name 'jobs' -Required $false)
 
+# outfile
+$cluster = api get cluster
+$outfileName = "deletedjobs-$($cluster.name).txt"
+$null = Remove-Item -Path $outfileName -Force -ErrorAction SilentlyContinue
+
 $jobs = api get -v2 "data-protect/protection-groups?isDeleted=true"
 
 # catch invalid job names
@@ -78,7 +83,9 @@ foreach($job in $jobs.protectionGroups | Sort-Object -Property name){
             "DELETING JOB: $($job.name) (and deleting existing snapshots)"
             $null = api delete -v2 "data-protect/protection-groups/$($job.id)?deleteSnapshots=true"
         }else{
-            "$($job.name)"
+            "$($job.name)" | Tee-Object -FilePath $outfileName -Append
         }
     }
 }
+
+"`nJob list saved to $outfileName`n"

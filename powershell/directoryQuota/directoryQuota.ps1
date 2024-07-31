@@ -88,7 +88,7 @@ if($paths.Length -eq 0 -or $quotaLimitGiB -eq 0){
         }}}
     $pDirPath = @{l='Directory'; e={$_.dirPath}}
     $pUsageGiB = @{l='Usage(GiB)'; e={[math]::Round($_.usageBytes / (1024 * 1024 * 1024),2)}}
-    if($paths.Length -gt 0){
+    if($paths.Length -gt 0 -and $quotas.PSObject.Properties['quotas']){
         $quotas.quotas = $quotas.quotas | Where-Object {$_.dirPath -in $paths}
     }
     $quotas.quotas | Select-Object -Property $pDirPath, $pUsageGiB, $pLimitGiB, $pAlertGiB

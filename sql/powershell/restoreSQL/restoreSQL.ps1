@@ -58,6 +58,14 @@ param (
     [Parameter()][switch]$returnErrorMessage
 )
 
+function warn($message){
+    if($returnErrorMessage){
+        $message
+    }else{
+        Write-Host $message -ForegroundColor Yellow
+    }
+}
+
 # handle alternate secondary data file locations
 $secondaryFileLocation = @()
 if($ndfFolders){
@@ -85,13 +93,13 @@ if($USING_HELIOS){
     if($clusterName){
         $thisCluster = heliosCluster $clusterName
     }else{
-        Write-Host "Please provide -clusterName when connecting through helios" -ForegroundColor Yellow
+        warn "Please provide -clusterName when connecting through helios"
         exit 1
     }
 }
 
 if(!$cohesity_api.authorized){
-    Write-Host "Not authenticated" -ForegroundColor Yellow
+    warn "Not authenticated"
     exit 1
 }
 
@@ -128,7 +136,7 @@ if($sourceNodes){
 
 if($null -eq $dbresults){
     foreach($si in $sourceInstance){
-        Write-Host "Database $si/$sourceDB on Server $sourceServer Not Found" -ForegroundColor Yellow
+        warn "Database $si/$sourceDB on Server $sourceServer Not Found"
     }
     exit 1
 }
@@ -146,7 +154,7 @@ $dbVersions = $dbVersions | Sort-Object -Property {$_.instanceId.jobStartTimeUse
 
 if($dbVersions.Count -eq 0){
     foreach($si in $sourceInstance){
-        Write-Host "Database $si/$sourceDB on Server $sourceServer Not Found" -ForegroundColor Yellow
+        warn "Database $si/$sourceDB on Server $sourceServer Not Found"
     }
     exit 1
 }
@@ -402,8 +410,8 @@ if($targetDB -ne $sourceDB -or $targetServer -ne $sourceServer -or $differentIns
     }
 
     if('' -eq $mdfFolder){
-        Write-Host "-mdfFolder must be specified when restoring to a new database name or different target server" -ForegroundColor Yellow
-        exit
+        warn "-mdfFolder must be specified when restoring to a new database name or different target server"
+        exit 1
     }
     $restoreTask.restoreAppParams.restoreAppObjectVec[0].restoreParams.sqlRestoreParams['dataFileDestination'] = $mdfFolder;
     $restoreTask.restoreAppParams.restoreAppObjectVec[0].restoreParams.sqlRestoreParams['logFileDestination'] = $ldfFolder;
@@ -429,7 +437,7 @@ if($noStop -and $useLogTime){
 if($targetServer -ne $sourceServer -or $differentInstance){
     $targetEntity = $entities | where-object { $_.appEntity.entity.displayName -eq $targetServer }
     if($null -eq $targetEntity){
-        Write-Host "Target Server Not Found" -ForegroundColor Yellow
+        warn "Target Server Not Found"
         exit 1
     }
     $restoreTask.restoreAppParams.restoreAppObjectVec[0].restoreParams['targetHost'] = $targetEntity.appEntity.entity;
@@ -533,7 +541,11 @@ if($wait -or $progress){
             exit 1
         }
     }else{
-        Write-Host "Failed to get restore task ID" -ForegroundColor Yellow
+        if($returnErrorMessage){
+            "Failed to get restore task ID"
+        }else{
+            Write-Host "Failed to get restore task ID" -ForegroundColor Yellow
+        }
         exit 1
     }
 }

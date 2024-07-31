@@ -1,5 +1,10 @@
 # Change Log for cohesity/community-automation-samples
 
+## 2024-07-26
+
+* [resetBSODCounters.ps1](https://github.com/cohesity/community-automation-samples/tree/main/powershell/resetBSODCounters) [`New`] reset BSOD counter for CBT driver on Windows
+* [protectLinux.ps1](https://github.com/cohesity/community-automation-samples/tree/main/powershell/protectLinux) [`Fix`] removed old volume type exclusion code
+
 ## 2024-07-25
 
 * [replicationQueue.ps1](https://github.com/cohesity/community-automation-samples/tree/main/powershell/replicationQueue) [`Update`] added -before and -after parameters

@@ -4,7 +4,7 @@ Warning: this code is provided on a best effort basis and is not in any way offi
 
 This is a binary tool that recovers one or more VMs.
 
-## Download the script
+## Download the tool
 
 Run these commands from a terminal to download the script(s) into your current directory
 

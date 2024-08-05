@@ -34,7 +34,8 @@ param (
     [Parameter()][switch]$overwrite,
     [Parameter()][switch]$dbg,
     [Parameter()][string]$vmTag,
-    [Parameter()][string]$protectionGroup
+    [Parameter()][string]$protectionGroup,
+    [Parameter()][string]$jobName
 )
 
 # gather list from command line params and file
@@ -335,6 +336,9 @@ foreach($vm in $vmNames){
     $vmName = [string]$vm
     $vms = api get -v2 "data-protect/search/protected-objects?snapshotActions=RecoverVMs,RecoverVApps,RecoverVAppTemplates&searchString=$vmName&environments=kVMware"
     $exactVMs = $vms.objects | Where-Object name -eq $vmName
+    if($jobName){
+        $exactVMs.latestSnapshotsInfo = @($exactVMs.latestSnapshotsInfo | Where-Object {$_.protectionGroupName -eq $jobName})
+    }
     $latestsnapshot = ($exactVMs | Sort-Object -Property @{Expression={$_.latestSnapshotsInfo[0].protectionRunStartTimeUsecs}; Ascending = $False})[0]
 
     if($recoverDate){
@@ -349,6 +353,7 @@ foreach($vm in $vmNames){
             Write-Host "No snapshots available for $vmName"
         }
     }else{
+
         $snapshot = $latestsnapshot.latestSnapshotsInfo[0].localSnapshotInfo
         $snapshotId = $snapshot.snapshotId
     }

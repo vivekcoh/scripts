@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 """Manage Protection Policy Using Python"""
 
-# version 2022.10.13
+# version 2024.08.06
 
 ### import pyhesity wrapper module
 from pyhesity import *
@@ -78,6 +78,7 @@ if removequiettime is None:
 # authenticate to Cohesity
 apiauth(vip=vip, username=username, domain=domain, password=password, useApiKey=useApiKey)
 
+policy = None
 policies = sorted((api('get', 'data-protect/policies', v=2))['policies'], key=lambda policy: policy['name'].lower())
 cluster = api('get', 'cluster')
 if cluster['clusterSoftwareVersion'] < '7.1':
@@ -175,6 +176,7 @@ if action == 'create':
             "unit": lockunit.title(),
             "duration": lockduration
         }
+    policy['isCBSEnabled'] = True
     result = api('post', 'data-protect/policies', policy, v=2)
     policies = [policy]
 
@@ -183,9 +185,12 @@ if action == 'delete':
     result = api('delete', 'data-protect/policies/%s' % policy['id'], v=2)
     exit()
 
+if policy is not None:
+    policy['isCBSEnabled'] = True
+
 # edit policy
 if action == 'edit':
-
+    
     if retention is None:
         print('--retention is required')
         exit()
@@ -254,7 +259,6 @@ if action == 'addfull':
     
     if 'fullBackups' not in policy['backupPolicy']['regular'] or policy['backupPolicy']['regular']['fullBackups'] is None:
         policy['backupPolicy']['regular']['fullBackups'] = []
-        print('hello')
     
     if frequencyunit == 'days':
         fullBackups = [f for f in policy['backupPolicy']['regular']['fullBackups'] if 'daySchedule' not in f['schedule']]

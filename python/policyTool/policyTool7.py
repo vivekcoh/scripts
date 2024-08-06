@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 """Manage Protection Policy Using Python"""
 
-# version 2024.08.06
+# version 2022.10.13
 
 ### import pyhesity wrapper module
 from pyhesity import *
@@ -21,13 +21,18 @@ parser.add_argument('-r', '--retention', type=int, default=None)
 parser.add_argument('-ld', '--lockduration', type=int, default=None)
 parser.add_argument('-lu', '--lockunit', type=str, choices=['days', 'weeks', 'months', 'years'], default='days')
 parser.add_argument('-ru', '--retentionunit', type=str, choices=['days', 'weeks', 'months', 'years'], default='days')
-parser.add_argument('-a', '--action', type=str, choices=['list', 'create', 'edit', 'delete', 'addextension', 'deleteextension', 'logbackup', 'addreplica', 'deletereplica', 'addarchive', 'deletearchive', 'editretries'], default='list')
+parser.add_argument('-a', '--action', type=str, choices=['list', 'create', 'edit', 'delete', 'addfull', 'deletefull', 'addextension', 'deleteextension', 'logbackup', 'addreplica', 'deletereplica', 'addarchive', 'deletearchive', 'editretries'], default='list')
 parser.add_argument('-n', '--targetname', type=str, default=None)
 parser.add_argument('-all', '--all', action='store_true')
 parser.add_argument('-t', '--retries', type=int, default=3)
 parser.add_argument('-m', '--retryminutes', type=int, default=5)
 parser.add_argument('-aq', '--addquiettime', action='append', type=str)
 parser.add_argument('-rq', '--removequiettime', action='append', type=str)
+parser.add_argument('-dow', '--dayofweek', action='append', type=str, choices=['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'sunday', 'monday', 'tuesday', 'wednesday', 'thursday', 'friday', 'saturday'])
+parser.add_argument('-wom', '--weekofmonth', type=str, choices=['First', 'Second', 'Third', 'Fourth', 'Last', 'first', 'second', 'third', 'fourth', 'last'], default='First')
+parser.add_argument('-dom', '--dayofmonth', type=int, default=1)
+parser.add_argument('-doy', '--dayofyear', type=str, choices=['First', 'Last', 'first', 'last'], default='First')
+
 args = parser.parse_args()
 
 vip = args.vip                        # cluster name/ip
@@ -49,6 +54,10 @@ retries = args.retries                # number of retries
 retryminutes = args.retryminutes      # number of minutes to wait between retries
 addquiettime = args.addquiettime      # add quiet time
 removequiettime = args.removequiettime  # remove quiettime
+dayofweek = args.dayofweek
+weekofmonth = args.weekofmonth
+dayofmonth = args.dayofmonth
+dayofyear = args.dayofyear
 
 if frequencyunit != 'runs' and frequency is None:
     frequency = 1
@@ -71,8 +80,8 @@ apiauth(vip=vip, username=username, domain=domain, password=password, useApiKey=
 
 policies = sorted((api('get', 'data-protect/policies', v=2))['policies'], key=lambda policy: policy['name'].lower())
 cluster = api('get', 'cluster')
-if cluster['clusterSoftwareVersion'] >= '7.1':
-    print('please use policyTool7.py for Cohesity version 7.1 or higher')
+if cluster['clusterSoftwareVersion'] < '7.1':
+    print('this script requires Cohesity version 7.1 or higher')
     exit()
 
 if policyname is not None:
@@ -137,15 +146,35 @@ if action == 'create':
         policy['backupPolicy']['regular']['incremental']['schedule']['minuteSchedule'] = {
             "frequency": frequency
         }
-    if lockduration is not None:
-        if cluster['clusterSoftwareVersion'] < '6.6.0d':
-            policy['dataLock'] = 'Compliance'
-        else:
-            policy['backupPolicy']['regular']['retention']['dataLockConfig'] = {
-                "mode": "Compliance",
-                "unit": lockunit.title(),
-                "duration": lockduration
+    if frequencyunit == 'weeks':
+        if dayofweek is None or len(dayofweek) == 0:
+            dayofweek = ['Sunday']
+        policy['backupPolicy']['regular']['incremental']['schedule']['weekSchedule'] = {
+            "dayOfWeek": [d.title() for d in dayofweek]
+        }
+    if frequencyunit == 'months':
+        if dayofweek is not None and len(dayofweek) > 0:
+            policy['backupPolicy']['regular']['incremental']['schedule'] = {
+                "monthSchedule": {
+                    "dayOfWeek": [d.title() for d in dayofweek],
+                    "weekOfMonth": weekofmonth.title()
+                }, 
+                "unit": "Months"
             }
+        else:
+            policy['backupPolicy']['regular']['incremental']['schedule'] = {
+                "monthSchedule": {
+                    "dayOfMonth": dayofmonth, 
+                    "dayOfWeek": None
+                }, 
+                "unit": "Months"
+            }
+    if lockduration is not None:
+        policy['backupPolicy']['regular']['retention']['dataLockConfig'] = {
+            "mode": "Compliance",
+            "unit": lockunit.title(),
+            "duration": lockduration
+        }
     result = api('post', 'data-protect/policies', policy, v=2)
     policies = [policy]
 
@@ -188,14 +217,11 @@ if action == 'edit':
         "duration": retention
     }
     if lockduration is not None:
-        if cluster['clusterSoftwareVersion'] < '6.6.0d':
-            policy['dataLock'] = 'Compliance'
-        else:
-            policy['backupPolicy']['regular']['retention']['dataLockConfig'] = {
-                "mode": "Compliance",
-                "unit": lockunit.title(),
-                "duration": lockduration
-            }
+        policy['backupPolicy']['regular']['retention']['dataLockConfig'] = {
+            "mode": "Compliance",
+            "unit": lockunit.title(),
+            "duration": lockduration
+        }
     result = api('put', 'data-protect/policies/%s' % policy['id'], policy, v=2)
     if 'error' in result:
         exit(1)
@@ -205,6 +231,101 @@ if action == 'editretries':
     policy['retryOptions']['retries'] = retries
     policy['retryOptions']['retryIntervalMins'] = retryminutes
     result = api('put', 'data-protect/policies/%s' % policy['id'], policy, v=2)
+
+# delete full backup
+
+if action == 'deletefull':
+    if 'fullBackups' in policy['backupPolicy']['regular'] and policy['backupPolicy']['regular']['fullBackups'] is not None and len(policy['backupPolicy']['regular']['fullBackups']) > 0:
+        policy['isCBSEnabled'] = True
+        policy['backupPolicy']['regular']['fullBackups'] = [f for f in policy['backupPolicy']['regular']['fullBackups'] if f['schedule']['unit'] != frequencyunit.title()]
+        result = api('put', 'data-protect/policies/%s' % policy['id'], policy, v=2)
+        if 'error' in result:
+            exit(1)
+# add full backup
+if action == 'addfull':
+    policy['isCBSEnabled'] = True
+    if retention is None:
+        print('--retention is required')
+        exit()
+    if frequency is None:
+        frequency = 1
+    if frequencyunit == 'runs':
+        frequencyunit = 'days'
+    
+    if 'fullBackups' not in policy['backupPolicy']['regular'] or policy['backupPolicy']['regular']['fullBackups'] is None:
+        policy['backupPolicy']['regular']['fullBackups'] = []
+        print('hello')
+    
+    if frequencyunit == 'days':
+        fullBackups = [f for f in policy['backupPolicy']['regular']['fullBackups'] if 'daySchedule' not in f['schedule']]
+        fullBackup = {
+            "schedule": {
+                "daySchedule": {
+                    "frequency": frequency
+                }, 
+                "unit": frequencyunit.title()
+            }
+        }
+    elif frequencyunit == 'weeks':
+        fullBackups = [f for f in policy['backupPolicy']['regular']['fullBackups'] if 'weekSchedule' not in f['schedule']]
+        if dayofweek is None or len(dayofweek) == 0:
+            dayofweek = ['Sunday']
+        fullBackup = {
+            "schedule": {
+                "unit": "Weeks", 
+                "weekSchedule": {
+                    "dayOfWeek": [d.title() for d in dayofweek]
+                }
+            }
+        }
+    elif frequencyunit == 'months':
+        if dayofweek is not None and len(dayofweek) > 0:
+            fullBackups = [f for f in policy['backupPolicy']['regular']['fullBackups'] if 'monthSchedule' not in f['schedule'] or 'dayOfWeek' not in f['schedule']['monthSchedule']]
+            fullBackup = {
+                "schedule": {
+                    "monthSchedule": {
+                        "dayOfWeek": [d.title() for d in dayofweek],
+                        "weekOfMonth": weekofmonth.title()
+                    }, 
+                    "unit": "Months"
+                }
+            }
+        else:
+            fullBackups = [f for f in policy['backupPolicy']['regular']['fullBackups'] if 'monthSchedule' not in f['schedule'] or 'dayOfMonth' not in f['schedule']['monthSchedule']]
+            fullBackup = {
+                "schedule": {
+                    "monthSchedule": {
+                        "dayOfMonth": dayofmonth, 
+                        "dayOfWeek": None
+                    }, 
+                    "unit": "Months"
+                }
+            }
+    elif frequencyunit == 'years':
+        fullBackups = [f for f in policy['backupPolicy']['regular']['fullBackups'] if 'yearSchedule' not in f['schedule']]
+        fullBackup = {
+            "schedule": {
+                "unit": "Years", 
+                "yearSchedule": {
+                    "dayOfYear": dayofyear.title()
+                }
+            }
+        }
+    fullBackup['retention'] = {
+        "duration": retention, 
+        "unit": retentionunit.title(),
+    }
+    if lockduration is not None:
+        fullBackup['retention']['dataLockConfig'] = {
+            "mode": "Compliance",
+            "unit": lockunit.title(),
+            "duration": lockduration,
+            "enableWormOnExternalTarget": False
+        }
+    policy['backupPolicy']['regular']['fullBackups'].append(fullBackup)
+    result = api('put', 'data-protect/policies/%s' % policy['id'], policy, v=2)
+    if 'error' in result:
+        exit(1)
 
 # add extend retention
 if action == 'addextension':
@@ -232,27 +353,21 @@ if action == 'addextension':
             }
         }
         if lockduration is not None:
-            if cluster['clusterSoftwareVersion'] < '6.6.0d':
-                policy['dataLock'] = 'Compliance'
-            else:
-                newRetention['retention']['dataLockConfig'] = {
-                    "mode": "Compliance",
-                    "unit": lockunit.title(),
-                    "duration": lockduration
-                }
+            newRetention['retention']['dataLockConfig'] = {
+                "mode": "Compliance",
+                "unit": lockunit.title(),
+                "duration": lockduration
+            }
         policy['extendedRetention'].append(newRetention)
     else:
         existingRetention[0]['retention']['unit'] = retentionunit.title()
         existingRetention[0]['retention']['duration'] = retention
         if lockduration is not None:
-            if cluster['clusterSoftwareVersion'] < '6.6.0d':
-                policy['dataLock'] = 'Compliance'
-            else:
-                existingRetention[0]['retention']['dataLockConfig'] = {
-                    "mode": "Compliance",
-                    "unit": lockunit.title(),
-                    "duration": lockduration
-                }
+            existingRetention[0]['retention']['dataLockConfig'] = {
+                "mode": "Compliance",
+                "unit": lockunit.title(),
+                "duration": lockduration
+            }
     result = api('put', 'data-protect/policies/%s' % policy['id'], policy, v=2)
     if 'error' in result:
         exit(1)
@@ -295,14 +410,11 @@ if action == 'logbackup':
         }
     }
     if lockduration is not None:
-        if cluster['clusterSoftwareVersion'] < '6.6.0d':
-            policy['dataLock'] = 'Compliance'
-        else:
-            policy['backupPolicy']['log']['retention']['dataLockConfig'] = {
-                "mode": "Compliance",
-                "unit": lockunit.title(),
-                "duration": lockduration
-            }
+        policy['backupPolicy']['log']['retention']['dataLockConfig'] = {
+            "mode": "Compliance",
+            "unit": lockunit.title(),
+            "duration": lockduration
+        }
     if frequencyunit == 'hours':
         policy['backupPolicy']['log']['schedule']['hourSchedule'] = {
             "frequency": frequency
@@ -355,14 +467,11 @@ if action == 'addreplica':
             }
         }
         if lockduration is not None:
-            if cluster['clusterSoftwareVersion'] < '6.6.0d':
-                policy['dataLock'] = 'Compliance'
-            else:
-                newReplica['retention']['dataLockConfig'] = {
-                    "mode": "Compliance",
-                    "unit": lockunit.title(),
-                    "duration": lockduration
-                }
+            newReplica['retention']['dataLockConfig'] = {
+                "mode": "Compliance",
+                "unit": lockunit.title(),
+                "duration": lockduration
+            }
         if frequencyunit != 'runs':
             newReplica['schedule']['frequency'] = frequency
         policy['remoteTargetPolicy']['replicationTargets'].append(newReplica)
@@ -370,14 +479,11 @@ if action == 'addreplica':
         existingReplica[0]['retention']['unit'] = retentionunit.title()
         existingReplica[0]['retention']['duration'] = retention
         if lockduration is not None:
-            if cluster['clusterSoftwareVersion'] < '6.6.0d':
-                policy['dataLock'] = 'Compliance'
-            else:
-                existingReplica[0]['retention']['dataLockConfig'] = {
-                    "mode": "Compliance",
-                    "unit": lockunit.title(),
-                    "duration": lockduration
-                }
+            existingReplica[0]['retention']['dataLockConfig'] = {
+                "mode": "Compliance",
+                "unit": lockunit.title(),
+                "duration": lockduration
+            }
     result = api('put', 'data-protect/policies/%s' % policy['id'], policy, v=2)
     if 'error' in result:
         exit(1)
@@ -450,14 +556,11 @@ if action == 'addarchive':
             "targetType": "Cloud"
         }
         if lockduration is not None:
-            if cluster['clusterSoftwareVersion'] < '6.6.0d':
-                policy['dataLock'] = 'Compliance'
-            else:
-                newTarget['retention']['dataLockConfig'] = {
-                    "mode": "Compliance",
-                    "unit": lockunit.title(),
-                    "duration": lockduration
-                }
+            newTarget['retention']['dataLockConfig'] = {
+                "mode": "Compliance",
+                "unit": lockunit.title(),
+                "duration": lockduration
+            }
         if frequencyunit != 'runs':
             newTarget['schedule']['frequency'] = frequency
         policy['remoteTargetPolicy']['archivalTargets'].append(newTarget)
@@ -465,14 +568,11 @@ if action == 'addarchive':
         existingTarget[0]['retention']['unit'] = retentionunit.title()
         existingTarget[0]['retention']['duration'] = retention
         if lockduration is not None:
-            if cluster['clusterSoftwareVersion'] < '6.6.0d':
-                policy['dataLock'] = 'Compliance'
-            else:
-                existingTarget[0]['retention']['dataLockConfig'] = {
-                    "mode": "Compliance",
-                    "unit": lockunit.title(),
-                    "duration": lockduration
-                }
+            existingTarget[0]['retention']['dataLockConfig'] = {
+                "mode": "Compliance",
+                "unit": lockunit.title(),
+                "duration": lockduration
+            }
     result = api('put', 'data-protect/policies/%s' % policy['id'], policy, v=2)
     if 'error' in result:
         exit(1)
@@ -645,22 +745,39 @@ for policy in policies:
             if unit == 'Weeks':
                 print('  Incremental backup:  Weekly on %s  (keep for %s %s%s)' % ((', '.join(backupSchedule[unitPath]['dayOfWeek'])), baseRetention['duration'], baseRetention['unit'], dataLock))
             if unit == 'Months':
-                print('  Incremental backup:  Monthly on the %s %s  (keep for %s %s%s)' % (backupSchedule[unitPath]['weekOfMonth'], backupSchedule[unitPath]['dayOfWeek'][0], baseRetention['duration'], baseRetention['unit'], dataLock))
+                if 'weekOfMonth' in backupSchedule[unitPath]:
+                    print('  Incremental backup:  Monthly on the %s %s  (keep for %s %s%s)' % (backupSchedule[unitPath]['weekOfMonth'], backupSchedule[unitPath]['dayOfWeek'][0], baseRetention['duration'], baseRetention['unit'], dataLock))
+                else:
+                    print('  Incremental backup:  Monthly on day %s  (keep for %s %s%s)' % (backupSchedule[unitPath]['dayOfMonth'], baseRetention['duration'], baseRetention['unit'], dataLock))
     # full backup
-    if 'full' in policy['backupPolicy']['regular']:
-        backupSchedule = policy['backupPolicy']['regular']['full']['schedule']
-        unit = backupSchedule['unit']
-        unitPath = '%sSchedule' % unit.lower()[:-1]
-        if unit in frequentSchedules:
-            frequency = backupSchedule[unitPath]['frequency']
-            print('         Full backup:  Every %s %s  (keep for %s %s%s' % (frequency, unit, baseRetention['duration'], baseRetention['unit'], dataLock))
-        else:
-            if unit == 'Weeks':
-                print('         Full backup:  Weekly on %s  (keep for %s %s%s)' % ((', '.join(backupSchedule[unitPath]['dayOfWeek'])), baseRetention['duration'], baseRetention['unit'], dataLock))
-            if unit == 'Months':
-                print('         Full backup:  Monthly on the %s %s  (keep for %s %s%s)' % (backupSchedule[unitPath]['weekOfMonth'], backupSchedule[unitPath]['dayOfWeek'][0], baseRetention['duration'], baseRetention['unit'], dataLock))
-            if unit == 'ProtectOnce':
-                print('         Full backup:  Once (keep for %s %s%s)' % (baseRetention['duration'], baseRetention['unit'], dataLock))
+    if 'fullBackups' in policy['backupPolicy']['regular'] and policy['backupPolicy']['regular']['fullBackups'] is not None and len(policy['backupPolicy']['regular']['fullBackups']) > 0:
+        for fullBackup in policy['backupPolicy']['regular']['fullBackups']:
+            backupSchedule = fullBackup['schedule']
+            backupRetention = fullBackup['retention']
+            unit = backupSchedule['unit']
+            
+            if 'dataLockConfig' in backupRetention and backupRetention['dataLockConfig'] is not None:
+                fullDataLock = ', datalock for %s %s' % (backupRetention['dataLockConfig']['duration'], backupRetention['dataLockConfig']['unit'])
+            else:
+                fullDataLock = dataLock
+            unitPath = '%sSchedule' % unit.lower()[:-1]
+            if unit in frequentSchedules:
+                frequency = backupSchedule[unitPath]['frequency']
+                print('         Full backup:  Every %s %s  (keep for %s %s%s)' % (frequency, unit, backupRetention['duration'], backupRetention['unit'], fullDataLock))
+            else:
+                if unit == 'Weeks':
+                    print('         Full backup:  Weekly on %s  (keep for %s %s%s)' % ((', '.join(backupSchedule[unitPath]['dayOfWeek'])), backupRetention['duration'], backupRetention['unit'], fullDataLock))
+                elif unit == 'Months':
+                    if 'weekOfMonth' in backupSchedule[unitPath]:
+                        print('         Full backup:  Monthly on the %s %s  (keep for %s %s%s)' % (backupSchedule[unitPath]['weekOfMonth'], backupSchedule[unitPath]['dayOfWeek'][0], backupRetention['duration'], backupRetention['unit'], fullDataLock))
+                    elif 'dayOfMonth' in backupSchedule[unitPath]:
+                        print('         Full backup:  Monthly on day %s  (keep for %s %s%s)' % (backupSchedule[unitPath]['dayOfMonth'], backupRetention['duration'], backupRetention['unit'], fullDataLock))
+                elif unit == 'Years':
+                    print('         Full backup:  Yearly on the %s day  (keep for %s %s%s)' % (backupSchedule[unitPath]['dayOfYear'], backupRetention['duration'], backupRetention['unit'], fullDataLock))
+                elif unit == 'ProtectOnce':
+                    print('         Full backup:  Once (keep for %s %s%s)' % (backupRetention['duration'], backupRetention['unit'], fullDataLock))
+                else:
+                    display(fullBackup)
     # quiet times
     if 'blackoutWindow' in policy and policy['blackoutWindow'] is not None and len(policy['blackoutWindow']) > 0:
         print('         Quiet times:')

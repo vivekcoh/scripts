@@ -28,6 +28,7 @@ You can download the scripts using the following commands:
 ```bash
 # download commands
 curl -O https://raw.githubusercontent.com/cohesity/community-automation-samples/main/python/policyTool/policyTool.py
+curl -O https://raw.githubusercontent.com/cohesity/community-automation-samples/main/python/policyTool/policyTool7.py
 curl -O https://raw.githubusercontent.com/cohesity/community-automation-samples/main/python/pyhesity.py
 chmod +x policyTool.py
 # end download commands
@@ -35,7 +36,8 @@ chmod +x policyTool.py
 
 ## Components
 
-* [policyTool.py](https://raw.githubusercontent.com/cohesity/community-automation-samples/main/python/policyTool/policyTool.py): the main python script
+* [policyTool.py](https://raw.githubusercontent.com/cohesity/community-automation-samples/main/python/policyTool/policyTool.py): the main python script (for versions of Cohesity before 7.1)
+* [policyTool7.py](https://raw.githubusercontent.com/cohesity/community-automation-samples/main/python/policyTool/policyTool.py): the main python script (for versions of Cohesity 7.1 or later)
 * [pyhesity.py](https://raw.githubusercontent.com/cohesity/community-automation-samples/main/python/pyhesity/pyhesity.py): the Cohesity REST API helper module
 
 Place both files in a folder together and run the main script like so:
@@ -131,6 +133,13 @@ To delete all replicas for a remote cluster:
 * -aq, --addquiettime: (optional) add quiet time (see format below) repeat for multiple
 * -rq, --removequiettime: (optional) remove quiet time (see format below) repeat for multiple
 
+## Addition Parameters for policyTool7
+
+* -dow, --dayofweek: (optional) day of the week for daily or monthly elements (repeat for multiple)
+* -wom, --weekofmonth: (optional) week of the month, e.g. First, Second, Third, Fourth, Last
+* -dom, --dayofmonth: (optional) day of the month, e.g. 1
+* -doy, --dayofyear: (optional) First or Last
+
 ## Actions
 
 * list: show policy settings (default)
@@ -145,6 +154,8 @@ To delete all replicas for a remote cluster:
 * deletereplica: delete a replication
 * addarchive: add or edit an archive
 * deletearchive: delete an archive
+* addfull: add full backup
+* deletefull: delete full backup
 
 ## Quiet Time Format
 

@@ -261,7 +261,7 @@ if action == 'addfull':
         policy['backupPolicy']['regular']['fullBackups'] = []
     
     if frequencyunit == 'days':
-        fullBackups = [f for f in policy['backupPolicy']['regular']['fullBackups'] if 'daySchedule' not in f['schedule']]
+        policy['backupPolicy']['regular']['fullBackups'] = [f for f in policy['backupPolicy']['regular']['fullBackups'] if 'daySchedule' not in f['schedule']]
         fullBackup = {
             "schedule": {
                 "daySchedule": {
@@ -271,7 +271,7 @@ if action == 'addfull':
             }
         }
     elif frequencyunit == 'weeks':
-        fullBackups = [f for f in policy['backupPolicy']['regular']['fullBackups'] if 'weekSchedule' not in f['schedule']]
+        policy['backupPolicy']['regular']['fullBackups'] = [f for f in policy['backupPolicy']['regular']['fullBackups'] if 'weekSchedule' not in f['schedule']]
         if dayofweek is None or len(dayofweek) == 0:
             dayofweek = ['Sunday']
         fullBackup = {
@@ -284,7 +284,7 @@ if action == 'addfull':
         }
     elif frequencyunit == 'months':
         if dayofweek is not None and len(dayofweek) > 0:
-            fullBackups = [f for f in policy['backupPolicy']['regular']['fullBackups'] if 'monthSchedule' not in f['schedule'] or 'dayOfWeek' not in f['schedule']['monthSchedule']]
+            policy['backupPolicy']['regular']['fullBackups'] = [f for f in policy['backupPolicy']['regular']['fullBackups'] if 'monthSchedule' not in f['schedule'] or 'dayOfWeek' not in f['schedule']['monthSchedule']]
             fullBackup = {
                 "schedule": {
                     "monthSchedule": {
@@ -295,7 +295,7 @@ if action == 'addfull':
                 }
             }
         else:
-            fullBackups = [f for f in policy['backupPolicy']['regular']['fullBackups'] if 'monthSchedule' not in f['schedule'] or 'dayOfMonth' not in f['schedule']['monthSchedule']]
+            policy['backupPolicy']['regular']['fullBackups'] = [f for f in policy['backupPolicy']['regular']['fullBackups'] if 'monthSchedule' not in f['schedule'] or 'dayOfMonth' not in f['schedule']['monthSchedule']]
             fullBackup = {
                 "schedule": {
                     "monthSchedule": {
@@ -306,7 +306,7 @@ if action == 'addfull':
                 }
             }
     elif frequencyunit == 'years':
-        fullBackups = [f for f in policy['backupPolicy']['regular']['fullBackups'] if 'yearSchedule' not in f['schedule']]
+        policy['backupPolicy']['regular']['fullBackups'] = [f for f in policy['backupPolicy']['regular']['fullBackups'] if 'yearSchedule' not in f['schedule']]
         fullBackup = {
             "schedule": {
                 "unit": "Years", 
@@ -325,7 +325,7 @@ if action == 'addfull':
             "unit": lockunit.title(),
             "duration": lockduration,
             "enableWormOnExternalTarget": False
-        }
+        }   
     policy['backupPolicy']['regular']['fullBackups'].append(fullBackup)
     result = api('put', 'data-protect/policies/%s' % policy['id'], policy, v=2)
     if 'error' in result:

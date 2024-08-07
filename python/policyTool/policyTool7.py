@@ -75,6 +75,99 @@ if addquiettime is None:
 if removequiettime is None:
     removequiettime = []
 
+
+def makeSchedule(cbs=True):
+    global frequencyunit
+    global frequency
+    global dayofweek
+    global dayofmonth
+    global dayofyear
+    global weekofmonth
+
+    thisSchedule = {
+        "unit": frequencyunit.title()
+    }
+    if cbs is True:
+        if frequencyunit == 'days':
+            thisSchedule['daySchedule'] = {
+                "frequency": frequency
+            }
+        if frequencyunit == 'hours':
+            thisSchedule['hourSchedule'] = {
+                "frequency": frequency
+            }
+        if frequencyunit == 'minutes':
+            thisSchedule['minuteSchedule'] = {
+                "frequency": frequency
+            }
+        if frequencyunit == 'weeks':
+            if dayofweek is None or len(dayofweek) == 0:
+                dayofweek = ['Sunday']
+            thisSchedule['weekSchedule'] = {
+                "dayOfWeek": [d.title() for d in dayofweek]
+            }
+        if frequencyunit == 'months':
+            if dayofweek is not None and len(dayofweek) > 0:
+                thisSchedule = {
+                    "monthSchedule": {
+                        "dayOfWeek": [d.title() for d in dayofweek],
+                        "weekOfMonth": weekofmonth.title()
+                    }, 
+                    "unit": "Months"
+                }
+            else:
+                thisSchedule = {
+                    "monthSchedule": {
+                        "dayOfMonth": dayofmonth, 
+                        "dayOfWeek": None
+                    }, 
+                    "unit": "Months"
+                }
+        if frequencyunit == 'years':
+            thisSchedule = {
+                "unit": "Years", 
+                "yearSchedule": {
+                    "dayOfYear": dayofyear.title()
+                }
+            }
+    else:
+        thisSchedule['frequency'] = frequency
+
+    return thisSchedule
+
+
+def makeRetention():
+    global retentionunit
+    global retention
+    global lockunit
+    global lockduration
+    thisRetention = {
+        "unit": retentionunit.title(),
+        "duration": retention
+    }
+    if lockduration is not None:
+        thisRetention['dataLockConfig'] = {
+            "mode": "Compliance",
+            "unit": lockunit.title(),
+            "duration": lockduration
+        }
+    return thisRetention
+
+
+def parseTime(thistime, description='time'):
+    try:
+        (hour, minute) = thistime.split(':')
+        hour = int(hour)
+        minute = int(minute)
+        if hour < 0 or hour > 23 or minute < 0 or minute > 59:
+            print('%s is invalid!' % description)
+            exit(1)
+        return [hour, minute]
+    except Exception:
+        print('%s is invalid!' % description)
+        exit(1)
+
+
 # authenticate to Cohesity
 apiauth(vip=vip, username=username, domain=domain, password=password, useApiKey=useApiKey)
 
@@ -93,6 +186,7 @@ if policyname is not None:
             exit()
     else:
         policy = policies[0]
+        policies = [policy]
         if action == 'create':
             print("Policy '%s' already exists" % policyname)
             action = 'list'
@@ -115,68 +209,21 @@ if action == 'create':
         "backupPolicy": {
             "regular": {
                 "incremental": {
-                    "schedule": {
-                        "unit": frequencyunit.title()
-                    }
+                    "schedule": makeSchedule()
                 },
-                "retention": {
-                    "unit": retentionunit.title(),
-                    "duration": retention
-                }
+                "retention": makeRetention()
             }
         },
         "id": None,
         "name": policyname,
         "description": None,
         "remoteTargetPolicy": {},
+        "isCBSEnabled": True,
         "retryOptions": {
             "retries": retries,
             "retryIntervalMins": retryminutes
         }
     }
-
-    if frequencyunit == 'days':
-        policy['backupPolicy']['regular']['incremental']['schedule']['daySchedule'] = {
-            "frequency": frequency
-        }
-    if frequencyunit == 'hours':
-        policy['backupPolicy']['regular']['incremental']['schedule']['hourSchedule'] = {
-            "frequency": frequency
-        }
-    if frequencyunit == 'minutes':
-        policy['backupPolicy']['regular']['incremental']['schedule']['minuteSchedule'] = {
-            "frequency": frequency
-        }
-    if frequencyunit == 'weeks':
-        if dayofweek is None or len(dayofweek) == 0:
-            dayofweek = ['Sunday']
-        policy['backupPolicy']['regular']['incremental']['schedule']['weekSchedule'] = {
-            "dayOfWeek": [d.title() for d in dayofweek]
-        }
-    if frequencyunit == 'months':
-        if dayofweek is not None and len(dayofweek) > 0:
-            policy['backupPolicy']['regular']['incremental']['schedule'] = {
-                "monthSchedule": {
-                    "dayOfWeek": [d.title() for d in dayofweek],
-                    "weekOfMonth": weekofmonth.title()
-                }, 
-                "unit": "Months"
-            }
-        else:
-            policy['backupPolicy']['regular']['incremental']['schedule'] = {
-                "monthSchedule": {
-                    "dayOfMonth": dayofmonth, 
-                    "dayOfWeek": None
-                }, 
-                "unit": "Months"
-            }
-    if lockduration is not None:
-        policy['backupPolicy']['regular']['retention']['dataLockConfig'] = {
-            "mode": "Compliance",
-            "unit": lockunit.title(),
-            "duration": lockduration
-        }
-    policy['isCBSEnabled'] = True
     result = api('post', 'data-protect/policies', policy, v=2)
     policies = [policy]
 
@@ -185,12 +232,18 @@ if action == 'delete':
     result = api('delete', 'data-protect/policies/%s' % policy['id'], v=2)
     exit()
 
+updatePolicy = False
 if policy is not None:
+    if action not in ['create', 'list'] or len(addquiettime) > 0 or len(removequiettime) > 0:
+        updatePolicy = True
     policy['isCBSEnabled'] = True
+    if lockduration is None and 'dataLockConfig' in policy['backupPolicy']['regular']['retention']:
+        lockduration = policy['backupPolicy']['regular']['retention']['dataLockConfig']['duration']
+        lockunit = policy['backupPolicy']['regular']['retention']['dataLockConfig']['unit']
+
 
 # edit policy
 if action == 'edit':
-    
     if retention is None:
         print('--retention is required')
         exit()
@@ -198,44 +251,14 @@ if action == 'edit':
         frequency = 1
     if frequencyunit == 'runs':
         frequencyunit = 'days'
-    policy['backupPolicy']['regular']['incremental'] = {
-        "schedule": {
-            "unit": frequencyunit.title(),
-        }
-    }
 
-    if frequencyunit == 'days':
-        policy['backupPolicy']['regular']['incremental']['schedule']['daySchedule'] = {
-            "frequency": frequency
-        }
-    if frequencyunit == 'hours':
-        policy['backupPolicy']['regular']['incremental']['schedule']['hourSchedule'] = {
-            "frequency": frequency
-        }
-    if frequencyunit == 'minutes':
-        policy['backupPolicy']['regular']['incremental']['schedule']['minuteSchedule'] = {
-            "frequency": frequency
-        }
-
-    policy['backupPolicy']['regular']['retention'] = {
-        "unit": retentionunit.title(),
-        "duration": retention
-    }
-    if lockduration is not None:
-        policy['backupPolicy']['regular']['retention']['dataLockConfig'] = {
-            "mode": "Compliance",
-            "unit": lockunit.title(),
-            "duration": lockduration
-        }
-    result = api('put', 'data-protect/policies/%s' % policy['id'], policy, v=2)
-    if 'error' in result:
-        exit(1)
+    policy['backupPolicy']['regular']['incremental']['schedule'] = makeSchedule()
+    policy['backupPolicy']['regular']['retention'] = makeRetention()
 
 # edit retry settings
 if action == 'editretries':
     policy['retryOptions']['retries'] = retries
     policy['retryOptions']['retryIntervalMins'] = retryminutes
-    result = api('put', 'data-protect/policies/%s' % policy['id'], policy, v=2)
 
 # delete full backup
 
@@ -243,9 +266,7 @@ if action == 'deletefull':
     if 'fullBackups' in policy['backupPolicy']['regular'] and policy['backupPolicy']['regular']['fullBackups'] is not None and len(policy['backupPolicy']['regular']['fullBackups']) > 0:
         policy['isCBSEnabled'] = True
         policy['backupPolicy']['regular']['fullBackups'] = [f for f in policy['backupPolicy']['regular']['fullBackups'] if f['schedule']['unit'] != frequencyunit.title()]
-        result = api('put', 'data-protect/policies/%s' % policy['id'], policy, v=2)
-        if 'error' in result:
-            exit(1)
+
 # add full backup
 if action == 'addfull':
     policy['isCBSEnabled'] = True
@@ -256,80 +277,17 @@ if action == 'addfull':
         frequency = 1
     if frequencyunit == 'runs':
         frequencyunit = 'days'
-    
+
     if 'fullBackups' not in policy['backupPolicy']['regular'] or policy['backupPolicy']['regular']['fullBackups'] is None:
         policy['backupPolicy']['regular']['fullBackups'] = []
     
-    if frequencyunit == 'days':
-        policy['backupPolicy']['regular']['fullBackups'] = [f for f in policy['backupPolicy']['regular']['fullBackups'] if 'daySchedule' not in f['schedule']]
-        fullBackup = {
-            "schedule": {
-                "daySchedule": {
-                    "frequency": frequency
-                }, 
-                "unit": frequencyunit.title()
-            }
-        }
-    elif frequencyunit == 'weeks':
-        policy['backupPolicy']['regular']['fullBackups'] = [f for f in policy['backupPolicy']['regular']['fullBackups'] if 'weekSchedule' not in f['schedule']]
-        if dayofweek is None or len(dayofweek) == 0:
-            dayofweek = ['Sunday']
-        fullBackup = {
-            "schedule": {
-                "unit": "Weeks", 
-                "weekSchedule": {
-                    "dayOfWeek": [d.title() for d in dayofweek]
-                }
-            }
-        }
-    elif frequencyunit == 'months':
-        if dayofweek is not None and len(dayofweek) > 0:
-            policy['backupPolicy']['regular']['fullBackups'] = [f for f in policy['backupPolicy']['regular']['fullBackups'] if 'monthSchedule' not in f['schedule'] or 'dayOfWeek' not in f['schedule']['monthSchedule']]
-            fullBackup = {
-                "schedule": {
-                    "monthSchedule": {
-                        "dayOfWeek": [d.title() for d in dayofweek],
-                        "weekOfMonth": weekofmonth.title()
-                    }, 
-                    "unit": "Months"
-                }
-            }
-        else:
-            policy['backupPolicy']['regular']['fullBackups'] = [f for f in policy['backupPolicy']['regular']['fullBackups'] if 'monthSchedule' not in f['schedule'] or 'dayOfMonth' not in f['schedule']['monthSchedule']]
-            fullBackup = {
-                "schedule": {
-                    "monthSchedule": {
-                        "dayOfMonth": dayofmonth, 
-                        "dayOfWeek": None
-                    }, 
-                    "unit": "Months"
-                }
-            }
-    elif frequencyunit == 'years':
-        policy['backupPolicy']['regular']['fullBackups'] = [f for f in policy['backupPolicy']['regular']['fullBackups'] if 'yearSchedule' not in f['schedule']]
-        fullBackup = {
-            "schedule": {
-                "unit": "Years", 
-                "yearSchedule": {
-                    "dayOfYear": dayofyear.title()
-                }
-            }
-        }
-    fullBackup['retention'] = {
-        "duration": retention, 
-        "unit": retentionunit.title(),
-    }
-    if lockduration is not None:
-        fullBackup['retention']['dataLockConfig'] = {
-            "mode": "Compliance",
-            "unit": lockunit.title(),
-            "duration": lockduration,
-            "enableWormOnExternalTarget": False
-        }   
+    scheduleName = "%sSchedule" % frequencyunit[0:len(frequencyunit) - 1]
+    policy['backupPolicy']['regular']['fullBackups'] = [f for f in policy['backupPolicy']['regular']['fullBackups'] if scheduleName not in f['schedule']]
+    fullBackup = {
+        "schedule": makeSchedule(),
+        "retention": makeRetention()
+    }   
     policy['backupPolicy']['regular']['fullBackups'].append(fullBackup)
-    result = api('put', 'data-protect/policies/%s' % policy['id'], policy, v=2)
-    if 'error' in result:
-        exit(1)
 
 # add extend retention
 if action == 'addextension':
@@ -347,34 +305,11 @@ if action == 'addextension':
         existingRetention = [r for r in policy['extendedRetention'] if r['schedule']['unit'].lower() == frequencyunit and r['schedule']['frequency'] == frequency]
     if existingRetention is None or len(existingRetention) == 0:
         newRetention = {
-            "schedule": {
-                "unit": frequencyunit.title(),
-                "frequency": frequency
-            },
-            "retention": {
-                "unit": retentionunit.title(),
-                "duration": retention
-            }
+            "schedule": makeSchedule(False)
         }
-        if lockduration is not None:
-            newRetention['retention']['dataLockConfig'] = {
-                "mode": "Compliance",
-                "unit": lockunit.title(),
-                "duration": lockduration
-            }
         policy['extendedRetention'].append(newRetention)
     else:
-        existingRetention[0]['retention']['unit'] = retentionunit.title()
-        existingRetention[0]['retention']['duration'] = retention
-        if lockduration is not None:
-            existingRetention[0]['retention']['dataLockConfig'] = {
-                "mode": "Compliance",
-                "unit": lockunit.title(),
-                "duration": lockduration
-            }
-    result = api('put', 'data-protect/policies/%s' % policy['id'], policy, v=2)
-    if 'error' in result:
-        exit(1)
+        existingRetention[0]['retention'] = makeRetention()
 
 # delete extended retention
 if action == 'deleteextension':
@@ -387,9 +322,6 @@ if action == 'deleteextension':
             if includeRetention:
                 newRetentions.append(existingRetention)
         policy['extendedRetention'] = newRetentions
-    result = api('put', 'data-protect/policies/%s' % policy['id'], policy, v=2)
-    if 'error' in result:
-        exit(1)
 
 # log backup
 if action == 'logbackup':
@@ -403,33 +335,11 @@ if action == 'logbackup':
     if frequencyunit not in ['minutes', 'hours']:
         print('log frequency unit must be minutes or hours')
         exit()
-    print(retentionunit)
+
     policy['backupPolicy']['log'] = {
-        "schedule": {
-            "unit": frequencyunit.title(),
-        },
-        "retention": {
-            "unit": retentionunit.title(),
-            "duration": retention
-        }
+        "schedule": makeSchedule(),
+        "retention": makeRetention()
     }
-    if lockduration is not None:
-        policy['backupPolicy']['log']['retention']['dataLockConfig'] = {
-            "mode": "Compliance",
-            "unit": lockunit.title(),
-            "duration": lockduration
-        }
-    if frequencyunit == 'hours':
-        policy['backupPolicy']['log']['schedule']['hourSchedule'] = {
-            "frequency": frequency
-        }
-    else:
-        policy['backupPolicy']['log']['schedule']['minuteSchedule'] = {
-            "frequency": frequency
-        }
-    result = api('put', 'data-protect/policies/%s' % policy['id'], policy, v=2)
-    if 'error' in result:
-        exit(1)
 
 # add replica
 if action == 'addreplica':
@@ -448,7 +358,6 @@ if action == 'addreplica':
         print('Remote cluster %s not found' % targetname)
         exit()
     thisRemoteCluster = thisRemoteCluster[0]
-    policy = policies[0]
     if 'remoteTargetPolicy' not in policy:
         policy['remoteTargetPolicy'] = {}
     if 'replicationTargets' not in policy['remoteTargetPolicy']:
@@ -459,10 +368,7 @@ if action == 'addreplica':
             "schedule": {
                 "unit": frequencyunit.title()
             },
-            "retention": {
-                "unit": retentionunit.title(),
-                "duration": retention
-            },
+            "retention": makeRetention(),
             "copyOnRunSuccess": False,
             "targetType": "RemoteCluster",
             "remoteTargetConfig": {
@@ -470,27 +376,11 @@ if action == 'addreplica':
                 "clusterName": thisRemoteCluster['name']
             }
         }
-        if lockduration is not None:
-            newReplica['retention']['dataLockConfig'] = {
-                "mode": "Compliance",
-                "unit": lockunit.title(),
-                "duration": lockduration
-            }
         if frequencyunit != 'runs':
             newReplica['schedule']['frequency'] = frequency
         policy['remoteTargetPolicy']['replicationTargets'].append(newReplica)
     else:
-        existingReplica[0]['retention']['unit'] = retentionunit.title()
-        existingReplica[0]['retention']['duration'] = retention
-        if lockduration is not None:
-            existingReplica[0]['retention']['dataLockConfig'] = {
-                "mode": "Compliance",
-                "unit": lockunit.title(),
-                "duration": lockduration
-            }
-    result = api('put', 'data-protect/policies/%s' % policy['id'], policy, v=2)
-    if 'error' in result:
-        exit(1)
+        existingReplica[0]['retention'] = makeRetention()
 
 # delete replica
 if action == 'deletereplica':
@@ -500,7 +390,6 @@ if action == 'deletereplica':
     if frequencyunit == 'minutes':
         print('--frequencyunit "minutes" is not valid for replication')
         exit()
-    policy = policies[0]
     if 'remoteTargetPolicy' in policy and 'replicationTargets' in policy['remoteTargetPolicy']:
         newReplicationTargets = []
         changedReplicationTargets = False
@@ -518,9 +407,6 @@ if action == 'deletereplica':
                 changedReplicationTargets = True
         if changedReplicationTargets is True:
             policy['remoteTargetPolicy']['replicationTargets'] = newReplicationTargets
-            result = api('put', 'data-protect/policies/%s' % policy['id'], policy, v=2)
-            if 'error' in result:
-                exit(1)
 
 # add archive
 if action == 'addarchive':
@@ -539,7 +425,6 @@ if action == 'addarchive':
         print('External target %s not found' % targetname)
         exit()
     thisVault = thisVault[0]
-    policy = policies[0]
     if 'remoteTargetPolicy' not in policy:
         policy['remoteTargetPolicy'] = {}
     if 'archivalTargets' not in policy['remoteTargetPolicy']:
@@ -550,36 +435,17 @@ if action == 'addarchive':
             "schedule": {
                 "unit": frequencyunit.title()
             },
-            "retention": {
-                "unit": retentionunit.title(),
-                "duration": retention
-            },
+            "retention": makeRetention(),
             "copyOnRunSuccess": False,
             "targetId": thisVault['id'],
             "targetName": thisVault['name'],
             "targetType": "Cloud"
         }
-        if lockduration is not None:
-            newTarget['retention']['dataLockConfig'] = {
-                "mode": "Compliance",
-                "unit": lockunit.title(),
-                "duration": lockduration
-            }
         if frequencyunit != 'runs':
             newTarget['schedule']['frequency'] = frequency
         policy['remoteTargetPolicy']['archivalTargets'].append(newTarget)
     else:
-        existingTarget[0]['retention']['unit'] = retentionunit.title()
-        existingTarget[0]['retention']['duration'] = retention
-        if lockduration is not None:
-            existingTarget[0]['retention']['dataLockConfig'] = {
-                "mode": "Compliance",
-                "unit": lockunit.title(),
-                "duration": lockduration
-            }
-    result = api('put', 'data-protect/policies/%s' % policy['id'], policy, v=2)
-    if 'error' in result:
-        exit(1)
+        existingTarget[0]['retention'] = makeRetention()
 
 # delete archive
 if action == 'deletearchive':
@@ -589,7 +455,6 @@ if action == 'deletearchive':
     if frequencyunit == 'minutes':
         print('--frequencyunit "minutes" is not valid for replication')
         exit()
-    policy = policies[0]
     if 'remoteTargetPolicy' in policy and 'archivalTargets' in policy['remoteTargetPolicy']:
         newArchivalTargets = []
         changedArchivalTargets = False
@@ -603,55 +468,28 @@ if action == 'deletearchive':
                 changedArchiveTargets = True
         if changedArchiveTargets is True:
             policy['remoteTargetPolicy']['archivalTargets'] = newArchivalTargets
-            result = api('put', 'data-protect/policies/%s' % policy['id'], policy, v=2)
-            if 'error' in result:
-                exit(1)
 
 # add quiet time
 updatedQuietTimes = False
 for quiettime in addquiettime:
     parts = quiettime.split(';')
     if len(parts) < 3:
-        print('invalid quite time specified')
+        print('invalid quiet time specified')
         exit(1)
     days = parts[0]
     starttime = parts[1]
     endtime = parts[2]
-    # parse starttime
-    try:
-        (hour, minute) = starttime.split(':')
-        hour = int(hour)
-        minute = int(minute)
-        if hour < 0 or hour > 23 or minute < 0 or minute > 59:
-            print('quiet time starttime is invalid!')
-            exit(1)
-        starthour = hour
-        startminute = minute
-    except Exception:
-        print('quite time starttime is invalid!')
-        exit(1)
-    # parse endttime
-    try:
-        (hour, minute) = endtime.split(':')
-        hour = int(hour)
-        minute = int(minute)
-        if hour < 0 or hour > 23 or minute < 0 or minute > 59:
-            print('quiet time endtime is invalid!')
-            exit(1)
-        endhour = hour
-        endminute = minute
-    except Exception:
-        print('quiet time endtime is invalid!')
-        exit(1)
+    (starthour, startminute) = parseTime(starttime, 'quient time starttime')
+    (endhour, endminute) = parseTime(endtime, 'quiet time endtime')
     if days == 'All':
         days = 'Sunday,Monday,Tuesday,Wednesday,Thursday,Friday,Saturday'
     days = days.split(',')
     for day in days:
         day = day.strip().title()
         if day not in ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday']:
-            print('quite time day invalid')
+            print('quiet time day invalid')
             exit(1)
-        if 'blackoutWindow' not in policy:
+        if 'blackoutWindow' not in policy or policy['blackoutWindow'] is None:
             policy['blackoutWindow'] = []
         policy['blackoutWindow'] = [bw for bw in policy['blackoutWindow'] if bw is not None and not (
             bw['day'] == day and bw['startTime']['hour'] == starthour and bw['startTime']['minute'] == startminute and bw['endTime']['hour'] == endhour and bw['endTime']['minute'] == endminute
@@ -673,44 +511,20 @@ for quiettime in addquiettime:
 for quiettime in removequiettime:
     parts = quiettime.split(';')
     if len(parts) < 3:
-        print('invalid quite time specified')
+        print('invalid quiet time specified')
         exit(1)
     days = parts[0]
     starttime = parts[1]
     endtime = parts[2]
-    # parse starttime
-    try:
-        (hour, minute) = starttime.split(':')
-        hour = int(hour)
-        minute = int(minute)
-        if hour < 0 or hour > 23 or minute < 0 or minute > 59:
-            print('quiet time starttime is invalid!')
-            exit(1)
-        starthour = hour
-        startminute = minute
-    except Exception:
-        print('quite time starttime is invalid!')
-        exit(1)
-    # parse endttime
-    try:
-        (hour, minute) = endtime.split(':')
-        hour = int(hour)
-        minute = int(minute)
-        if hour < 0 or hour > 23 or minute < 0 or minute > 59:
-            print('quiet time endtime is invalid!')
-            exit(1)
-        endhour = hour
-        endminute = minute
-    except Exception:
-        print('quiet time endtime is invalid!')
-        exit(1)
+    (starthour, startminute) = parseTime(starttime,'quiet time starttime')
+    (endhour, endminute) = parseTime(endtime, 'quiet time endtime')
     if days == 'All':
         days = 'Sunday,Monday,Tuesday,Wednesday,Thursday,Friday,Saturday'
     days = days.split(',')
     for day in days:
         day = day.strip().title()
         if day not in ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday']:
-            print('quite time day invalid')
+            print('quiet time day invalid')
             exit(1)
         if 'blackoutWindow' not in policy:
             policy['blackoutWindow'] = []
@@ -719,7 +533,7 @@ for quiettime in removequiettime:
         )]
         updatedQuietTimes = True
 
-if updatedQuietTimes is True:
+if updatePolicy is True:
     result = api('put', 'data-protect/policies/%s' % policy['id'], policy, v=2)
     if 'error' in result:
         exit(1)
@@ -832,6 +646,7 @@ for policy in policies:
                 if 'dataLock' in policy:
                     dataLock = ', datalock for %s %s' % (replicationTarget['retention']['duration'], replicationTarget['retention']['unit'])
                 print('                       %s:  Every %s %s  (keep for %s %s%s)' % (targetName, frequency, frequencyunit, replicationTarget['retention']['duration'], replicationTarget['retention']['unit'], dataLock))
+        # archive targets
         if 'archivalTargets' in policy['remoteTargetPolicy'] and policy['remoteTargetPolicy']['archivalTargets'] is not None and len(policy['remoteTargetPolicy']['archivalTargets']) > 0:
             print('          Archive To:')
             for archivalTarget in policy['remoteTargetPolicy']['archivalTargets']:

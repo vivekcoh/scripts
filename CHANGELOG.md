@@ -1,5 +1,21 @@
 # Change Log for cohesity/community-automation-samples
 
+## 2024-08-08
+
+* [clusterNumberOfProtectedVMs.ps1](https://github.com/cohesity/community-automation-samples/tree/main/reports/powershell/clusterNumberOfProtectedVMs) [`New`] Report number of protected VMware VMs per cluster
+
+## 2024-08-07
+
+* [policyTool7.py](https://github.com/cohesity/community-automation-samples/tree/main/python/policyTool) [`New`] create and edit policies. This version supports calendar based scheduling introduced in Cohesity 7.x
+
+## 2024-08-05
+
+* [recoverVMs.ps1](https://github.com/cohesity/community-automation-samples/tree/main/powershell/recoverVMs) [`Update`] added -jobName parameter
+
+## 2024-08-01
+
+* [unprotectCCSEC2VMs.ps1](https://github.com/cohesity/community-automation-samples/tree/main/ccs/powershell/unprotectCCSEC2VMs) [`New`] Unprotect CCS EV2 VMs
+
 ## 2024-07-31
 
 * [clusterInfo.py](https://github.com/cohesity/community-automation-samples/tree/main/python/clusterInfo) [`Fix`] fixed crash when nodeInfo not available

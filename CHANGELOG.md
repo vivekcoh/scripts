@@ -1,5 +1,10 @@
 # Change Log for cohesity/community-automation-samples
 
+## 2024-08-09
+
+* [agentSummaryReport.ps1](https://github.com/cohesity/community-automation-samples/tree/main/reports/powershell/agentSummaryReport) [`New`] Generate an agent summary report
+* [agentSummaryReport.py](https://github.com/cohesity/community-automation-samples/tree/main/reports/python/agentSummaryReport) [`New`] Generate an agent summary report
+
 ## 2024-08-08
 
 * [clusterNumberOfProtectedVMs.ps1](https://github.com/cohesity/community-automation-samples/tree/main/reports/powershell/clusterNumberOfProtectedVMs) [`New`] Report number of protected VMware VMs per cluster

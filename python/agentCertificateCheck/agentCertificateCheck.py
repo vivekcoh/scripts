@@ -165,8 +165,8 @@ for clustername in clusternames:
                         except Exception:
                             pass
                         try:
-                            certinfo = os.popen('openssl s_client -showcerts -connect %s:%s </dev/null 2>/dev/null | openssl x509 -noout -text -certopt no_sigdump,no_pubkey,no_signame,no_issuer,no_version,no_header,no_serial,no_aux,no_subject 2>/dev/null' % (testname, port))
-                            # certinfo = os.popen('timeout 5 openssl s_client -showcerts -connect %s:%s </dev/null 2>/dev/null | openssl x509 -noout -text -certopt no_sigdump,no_pubkey,no_signame,no_issuer,no_version,no_header,no_serial,no_aux,no_subject 2>/dev/null' % (testname, port))
+                            # certinfo = os.popen('openssl s_client -showcerts -connect %s:%s </dev/null 2>/dev/null | openssl x509 -noout -text -certopt no_sigdump,no_pubkey,no_signame,no_issuer,no_version,no_header,no_serial,no_aux,no_subject 2>/dev/null' % (testname, port))
+                            certinfo = os.popen('timeout 5 openssl s_client -showcerts -connect %s:%s </dev/null 2>/dev/null | openssl x509 -noout -text -certopt no_sigdump,no_pubkey,no_signame,no_issuer,no_version,no_header,no_serial,no_aux,no_subject 2>/dev/null' % (testname, port))
                             cilines = certinfo.readlines()
                             for line in cilines:
                                 thisline = line.strip()

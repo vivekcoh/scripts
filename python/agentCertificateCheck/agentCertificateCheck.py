@@ -1,11 +1,12 @@
 #!/usr/bin/env python
-"""agent certificate check 2023-01-05-17-28"""
+"""agent certificate check 2024-08-09"""
 
 # import pyhesity wrapper module
 from pyhesity import *
 from datetime import datetime
 import codecs
 import os
+import re
 
 # command line arguments
 import argparse
@@ -64,7 +65,7 @@ else:
 
 i = codecs.open(impactfile, 'w')
 f = codecs.open(outfile, 'w')
-f.write('Cluster Name,Agent Name,Status,Cluster Version,MultiTenancy,Agent Version,Agent Port,OS Type,OS Name,Cert Expires,Error Message\n')
+f.write('Cluster Name,Agent Name,Status,Cluster Version,MultiTenancy,Agent Version,Agent Port,OS Type,OS Name,SAN Match,Cert Expires,Error Message\n')
 
 for clustername in clusternames:
     print('\nConnecting to %s...\n' % clustername)
@@ -110,6 +111,7 @@ for clustername in clusternames:
             version = 'unknown'
             expiringSoon = False
             expires = 'unknown'
+            sanMatch = False
             errorMessage = 'None'
             paramkey = None
             try:
@@ -163,18 +165,25 @@ for clustername in clusternames:
                         except Exception:
                             pass
                         try:
-                            certinfo = os.popen('timeout 5 openssl s_client -showcerts -connect %s:%s </dev/null 2>/dev/null | openssl x509 -noout -subject -dates 2>/dev/null' % (testname, port))
-                            cilines = certinfo.readlines()  #
-                            if len(cilines) >= 2:
-                                expdate = cilines[2]
-                                expires = expdate.strip().split('=')[1].replace('  ', ' ')
-                                datetime_object = datetime.strptime(expires, '%b %d %H:%M:%S %Y %Z')
-                                expiresUsecs = dateToUsecs(datetime_object)
-                                if expiresUsecs < expwarningusecs:
-                                    expiringSoon = True
-                                expires = datetime.strftime(datetime_object, "%m/%d/%Y %H:%M:%S")
-                            else:
-                                expires = 'unknown'
+                            # certinfo = os.popen('openssl s_client -showcerts -connect ve2.seltzer.net:443 </dev/null 2>/dev/null | openssl x509 -noout -text -certopt no_sigdump,no_pubkey,no_signame,no_issuer,no_version,no_header,no_serial,no_aux,no_subject 2>/dev/null')
+                            certinfo = os.popen('timeout 5 openssl s_client -showcerts -connect ve2.seltzer.net:443 </dev/null 2>/dev/null | openssl x509 -noout -text -certopt no_sigdump,no_pubkey,no_signame,no_issuer,no_version,no_header,no_serial,no_aux,no_subject 2>/dev/null')
+                            cilines = certinfo.readlines()
+                            for line in cilines:
+                                thisline = line.strip()
+                                if thisline.startswith('Not After'):
+                                    expires = re.split('= |: ', thisline, 1)[1].replace('  ', ' ')
+                                    datetime_object = datetime.strptime(expires, '%b %d %H:%M:%S %Y %Z')
+                                    expiresUsecs = dateToUsecs(datetime_object)
+                                    if expiresUsecs < expwarningusecs:
+                                        expiringSoon = True
+                                    expires = datetime.strftime(datetime_object, "%m/%d/%Y %H:%M:%S")
+                                if thisline.startswith('DNS:'):
+                                    sans = thisline.split(', ')
+                                    for san in sans:
+                                        thissan = san.split(':')[1]
+                                        if thissan.lower() == name.lower():
+                                            sanMatch = True
+
                         except Exception:
                             expires = 'unknown'
             except Exception:
@@ -190,7 +199,7 @@ for clustername in clusternames:
                         status = 'not impacted'
                 if paramkey is not None and 'agents' in paramkey:
                     print('%s:%s,%s,(%s) %s -> %s (%s)' % (name, port, version, hostType, osName, expires, status))
-                    f.write('%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s\n' % (cluster['name'], name, status, clusterVersion, orgsenabled, version, port, hostType, osName, expires, errorMessage))
+                    f.write('%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s\n' % (cluster['name'], name, status, clusterVersion, orgsenabled, version, port, hostType, osName, sanMatch, expires, errorMessage))
         if nodesCounted == 0:
             print('** No agents interrogated (all filtered by command line options) **')
             f.write('%s,No agents interrogated (all filtered by command line options),,%s\n' % (cluster['name'], clusterVersion))

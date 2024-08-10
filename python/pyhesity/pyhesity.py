@@ -1,5 +1,5 @@
 #!/usr/bin/env python
-"""Cohesity Python REST API Wrapper Module - 2024.06.07"""
+"""Cohesity Python REST API Wrapper Module - 2024.08.10"""
 
 ##########################################################################################
 # Change Log
@@ -570,12 +570,14 @@ def api(method, uri, data=None, quiet=None, mcm=None, mcmv2=None, v=1, reporting
                 if quiet is None:
                     print('Invalid api call: ' + uri)
                 return None
+            responsejson = None
             try:
                 responsejson = response.json()
             except Exception:  # ValueError as ve:
                 COHESITY_API['LAST_ERROR'] = response.reason
-                # print('*** %s ***' % response.reason)
-                return None
+                if response.reason != 'OK':
+                    print('*** %s ***' % response.reason)
+                    return None
             if isinstance(responsejson, bool):
                 return ''
             if responsejson is not None:
@@ -595,6 +597,13 @@ def api(method, uri, data=None, quiet=None, mcm=None, mcmv2=None, v=1, reporting
                             return None
                 else:
                     return responsejson
+            else:
+                try:
+                    responsetext = response.text
+                    return responsetext
+                except Exception:
+                    return None
+                
     else:
         if quiet is None:
             print("invalid api method")

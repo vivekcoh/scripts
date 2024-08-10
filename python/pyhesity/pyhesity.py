@@ -92,7 +92,7 @@ __all__ = ['api_version',
            'impersonate',
            'switchback']
 
-api_version = '2024.06.07'
+api_version = '2024.08.10'
 
 COHESITY_API = {
     'APIROOT': '',

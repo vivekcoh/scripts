@@ -61,3 +61,4 @@ To include multiple subject alternate names, repeat the -s parameter:
 * -city, --city: (optional) city code (default is SN)
 * -org, --organization: (optional) organization (default is Cohesity)
 * -ou, --organizationUnit: (optional) organization unit (default is IT)
+* -x, --expirydays: (optional) number of days until expiration (default is 365)

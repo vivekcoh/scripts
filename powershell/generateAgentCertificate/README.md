@@ -66,3 +66,4 @@ To include multiple subject alternate names, include them, comma separated, in t
 * -city: (optional) city code (default is SN)
 * -organization: (optional) organization (default is Cohesity)
 * -organizationUnit: (optional) organization unit (default is IT)
+* -expiryDays: (optional) number of days until expiration (default is 365)

@@ -17,7 +17,8 @@ param (
     [Parameter()][string]$state = 'CA',
     [Parameter()][string]$city = 'SN',
     [Parameter()][string]$organization = 'Cohesity',
-    [Parameter()][string]$organizationUnit = 'IT'
+    [Parameter()][string]$organizationUnit = 'IT',
+    [Parameter()][int64]$expiryDays = 365
 )
 
 # source the cohesity-api helper code
@@ -87,7 +88,7 @@ $certreq = @{
     "sanList" = @(
         "Agent (gRPC server)"
     );
-    "duration" = "8760h"
+    "duration" = "$([int64]($expiryDays * 24))h"
 }
 
 foreach($server in $serverNames | Sort-Object -Unique){

@@ -26,6 +26,7 @@ parser.add_argument('-state', '--state', type=str, default='CA')
 parser.add_argument('-city', '--city', type=str, default='SN')
 parser.add_argument('-org', '--organization', type=str, default='Cohesity')
 parser.add_argument('-ou', '--organizationUnit', type=str, default='IT')
+parser.add_argument('-x', '--expirydays', type=int, default=365)
 
 args = parser.parse_args()
 
@@ -46,6 +47,7 @@ state = args.state
 city = args.city
 org = args.organization
 ou = args.organizationUnit
+expirydays = args.expirydays
 
 # authentication =========================================================
 # demand clustername if connecting to helios or mcm
@@ -98,7 +100,7 @@ certreq = {
     "sanList": [
         "Agent (gRPC server)"
     ],
-    "duration": "8760h",
+    "duration": "%sh" % int(expirydays * 24),
     "countryCode": country,
     "state": state,
     "city": city

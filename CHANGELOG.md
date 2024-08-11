@@ -1,5 +1,17 @@
 # Change Log for cohesity/community-automation-samples
 
+## 2024-08-11
+
+* [generateAgentCertificate.ps1](https://github.com/cohesity/community-automation-samples/tree/main/powershell/generateAgentCertificate) [`New`] Generate new agent certificate
+* [replaceWindowsAgentCertificate.ps1](https://github.com/cohesity/community-automation-samples/tree/main/powershell/replaceWindowsAgentCertificate) [`New`] Remotely replace agent certificate on Windows host
+
+## 2024-08-10
+
+* [pyhesity.py](https://github.com/cohesity/community-automation-samples/tree/main/python/pyhesity) [`Update`] added text mode output
+* [generateAgentCertificate.py](https://github.com/cohesity/community-automation-samples/tree/main/python/generateAgentCertificate) [`New`] Generate new agent certificate
+* [replaceLinuxAgentCertificate.py](https://github.com/cohesity/community-automation-samples/tree/main/python/replaceLinuxAgentCertificate) [`New`] Remotely replace agent certificate on Linux host
+* [agentCertificateCheck.py](https://github.com/cohesity/community-automation-samples/tree/main/python/agentCertificateCheck) [`Update`] Added check for matching subject alternate name
+
 ## 2024-08-09
 
 * [agentSummaryReport.ps1](https://github.com/cohesity/community-automation-samples/tree/main/reports/powershell/agentSummaryReport) [`New`] Generate an agent summary report

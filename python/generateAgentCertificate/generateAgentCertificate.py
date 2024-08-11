@@ -49,6 +49,10 @@ org = args.organization
 ou = args.organizationUnit
 expirydays = args.expirydays
 
+if 'api_version' not in globals() or api_version < '2024.08.10':
+    print('this script requires pyhesity.py version 2024.08.10 or later')
+    exit()
+
 # authentication =========================================================
 # demand clustername if connecting to helios or mcm
 if (mcm or vip.lower() == 'helios.cohesity.com') and clustername is None:

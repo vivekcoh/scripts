@@ -22,7 +22,8 @@ param (
     [Parameter()][switch]$registerAD,
     [Parameter()][switch]$registerSQL,
     [Parameter()][switch]$sqlCluster,
-    [Parameter()][string]$serviceAccount = $null
+    [Parameter()][string]$serviceAccount = $null,
+    [Parameter()][string]$filepath
 )
 
 if($serverList){
@@ -40,15 +41,22 @@ Import-Module $(Join-Path -Path $PSScriptRoot -ChildPath userRights.psm1)
 
 ### function to set service account
 Function Set-ServiceAcctCreds([string]$strCompName,[string]$strServiceName,[string]$newAcct,[string]$newPass){
-    $filter = 'Name=' + "'" + $strServiceName + "'" + ''
-    $service = Get-WMIObject -ComputerName $strCompName -Authentication PacketPrivacy -namespace "root\cimv2" -class Win32_Service -Filter $filter
-    $service.Change($null,$null,$null,$null,$null,$null,$newAcct,$newPass)
-    $service.StopService()
-    while ($service.Started){
-      Start-Sleep 2
-      $service = Get-WMIObject -ComputerName $strCompName -Authentication PacketPrivacy -namespace "root\cimv2" -class Win32_Service -Filter $filter
+    $null = Invoke-Command -Computername $strCompName -ArgumentList $strServiceName, $newAcct, $newPass -ScriptBlock {
+        param($strServiceName, $newAcct, $newPass)
+        $filter = 'Name=' + "'" + $strServiceName + "'" + ''
+        $service = Get-WMIObject -Authentication PacketPrivacy -namespace "root\cimv2" -class Win32_Service -Filter $filter
+        $service.Change($null,$null,$null,$null,$null,$null,$newAcct,$newPass)
+        $service.StopService()
+        while ($service.Started){
+            Start-Sleep 2
+            $service = Get-WMIObject -Authentication PacketPrivacy -namespace "root\cimv2" -class Win32_Service -Filter $filter
+        }
+        $service.StartService()
+        while(! $service.Started){
+            Start-Sleep 2
+            $service = Get-WMIObject -Authentication PacketPrivacy -namespace "root\cimv2" -class Win32_Service -Filter $filter
+        }
     }
-    $service.StartService()
 }
 
 # authenticate
@@ -58,7 +66,6 @@ if(!$cohesity_api.authorized){
     Write-Host "Not authenticated"
     exit 1
 }
-
 
 ### get sqlAccount Password
 if($serviceAccount){
@@ -83,10 +90,14 @@ $sources = api get protectionSources/registrationInfo
 
 ### download agent installer to local host
 if ($installAgent) {
-    $downloadsFolder = join-path -path $([Environment]::GetFolderPath("UserProfile")) -ChildPath downloads
-    $agentFile = "Cohesity_Agent_$(((api get cluster).clusterSoftwareVersion).split('_')[0])_Win_x64_Installer.exe"
-    $filepath = join-path -path $downloadsFolder -ChildPath $agentFile
-    fileDownload 'physicalAgents/download?hostType=kWindows' $filepath
+    if($filepath){
+        $agentFile = $filepath
+    }else{
+        $downloadsFolder = join-path -path $([Environment]::GetFolderPath("UserProfile")) -ChildPath downloads
+        $agentFile = "Cohesity_Agent_$(((api get cluster).clusterSoftwareVersion).split('_')[0])_Win_x64_Installer.exe"
+        $filepath = join-path -path $downloadsFolder -ChildPath $agentFile
+        fileDownload 'physicalAgents/download?hostType=kWindows' $filepath
+    }
     $remoteFilePath = Join-Path -Path "C:\Windows\Temp" -ChildPath $agentFile
 }
 
@@ -106,7 +117,7 @@ foreach ($server in $servers){
         $null = Invoke-Command -Computername $server -ArgumentList $remoteFilePath -ScriptBlock {
             param($remoteFilePath)
             if (! $(Get-Service | Where-Object { $_.Name -eq 'CohesityAgent' })) {
-                ([WMICLASS]"\\localhost\ROOT\CIMV2:win32_process").Create("$remoteFilePath /type=allcbt /verysilent /suppressmsgboxes /norestart")
+                ([WMICLASS]"\\localhost\ROOT\CIMV2:win32_process").Create("$remoteFilePath /type=allcbt /verysilent /suppressmsgboxes /NORESTART")
                 New-NetFirewallRule -DisplayName 'Cohesity Agent' -Profile 'Domain' -Direction Inbound -Action Allow -Protocol TCP -LocalPort 50051
             }
         }

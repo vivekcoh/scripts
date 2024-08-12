@@ -30,15 +30,13 @@ Import-Module $(Join-Path -Path $PSScriptRoot -ChildPath userRights.psm1)
 
 ### function to set service account
 Function Set-ServiceAcctCreds([string]$strCompName,[string]$strServiceName,[string]$newAcct,[string]$newPass){
-    $filter = 'Name=' + "'" + $strServiceName + "'" + ''
-    $service = Get-WMIObject -ComputerName $strCompName -Authentication PacketPrivacy -namespace "root\cimv2" -class Win32_Service -Filter $filter
-    $service.Change($null,$null,$null,$null,$null,$null,$newAcct,$newPass)
-    $service.StopService()
-    while ($service.Started){
-      Start-Sleep 2
-      $service = Get-WMIObject -ComputerName $strCompName -Authentication PacketPrivacy -namespace "root\cimv2" -class Win32_Service -Filter $filter
+    $null = Invoke-Command -Computername $strCompName -ArgumentList $strServiceName, $newAcct, $newPass -ScriptBlock {
+        param($strServiceName, $newAcct, $newPass)
+        $filter = 'Name=' + "'" + $strServiceName + "'" + ''
+        $service = Get-WMIObject -Authentication PacketPrivacy -namespace "root\cimv2" -class Win32_Service -Filter $filter
+        $service.Change($null,$null,$null,$null,$null,$null,$newAcct,$newPass)
+        $null = Restart-Service -Name $strServiceName
     }
-    $service.StartService()
 }
 
 ### get sqlAccount Password

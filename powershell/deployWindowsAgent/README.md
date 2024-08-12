@@ -87,6 +87,7 @@ managing Cohesity Agent on sqlserver2.mydomain.net
 * -registerSQL: (optional) register server as a MSSQL protection source (requires -register or previous registration)
 * -sqlCluster: (optional) register server as a MSSQL Failover Cluster node (requires -register or previous registration)
 * -serviceAccount: (optional) set Cohesity agent to run using a service account
+* -filepath: (optional) path to pre-downloaded agent file
 
 ## Attributions
 

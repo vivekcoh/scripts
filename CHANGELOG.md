@@ -2,6 +2,7 @@
 
 ## 2024-08-14
 
+* [jobList.ps1](https://github.com/cohesity/community-automation-samples/tree/main/reports/powershell/jobList) [`Update`] modernized authentication
 * [rsyncBackup](https://github.com/cohesity/community-automation-samples/tree/main/remoteAdapter/rsyncBackup) [`New`] Remote Adapter Rsync backup script and instructions
 * [lv_snapper](https://github.com/cohesity/community-automation-samples/tree/main/bash/lv_snapper) [`New`] Pre/post scripts to snapshot an LVM volume
 

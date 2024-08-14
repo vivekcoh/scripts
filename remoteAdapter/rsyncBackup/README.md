@@ -13,28 +13,69 @@ chmod +x backup.sh
 # End download commands
 ```
 
+## Identify the Linux Host
+
+Identify the IP address of the Linux host that will be running the rsync script. We will use this IP address in the Subnet Allowlist below. In RHEL/CentOS, you can type this command to get the IP address: ip a
+
+Also identify a user account on the Linux host that will run the script. This user will need password-less sudo access to mount/unmount the Cohesity view. To grant this access, type: sudo visudo and append to the end of the file:  myuser ALL=(ALL) NOPASSWD: ALL
+
 ## Create a Cohesity View
 
-Create a Cohesity View to store the backups for your GitHub repositories. Recommend that you use the "File Share" template, which enables NFS access (required) and uses the TestAndDevHigh performance profile (recommended).
+1. In the Cohesity UI, click SmartFiles -> Views -> Create View
+2. Select the Backup Target -> General view template
+3. Enter a view name, e.g. myview, then click More Options
+4. Expand the Security section and click Subnet Allowlist -> Add
+5. To grant access to an IP address or subnet (including the Linux host IP address identified above), enter an IP address (e.g. 192.168.1.101/32) or an IP subnet (e.g. 192.168.0.0/16) and click add. Repeat steps 4 and 5 to add more
+6. Click Create to finish creating the view
+7. Click the three dots next to the new view, click Mount Paths and record the NFS mount path, e.g. mycluster.mydomain.net:/myview
 
-## Choose a Linux Host to Run the Script
+## Mount the View on the Linux Host
 
-Select a Linux host where we can run the bash script. The script will mount the view and rsync files/folders into the View. On the Linux host, create or select the desired user account and place the bash file in the user's home directory.
+1. Log on as the user we identified above
+2. Make a directory to mount our view, e.g. sudo mkdir /mnt/myview
+3. Set the permissions on the new directory, e.g. sudo chmod 777 /mnt/myview
+4. Install NFS client, e.g. sudo yum install nfs-utils
+5. Test mount the view, e.g. sudo mount mycluster.mydomain.net:/myview /mnt/myview
+6. Unmount the view, e.g. sudo umount /mnt/myview
 
-Note that the selected user will require password-less sudo access in order to mount/unmount the View when the script runs.
+## Create of Modify the Script on the Linux Host
 
-## Review and Modify the Bash Script
+```bash
+#!/bin/bash
 
-The script contains some example commands to use rsync to copy data onto the NFS mounted Cohesity view. Modify the commands as needed.
+sudo mount -t nfs -o soft,intr,noatime,retrans=1000,timeo=900,retry=5,rsize=1048576,wsize=1048576,nolock mycohesity.mydomain.net:/myview /mnt/myview/
 
-## Create a Remote Adapter Protection Group
+rsync -rltov /some/data/thisfolder /mnt/myview --delete
+rsync -rltov /other/data/thatfolder /mnt/myview --delete
 
-After the script is working, we can create a Remote Adapter protection group to run our script on a schedule.
+sudo umount /mnt/myview/
+```
 
-When creating the protection group:
+1. Install rsync, e.g. sudo yum install rsync
+2. Identify a location to create or download the script, e.g. /home/myuser
+3. Modify the script to match your mount paths and directories you want to backup. Add more rsync commands if you want to backup more directories.
+4. After saving the changes, set the permissions on the script: chmod +x backup.sh
+5. Now test the script: ./backup.sh the script should mount the view, copy the files and unmount when finished.
 
-* Select our Linux host and username
-* Copy the cluster ssh public key provided and add this to the ~/.ssh/authorized_keys file of our Linux user
-* Select the desired Policy, which will define the frequency and retention of the backups.
-* Select our Cohesity View
-* In the script information fields, enter the full path to the script, for example: `/home//backup.sh`
+## Create a Cohesity Remote Adapter Protection Group
+
+Now we will create a protection group that will schedule the execution of the script and protect the view.
+
+1. In the Cohesity UI, click Data Protection -> Protection -> Protect -> Remote Adapter
+2. Enter a name for the protection group
+3. Enter the Linux host IP or DNS name and the username we identified above
+4. Copy the ssh public key shown, append the key to the /home/myuser/.ssh/authorized_keys file on the Linux host
+5. Select a policy
+6. Select the view we created above
+7. Enter the full path to the script, e.g. /home/myuser/backup.sh
+8. Specify a start time
+9. Click Protect
+
+## Test the Protection Group
+
+1. In the Cohesity UI, click Data Protection -> Protection
+2. Click on the protection group name
+3. Click the three dots and click Run Now -> Run Now
+4. Wait for the backup to start. You will see a new run appear. Click on the date of the new run.
+5. Within the run, click on the view name. The pulse log will appear.
+6. You should see text output of the script and successful completion.

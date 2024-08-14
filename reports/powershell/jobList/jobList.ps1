@@ -10,7 +10,8 @@ param (
     [Parameter()][switch]$mcm,
     [Parameter()][string]$mfaCode,
     [Parameter()][switch]$emailMfaCode,
-    [Parameter()][string]$clusterName
+    [Parameter()][string]$clusterName,
+    [Parameter()][string]$outputPath = '.'
 )
 
 # source the cohesity-api helper code
@@ -47,8 +48,8 @@ $today = get-date
 $date = $today.ToString()
 $fileDate = $date.Replace('/','-').Replace(':','-').Replace(' ','_')
 
-$csvFile = "jobList_$($cluster.name)_$fileDate.csv"
-$htmlFile = "jobList_$($cluster.name)_$fileDate.html"
+$csvFile = $(Join-Path -Path $outputPath -ChildPath "jobList_$($cluster.name)_$fileDate.csv")
+$htmlFile = $(Join-Path -Path $outputPath -ChildPath "jobList_$($cluster.name)_$fileDate.html")
 
 $title = "Job List for $($cluster.name)"
 

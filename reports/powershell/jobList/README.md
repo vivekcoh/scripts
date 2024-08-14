@@ -40,3 +40,7 @@ Place both files in a folder together and run the main script like so:
 * -mcm: (optional) connect through MCM
 * -mfaCode: (optional) TOTP MFA code
 * -clusterName: (optional) cluster to connect to when connecting through Helios or MCM
+
+## Other Parameters
+
+* -outputPath: (optional) write output files to specified path (default is '.')

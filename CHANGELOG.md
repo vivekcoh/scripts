@@ -1,5 +1,10 @@
 # Change Log for cohesity/community-automation-samples
 
+## 2024-08-14
+
+* [rsyncBackup](https://github.com/cohesity/community-automation-samples/tree/main/remoteAdapter/rsyncBackup) [`New`] Remote Adapter Rsync backup script and instructions
+* [lv_snapper](https://github.com/cohesity/community-automation-samples/tree/main/bash/lv_snapper) [`New`] Pre/post scripts to snapshot an LVM volume
+
 ## 2024-08-11
 
 * [generateAgentCertificate.ps1](https://github.com/cohesity/community-automation-samples/tree/main/powershell/generateAgentCertificate) [`New`] Generate new agent certificate

@@ -15,7 +15,8 @@ param (
     [Parameter()][string]$clusterName = $null,
     [Parameter()][string]$serverName, #Server to add as physical source
     [Parameter()][string]$serverList,
-    [Parameter()][switch]$force
+    [Parameter()][switch]$force,
+    [Parameter()][switch]$reRegister
 )
 
 # gather view list
@@ -57,7 +58,7 @@ if($force){
 foreach($server in $servers){
     $server = [string]$server
     $registeredSource = (api get "protectionSources/registrationInfo?includeEntityPermissionInfo=true").rootNodes | Where-Object { $_.rootNode.name -eq $server }
-    if($registeredSource){
+    if($registeredSource -and ! $reRegister){
         "$server is already registered"
     }else{
         $newSource = @{
@@ -80,7 +81,9 @@ foreach($server in $servers){
             };
             'forceRegister' = $forceRegister
         }
-        
+        if($reRegister){
+            $newSource['reRegister'] = $True
+        }
         $result = api post /backupsources $newSource
         if($result.entity.id){
             "$server Registered"

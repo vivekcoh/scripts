@@ -50,3 +50,4 @@ Place both files in a folder together and run the main script like so:
 * -l, --serverlist: (optional) text file of server names to register (one per line)
 * -f, --force: (optional) force register
 * -t, --throttle: (optional) throttle network bandwidth to X MB/second
+* -r, --reregister: (optional) re-register the server (useful if agent configuration was lost)

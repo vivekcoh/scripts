@@ -15,6 +15,7 @@ parser.add_argument('-m', '--mfacode', type=str, default=None)
 parser.add_argument('-e', '--emailmfacode', action='store_true')
 parser.add_argument('-s', '--servername', action='append', type=str)  # server name to register
 parser.add_argument('-l', '--serverlist', type=str, default=None)     # text list of servers to register
+parser.add_argument('-r', '--reregister', action='store_true')
 parser.add_argument('-f', '--force', action='store_true')
 parser.add_argument('-t', '--throttle', type=int, default=0)
 
@@ -33,7 +34,7 @@ servername = args.servername
 serverlist = args.serverlist
 force = args.force
 throttle = args.throttle
-
+reregister = args.reregister
 
 # gather list function
 def gatherList(param=None, filename=None, name='items', required=True):
@@ -127,10 +128,13 @@ for server in servernames:
         'forceRegister': forceRegister
     }
 
+    if reregister is True:
+        newSource['reRegister'] = True
+
     if throttle > 0:
         newSource['registeredEntityParams'] = throttleParams
 
-    if existingsourceId is None:
+    if existingsourceId is None or reregister is True:
         result = api('post', '/backupsources', newSource)
         if result is not None:
             print("%s Registered" % server)

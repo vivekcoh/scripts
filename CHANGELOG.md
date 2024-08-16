@@ -1,5 +1,10 @@
 # Change Log for cohesity/community-automation-samples
 
+## 2024-08-16
+
+* [registerPhysical.py](https://github.com/cohesity/community-automation-samples/tree/main/python/registerPhysical) [`Update`] added -r, --reregister option
+* [registerPhysical.ps1](https://github.com/cohesity/community-automation-samples/tree/main/powershell/registerPhysical) [`Update`] added -r, --reregister option
+
 ## 2024-08-14
 
 * [jobList.ps1](https://github.com/cohesity/community-automation-samples/tree/main/reports/powershell/jobList) [`Update`] modernized authentication

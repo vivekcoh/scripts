@@ -231,9 +231,9 @@ def restore(thesefiles, doc, version, targetEntity, singleFile):
             cookie = None
             while True:
                 if cookie is not None:
-                    dirList = api('get', '/vm/directoryList?%s&useLibrarian=false&statFileEntries=false&dirPath=%s&cookie=%s' % (instance, thisFolder, cookie))
+                    dirList = api('get', '/vm/directoryList?%s&useLibrarian=false&statFileEntries=false&dirPath=%s&cookie=%s' % (instance, thisFolder, cookie), quiet=True)
                 else:
-                    dirList = api('get', '/vm/directoryList?%s&useLibrarian=false&statFileEntries=false&dirPath=%s' % (instance, thisFolder))
+                    dirList = api('get', '/vm/directoryList?%s&useLibrarian=false&statFileEntries=false&dirPath=%s' % (instance, thisFolder), quiet=True)
                 if dirList and 'entries' in dirList:
                     for entry in sorted(dirList['entries'], key=lambda e: e['name']):
                         nonwildcards.append(entry['fullPath'])
@@ -334,14 +334,14 @@ def listdir(searchPath, dirPath, instance, volumeInfoCookie=None, volumeName=Non
     thisDirPath = quote_plus(dirPath).replace('%2F%2F', '%2F')
     if cookie is not None:
         if volumeName is not None:
-            dirList = api('get', '/vm/directoryList?%s&useLibrarian=false&statFileEntries=false&dirPath=%s&volumeInfoCookie=%s&volumeName=%s&cookie=%s' % (instance, thisDirPath, volumeInfoCookie, volumeName, cookie))
+            dirList = api('get', '/vm/directoryList?%s&useLibrarian=false&statFileEntries=false&dirPath=%s&volumeInfoCookie=%s&volumeName=%s&cookie=%s' % (instance, thisDirPath, volumeInfoCookie, volumeName, cookie), quiet=True)
         else:
-            dirList = api('get', '/vm/directoryList?%s&useLibrarian=false&statFileEntries=false&dirPath=%s&cookie=%s' % (instance, thisDirPath, cookie))
+            dirList = api('get', '/vm/directoryList?%s&useLibrarian=false&statFileEntries=false&dirPath=%s&cookie=%s' % (instance, thisDirPath, cookie), quiet=True)
     else:
         if volumeName is not None:
-            dirList = api('get', '/vm/directoryList?%s&useLibrarian=false&statFileEntries=false&dirPath=%s&volumeInfoCookie=%s&volumeName=%s' % (instance, thisDirPath, volumeInfoCookie, volumeName))
+            dirList = api('get', '/vm/directoryList?%s&useLibrarian=false&statFileEntries=false&dirPath=%s&volumeInfoCookie=%s&volumeName=%s' % (instance, thisDirPath, volumeInfoCookie, volumeName), quiet=True)
         else:
-            dirList = api('get', '/vm/directoryList?%s&useLibrarian=false&statFileEntries=false&dirPath=%s' % (instance, thisDirPath))
+            dirList = api('get', '/vm/directoryList?%s&useLibrarian=false&statFileEntries=false&dirPath=%s' % (instance, thisDirPath), quiet=True)
     if dirList and 'entries' in dirList:
         for entry in sorted(dirList['entries'], key=lambda e: e['name']):
             if entry['fullPath'].lower() == searchPath.lower():
@@ -356,7 +356,7 @@ def listdir(searchPath, dirPath, instance, volumeInfoCookie=None, volumeName=Non
 if independentRestores is False:
     restore(files, doc, version, targetEntity, False)
 else:
-    unindexedSnapshots = [s for s in doc['versions'] if 'numEntriesIndexed' not in s or s['numEntriesIndexed'] == 0 or 'indexingStatus' not in s or s['indexingStatus'] != 2]
+    unindexedSnapshots = [s for s in versions if 'numEntriesIndexed' not in s or s['numEntriesIndexed'] == 0 or 'indexingStatus' not in s or s['indexingStatus'] != 2]
     if noindex or (unindexedSnapshots is not None and len(unindexedSnapshots) > 0):
         print('Crawling for files...')
     for file in files:
@@ -369,7 +369,7 @@ else:
         fileRestored = False
         if noindex or (unindexedSnapshots is not None and len(unindexedSnapshots) > 0):
             foundFile = None
-            for version in doc['versions']:
+            for version in versions:
                 if foundFile is None:
                     attemptNum = 0
                     if 'attemptNum' in version['instanceId']:
@@ -391,7 +391,7 @@ else:
                         # perform recursive directory walk (deep search)
                         backupType = doc['backupType']
                         if backupType in volumeTypes:
-                            volumeList = api('get', '/vm/volumeInfo?%s&statFileEntries=false' % instance)
+                            volumeList = api('get', '/vm/volumeInfo?%s&statFileEntries=false' % instance, quiet=True)
                             if 'volumeInfos' in volumeList:
                                 volumeInfoCookie = volumeList['volumeInfoCookie']
                                 for volume in sorted(volumeList['volumeInfos'], key=lambda v: v['name']):

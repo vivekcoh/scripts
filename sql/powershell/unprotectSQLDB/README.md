@@ -19,7 +19,7 @@ $repoURL = 'https://raw.githubusercontent.com/cohesity/community-automation-samp
 
 ## Components
 
-* [unprotectSQLDB.ps1](https://raw.githubusercontent.com/cohesity/community-automation-samples/main/sql/unprotectSQLDB/unprotectSQLDB.ps1): the main PowerShell script
+* [unprotectSQLDB.ps1](https://raw.githubusercontent.com/cohesity/community-automation-samples/main/sql/powershell/unprotectSQLDB/unprotectSQLDB.ps1): the main PowerShell script
 * [cohesity-api.ps1](https://raw.githubusercontent.com/cohesity/community-automation-samples/main/powershell/cohesity-api/cohesity-api.ps1): the Cohesity REST API helper module
 
 Place all files in a folder together. And run the script like so:

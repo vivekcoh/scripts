@@ -23,7 +23,7 @@ $repoURL = 'https://raw.githubusercontent.com/cohesity/community-automation-samp
 
 ## Components
 
-* [convertFileBasedSQLjobToVolume.ps1](https://raw.githubusercontent.com/cohesity/community-automation-samples/main/sql/convertFileBasedSQLjobToVolume/convertFileBasedSQLjobToVolume.ps1): the main PowerShell script
+* [convertFileBasedSQLjobToVolume.ps1](https://raw.githubusercontent.com/cohesity/community-automation-samples/main/sql/powershell/convertFileBasedSQLjobToVolume/convertFileBasedSQLjobToVolume.ps1): the main PowerShell script
 * [cohesity-api.ps1](https://raw.githubusercontent.com/cohesity/community-automation-samples/main/powershell/cohesity-api/cohesity-api.ps1): the Cohesity REST API helper module
 
 Place all files in a folder together. And run the script like so:

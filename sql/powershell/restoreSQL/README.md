@@ -23,7 +23,7 @@ $repoURL = 'https://raw.githubusercontent.com/cohesity/community-automation-samp
 
 ## Components
 
-* [restoreSQL.ps1](https://raw.githubusercontent.com/cohesity/community-automation-samples/main/sql/restoreSQL/restoreSQL.ps1): the main powershell script
+* [restoreSQL.ps1](https://raw.githubusercontent.com/cohesity/community-automation-samples/main/sql/powershell/restoreSQL/restoreSQL.ps1): the main powershell script
 * [cohesity-api.ps1](https://raw.githubusercontent.com/cohesity/community-automation-samples/main/powershell/cohesity-api/cohesity-api.ps1): the Cohesity REST API helper module
 
 Place both files in a folder together and run the main script like so:

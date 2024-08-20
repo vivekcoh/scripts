@@ -19,7 +19,7 @@ $repoURL = 'https://raw.githubusercontent.com/cohesity/community-automation-samp
 
 ## Components
 
-* [sqlStreamCount.ps1](https://raw.githubusercontent.com/cohesity/community-automation-samples/main/sql/sqlStreamCount/sqlStreamCount.ps1): the main PowerShell script
+* [sqlStreamCount.ps1](https://raw.githubusercontent.com/cohesity/community-automation-samples/main/sql/powershell/sqlStreamCount/sqlStreamCount.ps1): the main PowerShell script
 * [cohesity-api.ps1](https://raw.githubusercontent.com/cohesity/community-automation-samples/main/powershell/cohesity-api/cohesity-api.ps1): the Cohesity REST API helper module
 
 Place all files in a folder together. And run the script like so:

@@ -19,7 +19,7 @@ $repoURL = 'https://raw.githubusercontent.com/cohesity/community-automation-samp
 
 ## Components
 
-* [sqlRecoveryPoints.ps1](https://raw.githubusercontent.com/cohesity/community-automation-samples/main/sql/sqlRecoveryPoints/sqlRecoveryPoints.ps1): the main python script
+* [sqlRecoveryPoints.ps1](https://raw.githubusercontent.com/cohesity/community-automation-samples/main/sql/powershell/sqlRecoveryPoints/sqlRecoveryPoints.ps1): the main python script
 * [cohesity-api.ps1](https://raw.githubusercontent.com/cohesity/community-automation-samples/main/powershell/cohesity-api/cohesity-api.ps1): the Cohesity REST API helper module
 
 Place both files in a folder together and run the main script like so:

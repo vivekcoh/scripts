@@ -23,7 +23,7 @@ $repoURL = 'https://raw.githubusercontent.com/cohesity/community-automation-samp
 
 ## Components
 
-* [cloneBackupToView.ps1](https://raw.githubusercontent.com/cohesity/community-automation-samples/main/sql/cloneBackupToView/cloneBackupToView.ps1): the main powershell script
+* [cloneBackupToView.ps1](https://raw.githubusercontent.com/cohesity/community-automation-samples/main/sql/powershell/cloneBackupToView/cloneBackupToView.ps1): the main powershell script
 * [cohesity-api.ps1](https://raw.githubusercontent.com/cohesity/community-automation-samples/main/powershell/cohesity-api/cohesity-api.ps1): the Cohesity REST API helper module
 
 Place both files in a folder together, then we can run the script.

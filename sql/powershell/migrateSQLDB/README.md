@@ -19,7 +19,7 @@ $repoURL = 'https://raw.githubusercontent.com/cohesity/community-automation-samp
 
 ## Components
 
-* [migrateSQLDB.ps1](https://raw.githubusercontent.com/cohesity/community-automation-samples/main/sql/migrateSQLDB/migrateSQLDB.ps1): the main powershell script
+* [migrateSQLDB.ps1](https://raw.githubusercontent.com/cohesity/community-automation-samples/main/sql/powershell/migrateSQLDB/migrateSQLDB.ps1): the main powershell script
 * [cohesity-api.ps1](https://raw.githubusercontent.com/cohesity/community-automation-samples/main/powershell/cohesity-api/cohesity-api.ps1): the Cohesity REST API helper module
 
 ## Operating Modes

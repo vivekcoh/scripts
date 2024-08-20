@@ -19,7 +19,7 @@ $repoURL = 'https://raw.githubusercontent.com/cohesity/community-automation-samp
 
 ## Components
 
-* [sqlHeatmapReport.ps1](https://raw.githubusercontent.com/cohesity/community-automation-samples/main/sql/sqlHeatmapReport/sqlHeatmapReport.ps1): the main powershell script
+* [sqlHeatmapReport.ps1](https://raw.githubusercontent.com/cohesity/community-automation-samples/main/sql/powershell/sqlHeatmapReport/sqlHeatmapReport.ps1): the main powershell script
 * [cohesity-api.ps1](https://raw.githubusercontent.com/cohesity/community-automation-samples/main/powershell/cohesity-api/cohesity-api.ps1): the Cohesity REST API helper module
 
 ## Example

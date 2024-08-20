@@ -19,7 +19,7 @@ $repoURL = 'https://raw.githubusercontent.com/cohesity/community-automation-samp
 
 ## Components
 
-* [aagFailoverMinder.ps1](https://raw.githubusercontent.com/cohesity/community-automation-samples/main/sql/aagFailoverMinder/aagFailoverMinder.ps1): the main PowerShell script
+* [aagFailoverMinder.ps1](https://raw.githubusercontent.com/cohesity/community-automation-samples/main/sql/powershell/aagFailoverMinder/aagFailoverMinder.ps1): the main PowerShell script
 * [cohesity-api.ps1](https://raw.githubusercontent.com/cohesity/community-automation-samples/main/powershell/cohesity-api/cohesity-api.ps1): the Cohesity REST API helper module
 
 Place all files in a folder together. And run the script like so:

@@ -33,7 +33,7 @@ $repoURL = 'https://raw.githubusercontent.com/cohesity/community-automation-samp
 
 ## Components
 
-* [migrateSQLProtectionGroup.ps1](https://raw.githubusercontent.com/cohesity/community-automation-samples/main/sql/migrateSQLProtectionGroup/migrateSQLProtectionGroup.ps1): the main PowerShell script
+* [migrateSQLProtectionGroup.ps1](https://raw.githubusercontent.com/cohesity/community-automation-samples/main/sql/powershell/migrateSQLProtectionGroup/migrateSQLProtectionGroup.ps1): the main PowerShell script
 * [cohesity-api.ps1](https://raw.githubusercontent.com/cohesity/community-automation-samples/main/powershell/cohesity-api/cohesity-api.ps1): the Cohesity REST API helper module
 
 The safest way to migrate SQL protection group is to avoid destroying the protection group and sources on the source cluster. This is the default behavior of the script. Note that during migration, the sources are force registered onto the target cluster, so they will be broken on the source, but by leaving the protection group behind, we will have the opportunity to retry the migration if it fails for some reason.

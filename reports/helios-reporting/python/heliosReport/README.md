@@ -46,6 +46,7 @@ Place both files in a folder together and run the main script like so:
 * -fl, --filterlist: (optional) text file of items to search for (e.g. server names)
 * -fp, --filterproperty: (optional) property to search for items (e.g. objectName)
 * -o, --outputpath: (optional) path to write output files (default is '.')
+* -of, --outputfile: (optional) filename (minus extension) to name output files (default is automatic)
 
 ## Filters
 

@@ -30,6 +30,7 @@ parser.add_argument('-f', '--filter', action='append', type=str)
 parser.add_argument('-fl', '--filterlist', type=str, default=None)
 parser.add_argument('-fp', '--filterproperty', type=str, default=None)
 parser.add_argument('-o', '--outputpath', type=str, default='.')
+parser.add_argument('-of', '--outputfile', type=str, default=None)
 
 args = parser.parse_args()
 
@@ -51,6 +52,7 @@ filters = args.filter
 filterlist = args.filterlist
 filterproperty = args.filterproperty
 outputpath = args.outputpath
+outputfile = args.outputfile
 maxrecords = args.maxrecords
 
 
@@ -153,15 +155,17 @@ title = report[0]['title']
 
 # TSV output
 
-tsvFileName = os.path.join(outputpath, "%s_%s_%s.tsv" % (title.replace('/', '-').replace('\\', '-'), start, end))
-tsv = codecs.open(tsvFileName, 'w', 'utf-8')
+if outputfile is not None:
+    tsvFileName = os.path.join(outputpath, "%s.tsv" % outputfile)
+    csvFileName = os.path.join(outputpath, "%s.csv" % outputfile)
+    htmlFileName = os.path.join(outputpath, "%s.html" % outputfile)
+else:
+    tsvFileName = os.path.join(outputpath, "%s_%s_%s.tsv" % (title.replace('/', '-').replace('\\', '-'), start, end))
+    csvFileName = os.path.join(outputpath, "%s_%s_%s.csv" % (title.replace('/', '-').replace('\\', '-'), start, end))
+    htmlFileName = os.path.join(outputpath, "%s_%s_%s.html" % (title.replace('/', '-').replace('\\', '-'), start, end))
 
-# CSV output
-csvFileName = os.path.join(outputpath, "%s_%s_%s.csv" % (title.replace('/', '-').replace('\\', '-'), start, end))
 csv = codecs.open(csvFileName, 'w', 'utf-8')
-
-# HTML output
-htmlFileName = os.path.join(outputpath, "%s_%s_%s.html" % (title.replace('/', '-').replace('\\', '-'), start, end))
+tsv = codecs.open(tsvFileName, 'w', 'utf-8')
 htmlFile = codecs.open(htmlFileName, 'w', 'utf-8')
 
 html = '''<html>

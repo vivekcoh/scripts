@@ -1,5 +1,13 @@
 # Change Log for cohesity/community-automation-samples
 
+## 2024-08-20
+
+* [heliosReport.py](https://github.com/cohesity/community-automation-samples/tree/main/reports/helios-reporting/python/heliosReport) [`Update`] added outputfile parameter
+
+## 2024-08-19
+
+* [restoreFiles.py](https://github.com/cohesity/community-automation-samples/tree/main/python/restoreFiles) [`Fix`] end and start dates not honored
+
 ## 2024-08-16
 
 * [registerPhysical.py](https://github.com/cohesity/community-automation-samples/tree/main/python/registerPhysical) [`Update`] added -r, --reregister option
@@ -48,7 +56,7 @@
 
 * [clusterInfo.py](https://github.com/cohesity/community-automation-samples/tree/main/python/clusterInfo) [`Fix`] fixed crash when nodeInfo not available
 * [directoryQuota.ps1](https://github.com/cohesity/community-automation-samples/tree/main/powershell/directoryQuota) [`Update`] added paging to API call
-* [restoreSQL.ps1](https://github.com/cohesity/community-automation-samples/tree/main/sql/restoreSQL) [`Update`] added -returnErrorMessage option
+* [restoreSQL.ps1](https://github.com/cohesity/community-automation-samples/tree/main/sql/powershell/restoreSQL) [`Update`] added -returnErrorMessage option
 
 ## 2024-07-30
 
@@ -217,7 +225,7 @@
 ## 2024-05-21
 
 * [restoreSQL-CCS.ps1](https://github.com/cohesity/community-automation-samples/tree/main/ccs/powershell/restoreSQL-CCS) [`Update`] added -logRangeDays parameter to limit scope of log lookups
-* [restoreSQLv2.ps1](https://github.com/cohesity/community-automation-samples/tree/main/sql/restoreSQLv2) [`Update`] added -logRangeDays parameter to limit scope of log lookups
+* [restoreSQLv2.ps1](https://github.com/cohesity/community-automation-samples/tree/main/sql/powershell/restoreSQLv2) [`Update`] added -logRangeDays parameter to limit scope of log lookups
 * [obfuscateLogs.py](https://github.com/cohesity/community-automation-samples/tree/main/python/obfuscateLogs) [`New`] obfuscate paths in log files before uploading to Cohesity Support
 * [heliosLicenseReport.py](https://github.com/cohesity/community-automation-samples/tree/main/reports/helios-other/python/heliosLicenseReport) [`Update`] added CSV output format
 
@@ -527,7 +535,7 @@ Update`] added -taskName parameter
 ## 2024-02-06
 
 * [clusterProtectionRuns.ps1](https://github.com/cohesity/community-automation-samples/tree/main/reports/powershell/clusterProtectionRuns) [`Update`] added support for cloudArchive Direct
-* [protectSQLServer.ps1](https://github.com/cohesity/community-automation-samples/tree/main/sql/protectSQLServer) [`Update`] added option to enable source side deduplication (for file-based protection type only)
+* [protectSQLServer.ps1](https://github.com/cohesity/community-automation-samples/tree/main/sql/powershell/protectSQLServer) [`Update`] added option to enable source side deduplication (for file-based protection type only)
 * [backedUpFileList.ps1](https://github.com/cohesity/community-automation-samples/tree/main/powershell/backedUpFileList) [`Fix`] handle missing attemptNum property
 * [backedUpFileList.py](https://github.com/cohesity/community-automation-samples/tree/main/python/backedUpFileList) [`Fix`] handle missing attemptNum property
 
@@ -552,7 +560,7 @@ Update`] added -taskName parameter
 ## 2024-01-26
 
 * [restartFailedJobs.ps1](https://github.com/cohesity/community-automation-samples/tree/main/powershell/restartFailedJobs) [`New`] find and restart any failed jobs
-* [restoreSQLv2.ps1](https://github.com/cohesity/community-automation-samples/tree/main/sql/restoreSQLv2) [`Fix`] added several validation checks for negative search results
+* [restoreSQLv2.ps1](https://github.com/cohesity/community-automation-samples/tree/main/sql/powershell/restoreSQLv2) [`Fix`] added several validation checks for negative search results
 
 ## 2024-01-25
 
@@ -573,7 +581,7 @@ Update`] added -taskName parameter
 ## 2024-01-19
 
 * [agentStatus.ps1](https://github.com/cohesity/community-automation-samples/tree/main/reports/powershell/agentStatus) [`Removed`] this script has been superceded by [registeredSources.ps1](https://github.com/cohesity/community-automation-samples/tree/main/reports/powershell/registeredSources)
-* [protectSQLServer.ps1](https://github.com/cohesity/community-automation-samples/tree/main/sql/protectSQLServer) [`Update`] added -unprotectedDBs parameter
+* [protectSQLServer.ps1](https://github.com/cohesity/community-automation-samples/tree/main/sql/powershell/protectSQLServer) [`Update`] added -unprotectedDBs parameter
 * [changeLocalRetention.ps1](https://github.com/cohesity/community-automation-samples/tree/main/powershell/changeLocalRetention) [`Update`] added -jobList parameter
 * [protectCcsM365Mailboxes.ps1](https://github.com/cohesity/community-automation-samples/tree/main/ccs/powershell/protectCcsM365Mailboxes) [`Update`] added support for security groups
 * [smbFileOpens](https://github.com/cohesity/community-automation-samples/tree/main/reports/powershell/smbFileOpens) [`Update`] added path filter
@@ -584,7 +592,7 @@ Update`] added -taskName parameter
 
 ## 2024-01-17
 
-* [restoreSQLv2.ps1](https://github.com/cohesity/community-automation-samples/tree/main/sql/restoreSQLv2) [`Fix`] added validation of target instance name
+* [restoreSQLv2.ps1](https://github.com/cohesity/community-automation-samples/tree/main/sql/powershell/restoreSQLv2) [`Fix`] added validation of target instance name
 
 ## 2024-01-16
 

@@ -65,9 +65,10 @@ Now we will create a protection group that will schedule the execution of the sc
 4. Copy the ssh public key shown, append the key to the /home/myuser/.ssh/authorized_keys file on the Linux host
 5. Select a policy
 6. Select the view we created above
-7. Enter the full path to the script, e.g. /home/myuser/backup.sh
-8. Specify a start time
-9. Click Protect
+7. Enter the full path to the script, e.g. `/home/myuser/backup.sh`
+8. Enter the script parameters (-v viewpath), e.g. `-v mycluster.mydomain.net:/myview`
+9. Specify a start time
+10. Click Protect
 
 ## Test the Protection Group
 

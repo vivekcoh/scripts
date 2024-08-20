@@ -3,6 +3,7 @@
 ## 2024-08-20
 
 * [heliosReport.py](https://github.com/cohesity/community-automation-samples/tree/main/reports/helios-reporting/python/heliosReport) [`Update`] added outputfile parameter
+* [pgdumpBackup](https://github.com/bseltz-cohesity/scripts/tree/master/remoteAdapter/pgdumpBackup) [`New`] Remote adapter script to backup PostgreSQL
 
 ## 2024-08-19
 

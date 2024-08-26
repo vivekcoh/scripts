@@ -22,6 +22,7 @@ parser.add_argument('-mp', '--mailport', type=int, default=25)
 parser.add_argument('-to', '--sendto', action='append', type=str)
 parser.add_argument('-fr', '--sendfrom', type=str)
 parser.add_argument('-as', '--alwayssend', action='store_true')
+parser.add_argument('-f', '--fullbackup', action='store_true')
 args = parser.parse_args()
 
 vip = args.vip
@@ -37,6 +38,7 @@ mailport = args.mailport
 sendto = args.sendto
 sendfrom = args.sendfrom
 alwayssend = args.alwayssend
+fullbackup = args.fullbackup
 
 
 def waitForRefresh(sourceId):
@@ -165,6 +167,8 @@ for clustername in clusternames:
                             "copyRunTargets": copyRunTargets,
                             "runNowParameters": runNowParameters
                         }
+                        if fullbackup is True:
+                            runParams['runType'] = 'kFull'
                         newRun = api('post', 'protectionJobs/run/%s' % jobId, runParams)
                         print('- Running job %s again' % job['name'])
             except Exception:

@@ -219,6 +219,11 @@ function validateServer($object, $vm){
     $lastStatus = $run.backupRun.status
     # get latest recovery point dirlist
     $readableBackup = $False
+    if(! $version.instanceId.PSObject.Properties['attemptNum']){
+        $attemptNum = 0
+    }else{
+        $attemptNum = $version.instanceId.attemptNum
+    }
     $instance = ("attemptNum={0}&clusterId={1}&clusterIncarnationId={2}&entityId={3}&jobId={4}&jobInstanceId={5}&jobStartTimeUsecs={6}&jobUidObjectId={7}" -f `
             $version.instanceId.attemptNum,
             $doc.objectId.jobUid.clusterId,

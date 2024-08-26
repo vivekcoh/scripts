@@ -235,13 +235,8 @@ function validateServer($object, $vm){
             $doc.objectId.jobUid.objectId)
     if($backupType -in $volumeTypes){
         $volumeList = api get "/vm/volumeInfo?$instance&statFileEntries=false"
-        if($volumeList.volumeInfos){
-            $volumeInfoCookie = $volumeList.volumeInfoCookie
-            $volumeName = [System.Web.HttpUtility]::UrlEncode($volumeList.volumeInfos[0].name)
-            $dirList = api get "/vm/directoryList?$instance&dirPath=%2F&statFileEntries=false&volumeInfoCookie=$volumeInfoCookie&volumeName=$volumeName"
-            if($dirList.entries){
-                $readableBackup = $True
-            }
+        if($volumeList.PSObject.Properties['volumeInfos']){
+            $readableBackup = $True
         }                
     }else{
         $dirList = api get "/vm/directoryList?$instance&dirPath=%2F&statFileEntries=false"

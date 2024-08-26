@@ -47,3 +47,4 @@ Place both files in a folder together and run the main script like so:
 * -fr, --sendfrom: (optional) email address to show in the from field
 * -to, --sendto: (optional) email addresses to send report to (repeat for multple recipients)
 * -as, --alwayssend: (optional) send email even if no issues detected
+* -f, --fullbackup: (optional) perform full backup (default is incremental)

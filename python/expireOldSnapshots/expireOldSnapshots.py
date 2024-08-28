@@ -47,6 +47,9 @@ skipmonthlies = args.skipmonthlies
 activeconfirmation = args.activeconfirmation
 activeonly = args.activeonly
 
+if activeconfirmation is True:
+    confirmreplication = True
+
 # authenticate
 apiauth(vip=vip, username=username, domain=domain, password=password, useApiKey=useApiKey, noretry=True)
 

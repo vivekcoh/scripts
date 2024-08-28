@@ -67,7 +67,7 @@ nodes = api('get', 'protectionSources/registrationInfo?environments=kPhysical&al
 for node in nodes['rootNodes']:
     version = 'unknown'
     name = node['rootNode']['physicalProtectionSource']['name']
-    if 'agents' in node['rootNode']['physicalProtectionSource'] and len(node['rootNode']['physicalProtectionSource']['agents']) > 0:
+    if 'agents' in node['rootNode']['physicalProtectionSource'] and len(node['rootNode']['physicalProtectionSource']['agents']) > 0 and 'version' in node['rootNode']['physicalProtectionSource']['agents'][0]:
         version = node['rootNode']['physicalProtectionSource']['agents'][0]['version']
     hostType = node['rootNode']['physicalProtectionSource']['hostType'][1:]
     osName = node['rootNode']['physicalProtectionSource']['osName']

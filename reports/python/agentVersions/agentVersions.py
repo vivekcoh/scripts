@@ -62,11 +62,13 @@ f = codecs.open(outfile, 'w')
 # headings
 f.write('Cluster Name\tSource Name\tAgent Version\tOS Type\tOS Name\n')
 
-nodes = api('get', 'protectionSources/registrationInfo?environments=kPhysical')
+nodes = api('get', 'protectionSources/registrationInfo?environments=kPhysical&allUnderHierarchy=true')
 
 for node in nodes['rootNodes']:
+    version = 'unknown'
     name = node['rootNode']['physicalProtectionSource']['name']
-    version = node['rootNode']['physicalProtectionSource']['agents'][0]['version']
+    if 'agents' in node['rootNode']['physicalProtectionSource'] and len(node['rootNode']['physicalProtectionSource']['agents']) > 0:
+        version = node['rootNode']['physicalProtectionSource']['agents'][0]['version']
     hostType = node['rootNode']['physicalProtectionSource']['hostType'][1:]
     osName = node['rootNode']['physicalProtectionSource']['osName']
     print('%s\t%s\t(%s) %s' % (name, version, hostType, osName))

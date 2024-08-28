@@ -29,15 +29,6 @@ First, run the script without the -e parameter to see what would be expired
 # end
 ```
 
-```text
-Connected!
-Searching for old snapshots...
-BD_Prod_Biz_App - 2019-06-24 21:00:01
-BD_Prod_Biz_App - 2019-06-23 21:00:01
-DTMB - 2019-06-24 09:05:01
-DTMB - 2019-06-23 09:05:00
-```
-
 When you're happy about what would be deleted you can include the -e switch to cause these snapshots to be expired
 
 ```bash
@@ -52,14 +43,6 @@ or if you want to ensure that the snapshots have been successfully replicated be
 # expire snapshots older than 30 days (only if successfully replicated)
 ./expireOldSnapshots.py -v mycluster -u myuser -d mydomain.net -k 30 -e -r
 # end
-```
-
-```text
-Connected!
-Searching for old snapshots...
-Skipping SQL Gold - lab3 snapshot from 2019-04-14 01:01:14 (not replicated)
-Skipping SQL Gold - lab3 snapshot from 2019-04-13 13:01:13 (not replicated)
-Skipping SQL Gold - lab3 snapshot from 2019-04-13 01:01:12 (not replicated)
 ```
 
 ## Parameters
@@ -79,6 +62,8 @@ Skipping SQL Gold - lab3 snapshot from 2019-04-13 01:01:12 (not replicated)
 * -at, --arcvhivetarget: (optional) specific target name to use for confirmarchive
 * -n, --numruns: (optional) number of runs to retrieve at a time (default is 1000)
 * -s, --skipmonthlies: (optional) don't expire snapshots from the first day of the month
+* -ac, --activeconfirmation: (optional) active replication confirmation
+* -ao, --activeonly: (optional) skip confirmations for inactive jobs
 
 ## The Python Helper Module - pyhesity.py
 

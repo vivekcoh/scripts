@@ -20,6 +20,8 @@ parser.add_argument('-l', '--joblist', type=str)                    # (optional)
 parser.add_argument('-k', '--daystokeep', type=int, required=True)  # number of days of snapshots to retain
 parser.add_argument('-e', '--expire', action='store_true')          # (optional) expire snapshots older than k days
 parser.add_argument('-r', '--confirmreplication', action='store_true')     # (optional) confirm replication before expiring
+parser.add_argument('-ac', '--activeconfirmation', action='store_true')    # (optional) active replication confirmation
+parser.add_argument('-ao', '--activeonly', action='store_true')  # (optional) skip confirmations for inactive jobs 
 parser.add_argument('-rt', '--replicationtarget', type=str, default=None)  # (optional) replication target to confirm
 parser.add_argument('-a', '--confirmarchive', action='store_true')     # (optional) confirm archival before expiring
 parser.add_argument('-at', '--archivetarget', type=str, default=None)  # (optional) archive target to confirm
@@ -42,6 +44,8 @@ confirmarchive = args.confirmarchive
 archivetarget = args.archivetarget
 numruns = args.numruns
 skipmonthlies = args.skipmonthlies
+activeconfirmation = args.activeconfirmation
+activeonly = args.activeonly
 
 # authenticate
 apiauth(vip=vip, username=username, domain=domain, password=password, useApiKey=useApiKey, noretry=True)
@@ -82,7 +86,11 @@ nowUsecs = dateToUsecs(now.strftime("%Y-%m-%d %H:%M:%S"))
 print("Searching for old snapshots...")
 finishedStates = ['kSuccess', 'kFailure', 'kWarning']
 
+contexts = {}
+jobLists = {}
+
 for job in sorted(jobs, key=lambda job: job['name'].lower()):
+
     if len(jobnames) == 0 or job['name'].lower() in [j.lower() for j in jobnames]:
         print('\n%s' % job['name'])
         endUsecs = nowUsecs
@@ -109,11 +117,37 @@ for job in sorted(jobs, key=lambda job: job['name'].lower()):
                         continue
                 # check for replication
                 replicated = False
-                for copyRun in run['copyRun']:
-                    if copyRun['target']['type'] == 'kRemote':
-                        if copyRun['status'] == 'kSuccess':
-                            if replicationtarget is None or ('clusterName' in copyRun['target']['replicationTarget'] and copyRun['target']['replicationTarget']['clusterName'].lower() == replicationtarget.lower()):
-                                replicated = True
+                if activeonly is not True or 'isActive' not in job or job['isActive'] is True:
+                    for copyRun in run['copyRun']:
+                        if copyRun['target']['type'] == 'kRemote':
+                            if copyRun['status'] == 'kSuccess':
+                                if replicationtarget is None or ('clusterName' in copyRun['target']['replicationTarget'] and copyRun['target']['replicationTarget']['clusterName'].lower() == replicationtarget.lower()):
+                                    if activeconfirmation:
+                                        repltarget = copyRun['target']['replicationTarget']['clusterName']
+                                        context = getContext()
+                                        if repltarget not in contexts.keys():
+                                            apiauth(vip=repltarget, username=username, domain=domain, password=password, useApiKey=useApiKey, noretry=True, quiet=True)
+                                            # exit if not authenticated
+                                            if apiconnected() is False:
+                                                print('authentication failed')
+                                                exit(1)
+                                            contexts[repltarget] = getContext()
+                                            jobLists[repltarget] = api('get', 'protectionJobs')
+                                        else:
+                                            setContext(contexts[repltarget])
+                                        repljob = [j for j in jobLists[repltarget] if j['name'] == job['name']]
+                                        if repljob is not None and len(repljob) > 0:
+                                            replicaRun = api('get', 'protectionRuns?startedTimeUsecs=%s&jobId=%s' % (startdateusecs, repljob[0]['id']))
+                                            if replicaRun is not None and len(replicaRun) > 0:
+                                                for replicaCopyRun in replicaRun[0]['copyRun']:
+                                                    if replicaCopyRun['target']['type'] == 'kLocal':
+                                                        if replicaCopyRun['expiryTimeUsecs'] > nowUsecs and replicaCopyRun['status'] == 'kSuccess':
+                                                            replicated = True
+                                        setContext(context)
+                                    else:    
+                                        replicated = True
+                else:
+                    replicated = True
 
                 # check for archive
                 archived = False

@@ -22,7 +22,9 @@ param (
     [Parameter()][int]$fullProtectionSlaTimeMins,
     [Parameter()][ValidateSet('None','kSuccess','kSlaViolation','kFailure')][array]$alertOn,
     [Parameter()][array]$addRecipient,
-    [Parameter()][array]$removeRecipient
+    [Parameter()][array]$removeRecipient,
+    [Parameter()][switch]$disableIndexing,
+    [Parameter()][switch]$enableIndexing
 )
 
 # source the cohesity-api helper code
@@ -65,6 +67,20 @@ function findObjectParam($o){
     }
     return $objectParam
 }
+
+function findIndexingPolicy($o){
+    $jobParams = $o.PSObject.Properties
+    foreach($param in $jobParams){
+        if($param.Name -eq 'indexingPolicy'){
+            $indexParam = $o.$($param.Name)
+        }elseif($param.TypeNameOfValue -eq 'System.Management.Automation.PSCustomObject'){
+            $indexParam = findIndexingPolicy $o.$($param.Name)
+        }
+    }
+    return $indexParam
+}
+
+
 
 # gather list from command line params and file
 function gatherList($Param=$null, $FilePath=$null, $Required=$True, $Name='items'){
@@ -121,6 +137,33 @@ if($policyName){
         Write-Warning "Policy $policyName not found!"
         exit 1
     }
+}
+
+# default indexing policy
+$defaultIndexingPolicy = @{
+    "enableIndexing" = $true;
+    "includePaths" = @(
+        "/"
+    );
+    "excludePaths" = @(
+        '/$Recycle.Bin';
+        "/Windows";
+        "/Program Files";
+        "/Program Files (x86)";
+        "/ProgramData";
+        "/System Volume Information";
+        "/Users/*/AppData";
+        "/Recovery";
+        "/var";
+        "/usr";
+        "/sys";
+        "/proc";
+        "/lib";
+        "/grub";
+        "/grub2";
+        "/opt";
+        "/splunk"
+    )
 }
 
 foreach($job in $jobs.protectionGroups | Sort-Object -Property name){
@@ -201,6 +244,7 @@ foreach($job in $jobs.protectionGroups | Sort-Object -Property name){
         }
         # update alerts
         if($alertOn){
+            Write-Host "    updating alerts"
             $updateJob = $True
             if("None" -in $alertOn){
                 if($job.PSObject.Properties['alertPolicy']){
@@ -219,6 +263,7 @@ foreach($job in $jobs.protectionGroups | Sort-Object -Property name){
         }
         # add alert recipients
         if($addRecipient.Count -gt 0){
+            Write-Host "    updating alerts"
             if($job.PSObject.Properties['alertPolicy']){
                 foreach($address in $addRecipient){
                     $address = [string]$address
@@ -235,12 +280,39 @@ foreach($job in $jobs.protectionGroups | Sort-Object -Property name){
         }
         # remove alert recipients
         if($removeRecipient.Count -gt 0){
+            Write-Host "    updating alerts"
             if($job.PSObject.Properties['alertPolicy']){
                 foreach($address in $removeRecipient){
                     if($address -in $job.alertPolicy.alertTargets.emailAddress){
                         $job.alertPolicy.alertTargets = @($job.alertPolicy.alertTargets | Where-Object {$_.emailAddress -ne $address})
                         $updateJob = $True
                     }
+                }
+            }
+        }
+        # enable indexing
+        if($enableIndexing){
+            Write-Host "    updating indexing"
+            $indexingPolicy = findIndexingPolicy $job
+            if($indexingPolicy){
+                if($indexingPolicy.enableIndexing -eq $false){
+                    $indexingPolicy.enableIndexing = $True
+                    $indexingPolicy.includePaths = $defaultIndexingPolicy.includePaths
+                    $indexingPolicy.excludePaths = $defaultIndexingPolicy.excludePaths
+                    $updateJob = $True
+                }
+            }
+        }
+        # disable indexing
+        if($disableIndexing){
+            Write-Host "    updating indexing"
+            $indexingPolicy = findIndexingPolicy $job
+            if($indexingPolicy){
+                if($indexingPolicy.enableIndexing -eq $True){
+                    $indexingPolicy.enableIndexing = $false
+                    $indexingPolicy.includePaths = $null
+                    $indexingPolicy.excludePaths = $null
+                    $updateJob = $True
                 }
             }
         }

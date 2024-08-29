@@ -93,3 +93,5 @@ Changing several properties at once:
 * -alertOn: (otional) one or more of the following: None, kSuccess, kSlaViolation, kFailure (comma separated)
 * -addRecipient: (optional) one or more email addresses to add to alert recipients (comma separated)
 * -removeRecipient: (optional) one or more email addresses to remove from alert recipients (comma separated)
+* -enableIndexing: (optional) enable indexing (applies the default include and exclude paths)
+* -disableIndexing: (optional) disable indexing

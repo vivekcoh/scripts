@@ -1,5 +1,20 @@
 # Change Log for cohesity/community-automation-samples
 
+## 2024-08-29
+
+* [updateJob.ps1](https://github.com/cohesity/community-automation-samples/tree/main/powershell/updateJob) [`Update`] added enableIndexing/disableIndexing
+
+## 2024-08-28
+
+* [expireOldSnapshots.py](https://github.com/cohesity/community-automation-samples/tree/main/python/expireOldSnapshots) [`Update`] added active replication confirmation
+* [agentVersions.py](https://github.com/cohesity/community-automation-samples/tree/main/reports/python/agentVersions) [`Fix`] solved crash on missing agent/version
+
+## 2024-08-26
+
+* [aagFailoverMonitor.py](https://github.com/cohesity/community-automation-samples/tree/main/python/aagFailoverMonitor) [`New`] Resolve SQL Log Chain Breaks and AAG Failovers
+* [validateServerBackup.ps1](https://github.com/cohesity/community-automation-samples/tree/main/powershell/validateServerBackup) [`Fix`] updated to solve missing attemptNum property
+* [updateCcsSqlStreams.ps1](https://github.com/cohesity/community-automation-samples/tree/main/ccs/powershell/updateCcsSqlStreams) [`New`] update stream count for CCS SQL backups
+
 ## 2024-08-20
 
 * [heliosReport.py](https://github.com/cohesity/community-automation-samples/tree/main/reports/helios-reporting/python/heliosReport) [`Update`] added outputfile parameter

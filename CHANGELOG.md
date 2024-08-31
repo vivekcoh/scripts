@@ -1,5 +1,10 @@
 # Change Log for cohesity/community-automation-samples
 
+## 2024-08-31
+
+* [protectCcsEC2VMs.ps1](https://github.com/cohesity/community-automation-samples/tree/main/ccs/powershell/unprotectCCSEC2VMs) [`Update`] added parameters to include VMs by tag and to exclude disks
+* [protectCCSEC2VMs.py](https://github.com/cohesity/community-automation-samples/tree/main/ccs/python/protectCCSEC2VMs) [`Update`] added parameters to include VMs by tag and to exclude disks
+
 ## 2024-08-29
 
 * [updateJob.ps1](https://github.com/cohesity/community-automation-samples/tree/main/powershell/updateJob) [`Update`] added enableIndexing/disableIndexing

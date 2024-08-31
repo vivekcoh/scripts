@@ -54,26 +54,6 @@ if(! (($hour -and $minute) -or ([int]::TryParse($hour,[ref]$tempInt) -and [int]:
     exit
 }
 
-function getObjectId($objectName, $source){
-    $global:_object_id = $null
-
-    function get_nodes($obj){
-        if($obj.protectionSource.name -eq $objectName){
-            $global:_object_id = $obj.protectionSource.id
-            break
-        }
-        if($obj.PSObject.Properties['nodes']){
-            foreach($node in $obj.nodes){
-                if($null -eq $global:_object_id){
-                    get_nodes $node
-                }
-            }
-        }
-    }
-    get_nodes $source
-    return $global:_object_id
-}
-
 function getObject($objectName, $source){
     $global:_object = $null
 

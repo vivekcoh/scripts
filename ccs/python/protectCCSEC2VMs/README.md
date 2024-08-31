@@ -38,10 +38,10 @@ To protect a list of VMs (a text file with one VM name per line):
 
 ```bash
 ./protectCCSEC2VMs.py -u myuser \
-                               -r us-east-2 \
-                               -l ./vmlist.txt \
-                               -p mypolicy \
-                               -s myawssource
+                      -r us-east-2 \
+                      -l ./vmlist.txt \
+                      -p mypolicy \
+                      -s myawssource
 ```
 
 ## Parameters
@@ -52,11 +52,14 @@ To protect a list of VMs (a text file with one VM name per line):
 * -p, --policyname: name of protection policy to use
 * -n, --vmname: (optional) VM name to protect (repeat for multiple)
 * -l, --vmlist: (optional) text file of VM names to protect (one per line)
+* -g, --tagname: (optional) name of tag of vms to protect (repeat for multiple)
 * -tz, --timezone: (optional) time zone for new job (default is US/Eastern)
 * -st, --starttime: (optional) start time for new job (default is 21:00)
 * -is, --incrementalsla: (optional) incremental SLA minutes (default is 60)
 * -fs, --fullsla: (optional) full SLA minutes (default is 120)
 * -t, --protectiontype: (optional) All, CohesitySnapshot, or AWSSnapshot (default is CohesitySnapshot)
+* -b, --bootdiskunly: (optional) only protect the boot disk
+* -x, --excludedisk: (optional) disk to excludee.g. /dev/xvdb (repeat for multiple)
 
 ## Authenticating to Ccs
 

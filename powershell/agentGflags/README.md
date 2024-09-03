@@ -47,3 +47,4 @@ To clear a gflag:
 * -flagName: name of gFlag to set or clear
 * -flagValue: value to set for gFlag
 * -clear: remove the specified gFlag
+* -restart: restart Cohesity agent

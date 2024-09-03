@@ -5,7 +5,8 @@ param (
     [Parameter()][array]$serverName,
     [Parameter()][switch]$clear,
     [Parameter()][string]$flagName,
-    [Parameter()][string]$flagValue
+    [Parameter()][string]$flagValue,
+    [Parameter()][switch]$restart
 )
 
 # gather list from command line params and file
@@ -74,6 +75,12 @@ foreach ($server in $serverNames){
                 # edit existing entry
                 $null = Set-Itemproperty -path 'HKLM:\SOFTWARE\Cohesity\Agent\Parameters' -Name $flagName -value $flagValue
             }
+        }
+    }
+    if($restart){
+        Write-Host "    Restarting Cohesity Agent"
+        $null = Invoke-Command -Computername $server -ScriptBlock {
+            $null = Restart-Service -Name 'CohesityAgent'
         }
     }
 }

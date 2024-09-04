@@ -90,3 +90,11 @@ Place both files in a folder together and run the main script like so:
 * -r, --resume: (optional) resume the job(s)
 * -q, --noquiesce: (optional) disable app/crash consistent setting
 * -a, --alertonslaviolation: (optional) enable alert for SLA violation
+* -ei, --enableindexing: (optional) enable indexing (applies default indexing policy)
+* -di, --disableindexing: (optional) disable indexing
+* -ai, --addincludepath: (optional) include indexing paths (specified by --indexpath and --indexlist)
+* -ae, --addexcludepath: (optional) exclude indexing paths (specified by --indexpath and --indexlist)
+* -ri, --removeincludepath: (optional) remove included indexing paths (specified by --indexpath and --indexlist)
+* -re, --removeexcludepath: (optional) remove excluded indexing paths (specified by --indexpath and --indexlist)
+* -ip, --indexpath: (optional) path to add/remove from included/excluded indexing paths (repeat for multiple)
+* -il, --indexlist', type=str) text file of paths to add/remove from included/excluded indexing paths (one per line)

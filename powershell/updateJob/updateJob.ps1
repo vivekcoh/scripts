@@ -24,7 +24,14 @@ param (
     [Parameter()][array]$addRecipient,
     [Parameter()][array]$removeRecipient,
     [Parameter()][switch]$disableIndexing,
-    [Parameter()][switch]$enableIndexing
+    [Parameter()][switch]$enableIndexing,
+    [Parameter()][array]$indexPath,
+    [Parameter()][string]$indexList,
+    [Parameter()][switch]$addIncludePath,
+    [Parameter()][switch]$addExcludePath,
+    [Parameter()][switch]$removeIncludePath,
+    [Parameter()][switch]$removeExcludePath,
+    [Parameter()][switch]$clearExcludePaths
 )
 
 # source the cohesity-api helper code
@@ -80,8 +87,6 @@ function findIndexingPolicy($o){
     return $indexParam
 }
 
-
-
 # gather list from command line params and file
 function gatherList($Param=$null, $FilePath=$null, $Required=$True, $Name='items'){
     $items = @()
@@ -104,6 +109,7 @@ function gatherList($Param=$null, $FilePath=$null, $Required=$True, $Name='items
 }
 
 $jobNames = @(gatherList -Param $jobName -FilePath $jobList -Name 'jobs' -Required $True)
+$indexPaths = @(gatherList -Param $indexPath -FilePath $indexList -Name 'index paths' -Required $False)
 
 $jobs = api get -v2 "data-protect/protection-groups?isDeleted=false&isActive=true&includeTenants=true"
 
@@ -312,6 +318,46 @@ foreach($job in $jobs.protectionGroups | Sort-Object -Property name){
                     $indexingPolicy.enableIndexing = $false
                     $indexingPolicy.includePaths = $null
                     $indexingPolicy.excludePaths = $null
+                    $updateJob = $True
+                }
+            }
+        }
+        # add indexing include paths
+        if($addIncludePath -or $addExcludePath -or $removeExcludePath -or $removeIncludePath -or $clearExcludePaths){
+            Write-Host "    updating indexing"
+            $indexingPolicy = findIndexingPolicy $job
+            if($indexingPolicy){
+                if($indexingPolicy.enableIndexing -eq $True){
+                    if($clearExcludePaths){
+                        $indexingPolicy.excludePaths = $null
+                    }
+                    if($addIncludePath){
+                        foreach($ip in $indexPaths){
+                            $indexingPolicy.includePaths = @($indexingPolicy.includePaths + $ip)
+                        }
+                    }
+                    if($removeIncludePath -and $indexingPolicy.includePaths -ne $null){
+                        $indexingPolicy.includePaths = @($indexingPolicy.includePaths | Where-Object {$_ -notin $indexPaths})
+                    }
+                    if($addExcludePath){
+                        if($indexingPolicy.excludePaths -eq $null){
+                            $indexingPolicy.excludePaths = @()
+                        }
+                        foreach($ip in $indexPaths){
+                            $indexingPolicy.excludePaths = @($indexingPolicy.excludePaths + $ip)
+                        }
+                    }
+                    if($removeExcludePath -and $indexingPolicy.excludePaths -ne $null){
+                        $indexingPolicy.excludePaths = @($indexingPolicy.excludePaths | Where-Object {$_ -notin $indexPaths})
+                    }
+                    if($indexingPolicy.includePaths -eq $null -or $indexingPolicy.includePaths.Count -eq 0){
+                        $indexingPolicy.enableIndexing = $false
+                        $indexingPolicy.includePaths = $null
+                        $indexingPolicy.excludePaths = $null
+                    }
+                    if($indexingPolicy.excludePaths -eq $null -or $indexingPolicy.excludePaths.Count -eq 0){
+                        $indexingPolicy.excludePaths = $null
+                    }
                     $updateJob = $True
                 }
             }

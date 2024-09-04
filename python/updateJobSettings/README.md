@@ -97,4 +97,5 @@ Place both files in a folder together and run the main script like so:
 * -ri, --removeincludepath: (optional) remove included indexing paths (specified by --indexpath and --indexlist)
 * -re, --removeexcludepath: (optional) remove excluded indexing paths (specified by --indexpath and --indexlist)
 * -ip, --indexpath: (optional) path to add/remove from included/excluded indexing paths (repeat for multiple)
-* -il, --indexlist', type=str) text file of paths to add/remove from included/excluded indexing paths (one per line)
+* -il, --indexlist: (optional)) text file of paths to add/remove from included/excluded indexing paths (one per line)
+* -ce, --clearexcludepaths: (optional) remove all indexing exclusions

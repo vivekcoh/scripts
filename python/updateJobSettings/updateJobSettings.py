@@ -37,6 +37,7 @@ parser.add_argument('-ai', '--addincludepath', action='store_true')
 parser.add_argument('-ae', '--addexcludepath', action='store_true')
 parser.add_argument('-ri', '--removeincludepath', action='store_true')
 parser.add_argument('-re', '--removeexcludepath', action='store_true')
+parser.add_argument('-ce', '--clearexcludepaths', action='store_true')
 parser.add_argument('-ip', '--indexpath', action='append', type=str)
 parser.add_argument('-il', '--indexlist', type=str)
 
@@ -72,7 +73,7 @@ removeincludepath = args.removeincludepath
 removeexcludepath = args.removeexcludepath
 indexpaths = args.indexpath
 indexlist = args.indexlist
-
+clearexcludepaths = args.clearexcludepaths
 
 # gather server list
 def gatherList(param=None, filename=None, name='items', required=True):
@@ -108,7 +109,8 @@ if newpolicyname is None and \
     removeexcludepath is not True and \
     removeincludepath is not True and \
     addexcludepath is not True and \
-    addincludepath is not True:
+    addincludepath is not True and \
+    clearexcludepaths is not True:
     print('No changes requested\n')
     exit()
 
@@ -288,7 +290,7 @@ for job in sorted(jobs['protectionGroups'], key=lambda job: job['name'].lower())
         changedJob = True
         print('    enabled alert on SLA violation')
         f.write('    enabled alert on SLA violation\n')
-    if enableindexing is True or disableindexing is True or addexcludepath is True or addincludepath is True or removeexcludepath is True or removeincludepath is True:
+    if enableindexing is True or disableindexing is True or addexcludepath is True or addincludepath is True or removeexcludepath is True or removeincludepath is True or clearexcludepaths is True:
         # find indexingPolicy
         indexingPolicy = None
         jobType = job['environment'][1:]
@@ -319,11 +321,19 @@ for job in sorted(jobs['protectionGroups'], key=lambda job: job['name'].lower())
             print('    disabled indexing')
             f.write('    disabled indexing\n')
 
+        if clearexcludepaths is True:
+            indexingPolicy['excludePaths'] = None
+            changedJob = True
+            print('    updated indexing')
+            f.write('    updated indexing\n')
+
         if len(indexpaths) > 0 and indexingPolicy['enableIndexing'] is True:
             if addincludepath is True:
                 for indexpath in indexpaths:
                     indexingPolicy['includePaths'].append(indexpath)
             elif addexcludepath is True:
+                if indexingPolicy['excludePaths'] is None:
+                    indexingPolicy['excludePaths'] = []
                 for indexpath in indexpaths:
                     indexingPolicy['excludePaths'].append(indexpath)
             elif removeincludepath is True and indexingPolicy['includePaths'] is not None:

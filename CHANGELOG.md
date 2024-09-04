@@ -1,5 +1,14 @@
 # Change Log for cohesity/community-automation-samples
 
+## 2024-09-04
+
+* [updateJobSettings](https://github.com/cohesity/community-automation-samples/tree/main/python/updateJobSettings) [`Update`] added controls for indexing paths
+* [updateJob.ps1](https://github.com/cohesity/community-automation-samples/tree/main/powershell/updateJob) [`Update`] added controls for indexing paths
+
+## 2024-09-02
+
+* [uploadSSLCert.ps1](https://github.com/cohesity/community-automation-samples/tree/main/powershell/uploadSSLCert) [`Update`] modernized authentication
+
 ## 2024-08-31
 
 * [protectCcsEC2VMs.ps1](https://github.com/cohesity/community-automation-samples/tree/main/ccs/powershell/unprotectCCSEC2VMs) [`Update`] added parameters to include VMs by tag and to exclude disks

@@ -2,6 +2,8 @@
 
 ## 2024-09-06
 
+* [backupNow.ps1](https://github.com/cohesity/community-automation-samples/tree/main/powershell/backupNow) [`Update`] added support for Ft Knox
+* [backupNow.py](https://github.com/cohesity/community-automation-samples/tree/main/python/backupNow) [`Update`] added support for Ft Knox
 * [cloneSQL.ps1](https://github.com/cohesity/community-automation-samples/tree/main/sql/cloneSQL) [`Fix`] Fixed exit codes to return non-zero for all unsuccessful outcomes
 
 ## 2024-09-04

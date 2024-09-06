@@ -50,14 +50,15 @@ Clone task completed with status: kSuccess
 
 ## Other Parameters
 
-* -sourceServer (source SQL Server Name)
-* -sourceDB (source Database Name)
-* -targetServer (optional - SQL Server to attach clone to, defaults to same as sourceServer)
-* -targetDB (optional - target Database Name - defaults to same as source)
-* -targetInstance (optional - name of SQL instance on targetServer, defaults to MSSQLSERVER)
-* -logTime (optional - point in time to replay the logs to - if omitted will default to time of latest DB backup)
-* -wait (wait for completion and report end status)
-* -latest (optional - replay the logs to the latest point in time available)
+* -sourceServer: source SQL Server Name
+* -sourceDB: source Database Name
+* -targetServer: (optional) SQL Server to attach clone to, defaults to same as sourceServer
+* -targetDB: (optional) target Database Name - defaults to same as source
+* -targetInstance: (optional) name of SQL instance on targetServer, defaults to MSSQLSERVER
+* -logTime: (optional) point in time to replay the logs to - if omitted will default to time of latest DB backup
+* -latest: (optional) replay the logs to the latest point in time available
+* -wait: (optional) wait for completion and report end status
+* -sleepTime: (optional) number of seconds to wait between status queries when using -wait (default is 15)
 
 To specify a source instance, include the instance name in the sourceDB name, like MYINSTANCE/MyDB
 

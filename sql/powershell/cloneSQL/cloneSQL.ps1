@@ -23,7 +23,8 @@ param (
     [Parameter()][string]$targetInstance = 'MSSQLSERVER', # SQL instance name on the targetServer
     [Parameter()][string]$logTime, # point in time log replay like '2019-09-29 17:51:01'
     [Parameter()][switch]$wait, # wait for clone to finish
-    [Parameter()][switch]$latest # very latest point in time log replay
+    [Parameter()][switch]$latest, # very latest point in time log replay
+    [Parameter()][int64]$sleepTime = 15
 )
 
 # source the cohesity-api helper code
@@ -59,14 +60,14 @@ if($sourceDB.Contains('/')){
 $dbresults = $searchresults.vms | Where-Object {$_.vmDocument.objectAliases -eq $sourceServer }
 if($null -eq $dbresults){
     write-host "Server $sourceServer Not Found" -foregroundcolor yellow
-    exit
+    exit 1
 }
 
 ### narrow the search results to the correct source database
 $dbresults = $dbresults | Where-Object { $_.vmDocument.objectId.entity.sqlEntity.databaseName -eq $sourceDB }
 if($null -eq $dbresults){
     write-host "Database $sourceDB Not Found" -foregroundcolor yellow
-    exit
+    exit 1
 }
 
 ### if there are multiple results (e.g. old/new jobs?) select the one with the newest snapshot 
@@ -74,7 +75,7 @@ $latestdb = ($dbresults | sort-object -property @{Expression={$_.vmDocument.vers
 
 if($null -eq $latestdb){
     write-host "Database Not Found" -foregroundcolor yellow
-    exit
+    exit 1
 }
 
 ### identify physical or vm
@@ -87,7 +88,7 @@ $targetEntity = $entities | where-object { $_.appEntity.entity.displayName -eq $
 
 if($null -eq $targetEntity){
     Write-Host "Target Server Not Found" -ForegroundColor Yellow
-    exit
+    exit 1
 }
 
 ### handle log replay
@@ -218,7 +219,7 @@ if($response){
     "Cloning $sourceDB to $targetServer as $targetDB (task name: $taskName)"
 }else{
     Write-Warning "No Response"
-    exit(1)
+    exit 1
 }
 
 if($wait){
@@ -230,11 +231,13 @@ if($wait){
         if($publicStatus -in $finishedStates){
             $status = 'completed'
         }else{
-            sleep 3
+            sleep $sleepTime
         }
     }
     write-host "Clone task completed with status: $publicStatus"
     if($publicStatus -eq 'kFailure'){
         write-host "Error Message: $($task.restoreTask.performRestoreTaskState.base.error.errorMsg)"
+        exit 1
     }
 }
+exit 0

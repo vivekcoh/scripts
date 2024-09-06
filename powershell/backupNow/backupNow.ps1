@@ -534,7 +534,7 @@ if((! $localOnly) -and (! $noArchive)){
                 exit 1
             }
         }
-        $vault = api get vaults -timeout $timeoutSec | Where-Object {$_.name -eq $archiveTo}
+        $vault = api get vaults?includeFortKnoxVault=true -timeout $timeoutSec | Where-Object {$_.name -eq $archiveTo}
         if($vault){
             $copyRunTargets = $copyRunTargets + @{
                 "archivalTarget" = @{

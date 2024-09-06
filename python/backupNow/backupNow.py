@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 """BackupNow for python"""
 
-# version 2024.07.08
+# version 2024.09.06
 
 # version history
 # ===============
@@ -28,6 +28,7 @@
 # 2024.06.03 - fix unintended replication/archival
 # 2024.06.07 - added support for Entra ID (Open ID) authentication
 # 2024.07.08 - reintroduced -k, --keepLocalFor functionality
+# 2024.09.06 - added support for Ft Knox
 #
 # extended error codes
 # ====================
@@ -606,7 +607,7 @@ if archiveTo is not None:
             bail(3)
         else:
             bail(1)
-    vault = [vault for vault in api('get', 'vaults', timeout=timeoutsec) if vault['name'].lower() == archiveTo.lower()]
+    vault = [vault for vault in api('get', 'vaults?includeFortKnoxVault=true', timeout=timeoutsec) if vault['name'].lower() == archiveTo.lower()]
     if len(vault) > 0:
         vault = vault[0]
         jobData['copyRunTargets'].append({

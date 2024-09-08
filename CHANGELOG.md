@@ -1,5 +1,9 @@
 # Change Log for cohesity/community-automation-samples
 
+## 2024-09-08
+
+* [protectRemoteAdapter.py](https://github.com/cohesity/community-automation-samples/tree/main/python/protectRemoteAdapter) [`New`] Create or update a remote adapter protection group
+
 ## 2024-09-06
 
 * [backupNow.ps1](https://github.com/cohesity/community-automation-samples/tree/main/powershell/backupNow) [`Update`] added support for Ft Knox

@@ -1,5 +1,9 @@
 # Change Log for cohesity/community-automation-samples
 
+## 2024-09-09
+
+* [protectRemoteAdapter.ps1](https://github.com/cohesity/community-automation-samples/tree/main/powershell/protectRemoteAdapter) [`Update`] modernized authentication and refactored
+
 ## 2024-09-08
 
 * [protectRemoteAdapter.py](https://github.com/cohesity/community-automation-samples/tree/main/python/protectRemoteAdapter) [`New`] Create or update a remote adapter protection group

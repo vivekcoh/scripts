@@ -60,11 +60,14 @@ To create a new protection group:
 * -m, --mfacode: (optional) MFA code for authentication
 * -e --emailmfacode: (optional) send MFA code via email
 
-## Other Parameters
+## Basic Parameters
 
 * -j, --jobname: name of the job to create or update
 * -p, --policyname: (optional) name of policy (required when creating new job)
 * -vn, --viewname: (optional) name of view to protect (required when creating new job)
+
+## New Job Parameters
+
 * -tz, --timezone: (optional) default is 'US/Eastern'
 * -st, --starttime: (optional) default is '21:00'
 * -is, --incrementalsla: (optional) default is 60 (minutes)

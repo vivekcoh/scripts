@@ -40,26 +40,41 @@ Place all files in a folder together, then run the main script like so:
                            -logScriptParams 'other params'
 ```
 
-## Parameters
+## Authentication Parameters
 
-* -vip: name or IP of Cohesity cluster
-* -username: name of user to connect to Cohesity
-* -domain: your AD domain (defaults to local)
+* -vip: (optional) name or IP of Cohesity cluster (defaults to helios.cohesity.com)
+* -username: (optional) name of user to connect to Cohesity (defaults to helios)
+* -domain: (optional) your AD domain (defaults to local)
+* -useApiKey: (optional) use API key for authentication
+* -password: (optional) will use cached password or will be prompted
+* -noPrompt: (optional) do not prompt for password
+* -tenant: (optional) organization to impersonate
+* -mcm: (optional) connect through MCM
+* -mfaCode: (optional) TOTP MFA code
+* -clusterName: (optional) cluster to connect to when connecting through Helios or MCM
+
+## Basic Parameters
+
 * -jobname: name of protection job to create
-* -viewname: name of view to protect
-* -servername: name of remote host to protect
-* -user: name of ssh user on remote host
-* -policyname: name of protection policy to use for protection job
-* -storagedomain: (optional) default is DefaultStorageDomain
+* -policyname: (optional) name of protection policy to use for protection job
+* -viewname: (optional) name of view to protect
+
+## New Job Parameters
+
 * -timezone: (optional) default is 'America/New_York'
 * -starttime: Daily start time of job (e.g. 23:59)
+* -timeZone: (optional) e.g. 'America/New_York' (default is 'America/Los_Angeles')
+* -incrementalSlaMinutes: (optional) default 60
+* -fullSlaMinutes: (optional) default is 120
+* -paused: (optional) pause future runs (new job only)
+
+## Script Parameters
+
+* -servername: (optional) name of remote host to protect
+* -serveruser: (optional) name of ssh user on remote host
 * -scriptPath: full path to script on remote host (e.g. /home/oracle/rmanscript.sh)
 * -scriptParams: (optional) any parameters to be passed to the script
 * -logScriptPath: path to log backup script (required only if selected policy is log-enabled)
 * -logScriptParams: (optional) any parameters to be passed to the log script
 * -fullScriptPath: path to full backup script (required only if selected policy does periodic full)
 * -fullScriptParams: (optional) any parameters to be passed to the full backup script
-
-## Notes
-
-The script will create the view if it does not already exist. This script does not do any host-side setup; it is still required for the user to manage the deployment of the host-side scripts and ssh keys.

@@ -64,7 +64,7 @@ To create a new protection group:
 
 * -j, --jobname: name of the job to create or update
 * -p, --policyname: (optional) name of policy (required when creating new job)
-* -vn, --viewname: (optional) name of view to protect
+* -vn, --viewname: (optional) name of view to protect (required when creating new job)
 * -tz, --timezone: (optional) default is 'US/Eastern'
 * -st, --starttime: (optional) default is '21:00'
 * -is, --incrementalsla: (optional) default is 60 (minutes)
@@ -73,9 +73,9 @@ To create a new protection group:
 
 ## Script Parameters
 
-* -sn, --servername: (optional) Linux hostname or IP
-* -su, --serveruser: (optional) Linux username
-* -s, --script: (optional) path to script for incremental backup
+* -sn, --servername: (optional) Linux hostname or IP (required when creating new job)
+* -su, --serveruser: (optional) Linux username (required when creating new job)
+* -s, --script: (optional) path to script for incremental backup (required when creating new job)
 * -ip, --scriptparams: (optional) parameters for incremental backup
 * -l, --logscript: path to script for log backup (defaults to same as --script)
 * -lp, --logparams: parameters for log backup (defaults to same as --scriptparams)

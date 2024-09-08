@@ -96,7 +96,7 @@ if sshInfo is None or 'public_key' not in sshInfo or sshInfo['public_key'] is No
 publicKey = sshInfo['public_key']
 
 policies = api('get', 'data-protect/policies', v=2)['policies']
-views = api('get', 'file-services/views', v=2)
+views = api('get', 'file-services/views?useCachedData=false&protocolAccesses=NFS,NFS4,S3', v=2)
 
 # find existing job
 job = None

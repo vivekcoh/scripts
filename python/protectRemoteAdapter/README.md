@@ -75,12 +75,9 @@ To create a new protection group:
 
 * -sn, --servername: (optional) Linux hostname or IP
 * -su, --serveruser: (optional) Linux username
-
 * -s, --script: (optional) path to script for incremental backup
 * -ip, --scriptparams: (optional) parameters for incremental backup
-
 * -l, --logscript: path to script for log backup (defaults to same as --script)
 * -lp, --logparams: parameters for log backup (defaults to same as --scriptparams)
-
 * -f, --fullscript: path to script for full backup (defaults to same as --script)
 * -fp, --fullparams: parameters for full backup (defaults to same as --scriptparams)

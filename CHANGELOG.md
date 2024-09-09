@@ -2,8 +2,10 @@
 
 ## 2024-09-09
 
+* [createViewAlias.py](https://github.com/cohesity/community-automation-samples/tree/main/python/createViewAlias) [`Update`] modernized authentication
 * [createS3View.py](https://github.com/cohesity/community-automation-samples/tree/main/python/createS3View) [`Update`] modernized authentication
 * [createSMBView.py](https://github.com/cohesity/community-automation-samples/tree/main/python/createSMBView) [`Update`] modernized authentication
+* [createViewAlias.ps1](https://github.com/cohesity/community-automation-samples/tree/main/powershell/createViewAlias) [`Update`] modernized authentication
 * [createS3View.ps1](https://github.com/cohesity/community-automation-samples/tree/main/powershell/createS3View) [`Update`] modernized authentication
 * [createSMBView.ps1](https://github.com/cohesity/community-automation-samples/tree/main/powershell/createSMBView) [`Update`] modernized authentication
 * [createNfsView.ps1](https://github.com/cohesity/community-automation-samples/tree/main/powershell/createNfsView) [`Update`] modernized authentication

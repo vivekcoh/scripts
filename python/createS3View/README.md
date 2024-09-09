@@ -24,22 +24,32 @@ Place both files in a folder together and run the main script like so:
 ```bash
 #example
 ./createS3View.py -v mycluster \
-                   -u myusername \
-                   -d mydomain.net \
-                   -n newview1 \
-                   -q 'TestAndDev High' \
-                   -s mystoragedomain \
-                   -i '192.168.1.10, myserver' \
-                   -i 192.168.1.11
+                  -u myusername \
+                  -d mydomain.net \
+                  -n newview1 \
+                  -q 'TestAndDev High' \
+                  -s mystoragedomain \
+                  -a '192.168.1.10, myserver' \
+                  -a 192.168.1.11
 #end example
 ```
 
-## Parameters
+## Authentication Parameters
 
-* -v, --vip: Cohesity cluster to connect to
-* -u, --username: Cohesity username
-* -d, --domain: (optional) Active Directory domain (defaults to 'local')
+* -v, --vip: DNS or IP of the Cohesity cluster to connect to
+* -u, --username: username to authenticate to Cohesity cluster
+* -d, --domain: (optional) domain of username (defaults to local)
+* -t, --tenant: (optional) multi-tenancy tenant name
+* -i, --useApiKey: (optional) use API key for authentication
+* -pwd, --password: (optional) password or API key
+* -np, --noprompt: (optional) do not prompt for password
+* -mcm, --mcm: (optional) connect through MCM
+* -m, --mfacode: (optional) MFA code for authentication
+* -e --emailmfacode: (optional) send MFA code via email
+
+## Other Parameters
+
 * -n, --viewname: name of new view to create
-* -q, --qospolicy: defaults to 'Backup Target Low' or choose 'Backup Target High', 'TestAndDev High' or 'TestAndDev Low'
-* -s, --storageDomain: name of storage domain to place view data. Defaults to DefaultStorageDomain
-* -i, --whitelist: ip (and optional description) address to whitelist (can be used multiple times)
+* -q, --qospolicy: (optional) defaults to 'Backup Target Low' or choose 'Backup Target High', 'TestAndDev High' or 'TestAndDev Low' (defailt is TestAndDev High)
+* -s, --storageDomain: (optional) name of storage domain to place view data (defaults to DefaultStorageDomain)
+* -a, --allowlist: (optional) ip (and optional description) address to whitelist (can be used multiple times)

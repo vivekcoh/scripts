@@ -7,26 +7,44 @@ from pyhesity import *
 # command line arguments
 import argparse
 parser = argparse.ArgumentParser()
-parser.add_argument('-v', '--vip', type=str, required=True)  # Cohesity cluster name or IP
-parser.add_argument('-u', '--username', type=str, required=True)  # Cohesity Username
-parser.add_argument('-d', '--domain', type=str, default='local')  # Cohesity User Domain
+parser.add_argument('-v', '--vip', type=str, required=True)
+parser.add_argument('-u', '--username', type=str, required=True)
+parser.add_argument('-d', '--domain', type=str, default='local')
+parser.add_argument('-t', '--tenant', type=str, default=None)
+parser.add_argument('-i', '--useApiKey', action='store_true')
+parser.add_argument('-pwd', '--password', type=str, default=None)
+parser.add_argument('-np', '--noprompt', action='store_true')
+parser.add_argument('-m', '--mfacode', type=str, default=None)
+parser.add_argument('-e', '--emailmfacode', action='store_true')
 parser.add_argument('-n', '--viewname', type=str, required=True)  # name view to create
 parser.add_argument('-s', '--storagedomain', type=str, default='DefaultStorageDomain')  # name of storage domain to use
-parser.add_argument('-q', '--qospolicy', type=str, choices=['Backup Target Low', 'Backup Target High', 'TestAndDev High', 'TestAndDev Low'], default='Backup Target Low')  # qos policy
-parser.add_argument('-i', '--whitelist', action='append', default=[])  # ip to whitelist
+parser.add_argument('-q', '--qospolicy', type=str, choices=['Backup Target Low', 'Backup Target High', 'TestAndDev High', 'TestAndDev Low'], default='TestAndDev High')  # qos policy
+parser.add_argument('-a', '--allowlist', action='append', default=[])  # ip to allowlist
 
 args = parser.parse_args()
 
 vip = args.vip
 username = args.username
 domain = args.domain
+tenant = args.tenant
+useApiKey = args.useApiKey
+password = args.password
+noprompt = args.noprompt
+mfacode = args.mfacode
+emailmfacode = args.emailmfacode
 viewName = args.viewname
 storageDomain = args.storagedomain
 qosPolicy = args.qospolicy
-whitelist = args.whitelist
+allowlist = args.allowlist
 
-# authenticate
-apiauth(vip, username, domain)
+# authentication =========================================================
+apiauth(vip=vip, username=username, domain=domain, password=password, useApiKey=useApiKey, prompt=(not noprompt), mfaCode=mfacode, emailMfaCode=emailmfacode, tenantId=tenant)
+
+# exit if not authenticated
+if apiconnected() is False:
+    print('authentication failed')
+    exit(1)
+# end authentication =====================================================
 
 # find storage domain
 sd = [sd for sd in api('get', 'viewBoxes') if sd['name'].lower() == storageDomain.lower()]
@@ -67,9 +85,9 @@ newView = {
     "name": viewName
 }
 
-if len(whitelist) > 0:
+if len(allowlist) > 0:
     newView['subnetWhitelist'] = []
-    for ip in whitelist:
+    for ip in allowlist:
         if ',' in ip:
             (thisip, description) = ip.split(',')
             description = description.lstrip()

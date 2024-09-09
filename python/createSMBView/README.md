@@ -33,20 +33,31 @@ Place both files in a folder together and run the main script like so:
                    -r mydomain.net\auditors \
                    -q 'TestAndDev High' \
                    -s mystoragedomain \
-                   -i '192.168.1.10, myserver' \
-                   -i 192.168.1.11
+                   -a '192.168.1.10, myserver' \
+                   -a 192.168.1.11
 #end example
 ```
 
-## Parameters
+## Authentication Parameters
 
-* -v, --vip: Cohesity cluster to connect to
-* -u, --username: Cohesity username
-* -d, --domain: (optional) Active Directory domain (defaults to 'local')
+* -v, --vip: (optional) DNS or IP of the Cohesity cluster to connect to (default is helios.cohesity.com)
+* -u, --username: (optional) username to authenticate to Cohesity cluster (default is helios)
+* -d, --domain: (optional) domain of username (defaults to local)
+* -t, --tenant: (optional) multi-tenancy tenant name
+* -i, --useApiKey: (optional) use API key for authentication
+* -pwd, --password: (optional) password or API key
+* -np, --noprompt: (optional) do not prompt for password
+* -mcm, --mcm: (optional) connect through MCM
+* -c, --clustername: (optional) helios/mcm cluster to connect to
+* -m, --mfacode: (optional) MFA code for authentication
+* -e --emailmfacode: (optional) send MFA code via email
+
+## Other Parameters
+
 * -n, --viewname: name of new view to create
-* -r, --readonly: principal to grant readonly access (can be used multiple times)
-* -w, --readwrite: principal to grant read/write access (can be used multiple times)
-* -f, --fullcontrol: principal to grant full control (can be used multiple times)
-* -q, --qospolicy: defaults to 'Backup Target Low' or choose 'Backup Target High', 'TestAndDev High' or 'TestAndDev Low'
-* -s, --storageDomain: name of storage domain to place view data. Defaults to DefaultStorageDomain
-* -i, --whitelist: ip (and optional description) address to whitelist (can be used multiple times)
+* -r, --readonly: (optional) principal to grant readonly access (can be used multiple times)
+* -w, --readwrite: (optional) principal to grant read/write access (can be used multiple times)
+* -f, --fullcontrol: (optional) principal to grant full control (can be used multiple times)
+* -q, --qospolicy: (optional) defaults to 'Backup Target Low' or choose 'Backup Target High', 'TestAndDev High' or 'TestAndDev Low'
+* -s, --storageDomain: (optional) name of storage domain to place view data (defaults to DefaultStorageDomain)
+* -a, --allowlist: (optional) ip (and optional description) address to whitelist (can be used multiple times)

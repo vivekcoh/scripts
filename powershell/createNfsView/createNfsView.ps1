@@ -10,22 +10,52 @@
 ### process commandline arguments
 [CmdletBinding()]
 param (
-    [Parameter(Mandatory = $True)][string]$vip,       # the cluster to connect to (DNS name or IP)
-    [Parameter(Mandatory = $True)][string]$username,  # username (local or AD)
-    [Parameter()][string]$domain = 'local',           # local or AD domain
+    [Parameter()][string]$vip='helios.cohesity.com',
+    [Parameter()][string]$username = 'helios',
+    [Parameter()][string]$domain = 'local',
+    [Parameter()][string]$tenant,
+    [Parameter()][switch]$useApiKey,
+    [Parameter()][string]$password,
+    [Parameter()][switch]$noPrompt,
+    [Parameter()][switch]$mcm,
+    [Parameter()][string]$mfaCode,
+    [Parameter()][switch]$emailMfaCode,
+    [Parameter()][string]$clusterName,
     [Parameter(Mandatory = $True)][string]$viewName,  # name of view to create
     [Parameter()][string]$storageDomain = 'DefaultStorageDomain', # name of storage domain to store view in
-    [Parameter()][switch]$rootSquash, # whether whitelist entries should use root squash
-    [Parameter()][array]$readWrite, # list of cidr's to add to whitelist (e.g. 192.168.1.7/32) with read/write access
-    [Parameter()][array]$readOnly, # list of cidr's to add to whitelist (e.g. 192.168.1.0/24) with read/only access
+    [Parameter()][switch]$rootSquash, # whether allowlist entries should use root squash
+    [Parameter()][array]$readWrite, # list of cidr's to add to allowlist (e.g. 192.168.1.7/32) with read/write access
+    [Parameter()][array]$readOnly, # list of cidr's to add to allowlist (e.g. 192.168.1.0/24) with read/only access
     [Parameter()][ValidateSet("Backup Target Low","Backup Target High","TestAndDev High","TestAndDev Low")][string]$qosPolicy = 'TestAndDev High'
 )
 
 ### source the cohesity-api helper code
 . $(Join-Path -Path $PSScriptRoot -ChildPath cohesity-api.ps1)
 
-### authenticate
-apiauth -vip $vip -username $username -domain $domain
+# authentication =============================================
+# demand clusterName for Helios/MCM
+if(($vip -eq 'helios.cohesity.com' -or $mcm) -and ! $clusterName){
+    Write-Host "-clusterName required when connecting to Helios/MCM" -ForegroundColor Yellow
+    exit 1
+}
+
+# authenticate
+apiauth -vip $vip -username $username -domain $domain -passwd $password -apiKeyAuthentication $useApiKey -mfaCode $mfaCode -sendMfaCode $emailMfaCode -heliosAuthentication $mcm -regionid $region -tenant $tenant -noPromptForPassword $noPrompt
+
+# exit on failed authentication
+if(!$cohesity_api.authorized){
+    Write-Host "Not authenticated" -ForegroundColor Yellow
+    exit 1
+}
+
+# select helios/mcm managed cluster
+if($USING_HELIOS){
+    $thisCluster = heliosCluster $clusterName
+    if(! $thisCluster){
+        exit 1
+    }
+}
+# end authentication =========================================
 
 if($rootSquash){
     $nfsRootSquash = $True
@@ -51,25 +81,25 @@ function netbitsToDDN($netBits){
     return "$octet1.$octet2.$octet3.$octet4"
 }
 
-function newWhiteListEntry($cidr, $nfsAccess){
+function newAllowListEntry($cidr, $nfsAccess){
     $ip, $netbits = $cidr -split '/'
     $maskDDN = netbitsToDDN $netbits
-    $whitelistEntry = @{
+    $allowlistEntry = @{
         "nfsAccess" = $nfsAccess;
         "nfsRootSquash" = $nfsRootSquash;
         "ip"            = $ip;
         "netmaskIp4"    = $maskDDN
     }
-    return $whitelistEntry
+    return $allowlistEntry
 }
 
-### build subnetWhiteList
-$subnetWhitelist = @()
+### build subnetAllowList
+$subnetAllowlist = @()
 foreach($cidr in $readWrite){
-    $subnetWhitelist += newWhiteListEntry $cidr 'kReadWrite'
+    $subnetAllowlist += newAllowListEntry $cidr 'kReadWrite'
 }
 foreach($cidr in $readOnly){
-    $subnetWhitelist += newWhiteListEntry $cidr 'kReadOnly'
+    $subnetAllowlist += newAllowListEntry $cidr 'kReadOnly'
 }
 
 $viewParams = @{
@@ -95,8 +125,8 @@ $viewParams = @{
     "name"                            = $viewName
 }
 
-if($subnetWhitelist.Count -gt 0){
-    $viewParams['subnetWhitelist'] = $subnetWhitelist 
+if($subnetAllowlist.Count -gt 0){
+    $viewParams['subnetWhitelist'] = $subnetAllowlist 
 }
 
 "Creating view $viewName"

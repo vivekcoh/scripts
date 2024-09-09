@@ -36,14 +36,24 @@ Place both files in a folder together and run the main script like so:
 #end example
 ```
 
-## Parameters
+## Authentication Parameters
 
-* -vip: Cohesity cluster to connect to
-* -username: Cohesity username
-* -domain: (optional) Active Directory domain (defaults to 'local')
+* -vip: (optional) name or IP of Cohesity cluster (defaults to helios.cohesity.com)
+* -username: (optional) name of user to connect to Cohesity (defaults to helios)
+* -domain: (optional) your AD domain (defaults to local)
+* -useApiKey: (optional) use API key for authentication
+* -password: (optional) will use cached password or will be prompted
+* -noPrompt: (optional) do not prompt for password
+* -tenant: (optional) organization to impersonate
+* -mcm: (optional) connect through MCM
+* -mfaCode: (optional) TOTP MFA code
+* -clusterName: (optional) cluster to connect to when connecting through Helios or MCM
+
+## Other Parameters
+
 * -viewName: name of new view to create
 * -readWrite: (optional) comma separated list of CIDR addresses to grant read/write access (e.g. 192.168.1.7/32)
 * -readOnly: (optional) comma separated list of CIDR addresses to grant read/only access (e.g. 192.168.1.0/24)
 * -rootSquash: (optional) enable root squash
-* -qosPolicy: defaults to 'Backup Target Low' or choose 'Backup Target High', 'TestAndDev High' or 'TestAndDev Low'
+* -qosPolicy: 'Backup Target Low', 'Backup Target High', 'TestAndDev High', 'TestAndDev Low' (default is 'TestAndDev High')
 * -storageDomain: name of storage domain to place view data. Defaults to DefaultStorageDomain

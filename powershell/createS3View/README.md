@@ -30,7 +30,7 @@ Place both files in a folder together and run the main script like so:
                    -username myusername `
                    -domain mydomain.net `
                    -viewName newview1 `
-                   -whiteList 192.168.1.0/24, 192.168.2.11/32 `
+                   -allowList 192.168.1.0/24, 192.168.2.11/32 `
                    -qosPolicy 'TestAndDev High' `
                    -quotaLimitGB 20 `
                    -quotaAlertGB 18 `
@@ -39,16 +39,26 @@ Place both files in a folder together and run the main script like so:
 #end example
 ```
 
-## Parameters
+## Authentication Parameters
 
-* -vip: Cohesity cluster to connect to
-* -username: Cohesity username
-* -domain: (optional) Active Directory domain (defaults to 'local')
+* -vip: (optional) name or IP of Cohesity cluster
+* -username: (optional) name of user to connect to Cohesity
+* -domain: (optional) your AD domain (defaults to local)
+* -useApiKey: (optional) use API key for authentication
+* -password: (optional) will use cached password or will be prompted
+* -noPrompt: (optional) do not prompt for password
+* -tenant: (optional) organization to impersonate
+* -mcm: (optional) connect through MCM
+* -mfaCode: (optional) TOTP MFA code
+* -emailMfaCode: (optional) send MFA code via email
+
+## Other Parameters
+
 * -viewName: name of new view to create
-* -qosPolicy: (optional) defaults to 'Backup Target Low' or choose 'Backup Target High', 'TestAndDev High' or 'TestAndDev Low'
+* -qosPolicy: (optional) defaults to 'Backup Target Low' or choose 'Backup Target High', 'TestAndDev High' or 'TestAndDev Low' (default is 'TestAndDev High')
 * -storageDomain: (optional) name of storage domain to place view data. Defaults to DefaultStorageDomain
 * -quotaLimitGB: (optional) logical quota in GiB
 * -quotaAlertGB: (optional) alert threshold in GiB
-* -whiteList: (optional) one or more CIDR addresses (comma separated) e.g. 192.168.2.0/24, 192.168.2.11/32
+* -allowList: (optional) one or more CIDR addresses (comma separated) e.g. 192.168.2.0/24, 192.168.2.11/32
 * -caseSensitive: (optional) make file names case sensitive
 * -showKeys: (optional) display S3 access key and secret key

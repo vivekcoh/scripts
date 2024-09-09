@@ -3,24 +3,38 @@
 ### process commandline arguments
 [CmdletBinding()]
 param (
-    [Parameter(Mandatory = $True)][string]$vip,       # the cluster to connect to (DNS name or IP)
-    [Parameter(Mandatory = $True)][string]$username,  # username (local or AD)
-    [Parameter()][string]$domain = 'local',           # local or AD domain
+    [Parameter(Mandatory = $True)][string]$vip,
+    [Parameter(Mandatory = $True)][string]$username,
+    [Parameter()][string]$domain = 'local',
+    [Parameter()][string]$tenant = $null,
+    [Parameter()][switch]$useApiKey,
+    [Parameter()][string]$password = $null,
+    [Parameter()][switch]$noPrompt,
+    [Parameter()][switch]$mcm,
+    [Parameter()][string]$mfaCode = $null,
+    [Parameter()][switch]$emailMfaCode,
     [Parameter(Mandatory = $True)][string]$viewName,  # name of view to create
     [Parameter()][string]$storageDomain = 'DefaultStorageDomain',  # name of storage domain in which to create view
-    [Parameter()][array]$whiteList,                   # one or more CIDR address e.g. 192.168.2.0/24, 192.168.2.11/32
+    [Parameter()][array]$allowList,                   # one or more CIDR address e.g. 192.168.2.0/24, 192.168.2.11/32
     [Parameter()][switch]$caseSensitive,              # enable view case sensitive file names
     [Parameter()][switch]$showKeys,                   # show access keys
     [Parameter()][int64]$quotaLimitGB = 0,            # quota Limit in GiB
     [Parameter()][int64]$quotaAlertGB = 0,            # quota alert threshold in GiB
-    [Parameter()][ValidateSet('Backup Target Low','Backup Target High','TestAndDev High','TestAndDev Low')][string]$qosPolicy = 'Backup Target Low'
+    [Parameter()][ValidateSet('Backup Target Low','Backup Target High','TestAndDev High','TestAndDev Low')][string]$qosPolicy = 'TestAndDev High'
 )
 
-### source the cohesity-api helper code
+# source the cohesity-api helper code
 . $(Join-Path -Path $PSScriptRoot -ChildPath cohesity-api.ps1)
 
-### authenticate
-apiauth -vip $vip -username $username -domain $domain
+# authentication =============================================
+apiauth -vip $vip -username $username -domain $domain -passwd $password -apiKeyAuthentication $useApiKey -mfaCode $mfaCode -sendMfaCode $emailMfaCode -heliosAuthentication $mcm -regionid $region -tenant $tenant -noPromptForPassword $noPrompt
+
+# exit on failed authentication
+if(!$cohesity_api.authorized){
+    Write-Host "Not authenticated" -ForegroundColor Yellow
+    exit 1
+}
+# end authentication =========================================
 
 # convert CIDR to DDN
 function netbitsToDDN($netBits){
@@ -32,18 +46,18 @@ function netbitsToDDN($netBits){
     return "$octet1.$octet2.$octet3.$octet4"
 }
 
-# Create whitelist entry
-function newWhiteListEntry($cidr){
+# Create allowlist entry
+function newAllowListEntry($cidr){
     $ip, $netbits = $cidr -split '/'
     $maskDDN = netbitsToDDN $netbits
-    $whitelistEntry = @{
+    $allowlistEntry = @{
         "nfsAccess" = "kReadWrite";
         "smbAccess"     = "kReadWrite";
         "nfsRootSquash" = $false;
         "ip"            = $ip;
         "netmaskIp4"    = $maskDDN
     }
-    return $whitelistEntry
+    return $allowlistEntry
 }
 
 # find storage domain
@@ -91,14 +105,14 @@ if ($quotaLimitGB -ne 0 -or $quotaAlertGB -ne 0) {
     }
 }
 
-# whitelist
-$subnetWhitelist = @()
-foreach($cidr in $whiteList){
-    $subnetWhitelist += newWhiteListEntry $cidr
+# allowlist
+$subnetAllowList = @()
+foreach($cidr in $allowList){
+    $subnetAllowList += newAllowListEntry $cidr
 }
 
-if($subnetWhitelist.Count -gt 0){
-    $newView['subnetWhitelist'] = $subnetWhitelist 
+if($subnetAllowList.Count -gt 0){
+    $newView['subnetWhitelist'] = $subnetAllowList 
 }
 
 # create the view

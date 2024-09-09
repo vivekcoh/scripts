@@ -2,9 +2,14 @@
 
 ## 2024-09-09
 
-* [protectRemoteAdapter.ps1](https://github.com/cohesity/community-automation-samples/tree/main/powershell/protectRemoteAdapter) [`Update`] modernized authentication and refactored
+* [createS3View.py](https://github.com/cohesity/community-automation-samples/tree/main/python/createS3View) [`Update`] modernized authentication
+* [createSMBView.py](https://github.com/cohesity/community-automation-samples/tree/main/python/createSMBView) [`Update`] modernized authentication
 
 ## 2024-09-08
+
+* [protectRemoteAdapter.ps1](https://github.com/cohesity/community-automation-samples/tree/main/powershell/protectRemoteAdapter) [`Update`] modernized authentication and refactored
+
+## 2024-09-07
 
 * [protectRemoteAdapter.py](https://github.com/cohesity/community-automation-samples/tree/main/python/protectRemoteAdapter) [`New`] Create or update a remote adapter protection group
 

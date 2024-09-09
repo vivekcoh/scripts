@@ -4,6 +4,8 @@
 
 * [createS3View.py](https://github.com/cohesity/community-automation-samples/tree/main/python/createS3View) [`Update`] modernized authentication
 * [createSMBView.py](https://github.com/cohesity/community-automation-samples/tree/main/python/createSMBView) [`Update`] modernized authentication
+* [createS3View.ps1](https://github.com/cohesity/community-automation-samples/tree/main/powershell/createS3View) [`Update`] modernized authentication
+* [createSMBView.ps1](https://github.com/cohesity/community-automation-samples/tree/main/powershell/createSMBView) [`Update`] modernized authentication
 
 ## 2024-09-08
 

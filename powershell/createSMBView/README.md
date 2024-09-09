@@ -39,15 +39,25 @@ Place both files in a folder together and run the main script like so:
 #end example
 ```
 
-## Parameters
+## Authentication Parameters
 
-* -vip: Cohesity cluster to connect to
-* -username: Cohesity username
-* -domain: (optional) Active Directory domain (defaults to 'local')
+* -vip: (optional) name or IP of Cohesity cluster (defaults to helios.cohesity.com)
+* -username: (optional) name of user to connect to Cohesity (defaults to helios)
+* -domain: (optional) your AD domain (defaults to local)
+* -useApiKey: (optional) use API key for authentication
+* -password: (optional) will use cached password or will be prompted
+* -noPrompt: (optional) do not prompt for password
+* -tenant: (optional) organization to impersonate
+* -mcm: (optional) connect through MCM
+* -mfaCode: (optional) TOTP MFA code
+* -clusterName: (optional) cluster to connect to when connecting through Helios or MCM
+
+## Other Parameters
+
 * -viewName: name of new view to create
 * -readWrite: (optional) comma separated list of principals to grant read/write access
 * -fullControl: (optional) comma separated list of principals to grant full control
-* -qosPolicy: (optional) defaults to 'Backup Target Low' or choose 'Backup Target High', 'TestAndDev High' or 'TestAndDev Low'
+* -qosPolicy: (optional) defaults to 'Backup Target Low' or choose 'Backup Target High', 'TestAndDev High' or 'TestAndDev Low' (default is 'TestAndDev High')
 * -storageDomain: (optional) name of storage domain to place view data. Defaults to DefaultStorageDomain
 * -quotaLimitGB: (optional) logical quota in GiB
 * -quotaAlertGB: (optional) alert threshold in GiB

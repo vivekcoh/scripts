@@ -3,9 +3,17 @@
 ### process commandline arguments
 [CmdletBinding()]
 param (
-    [Parameter(Mandatory = $True)][string]$vip,       # the cluster to connect to (DNS name or IP)
-    [Parameter(Mandatory = $True)][string]$username,  # username (local or AD)
-    [Parameter()][string]$domain = 'local',           # local or AD domain
+    [Parameter()][string]$vip='helios.cohesity.com',
+    [Parameter()][string]$username = 'helios',
+    [Parameter()][string]$domain = 'local',
+    [Parameter()][string]$tenant,
+    [Parameter()][switch]$useApiKey,
+    [Parameter()][string]$password,
+    [Parameter()][switch]$noPrompt,
+    [Parameter()][switch]$mcm,
+    [Parameter()][string]$mfaCode,
+    [Parameter()][switch]$emailMfaCode,
+    [Parameter()][string]$clusterName,
     [Parameter(Mandatory = $True)][string]$viewName,  # name of view to create
     [Parameter()][string]$storageDomain = 'DefaultStorageDomain',  # name of storage domain in which to create view
     [Parameter()][array]$fullControl,                 # list of users to grant full control
@@ -16,14 +24,36 @@ param (
     [Parameter()][int64]$quotaLimitGB = 0,            # quota Limit in GiB
     [Parameter()][int64]$quotaAlertGB = 0,            # quota alert threshold in GiB
     [Parameter()][ValidateSet('BackupTarget', 'FileServices')][string]$category = 'FileServices',
-    [Parameter()][ValidateSet('Backup Target Low','Backup Target High','TestAndDev High','TestAndDev Low')][string]$qosPolicy = 'Backup Target Low'
+    [Parameter()][ValidateSet('Backup Target Low','Backup Target High','TestAndDev High','TestAndDev Low')][string]$qosPolicy = 'TestAndDev High'
 )
 
 ### source the cohesity-api helper code
 . $(Join-Path -Path $PSScriptRoot -ChildPath cohesity-api.ps1)
 
-### authenticate
-apiauth -vip $vip -username $username -domain $domain
+# authentication =============================================
+# demand clusterName for Helios/MCM
+if(($vip -eq 'helios.cohesity.com' -or $mcm) -and ! $clusterName){
+    Write-Host "-clusterName required when connecting to Helios/MCM" -ForegroundColor Yellow
+    exit 1
+}
+
+# authenticate
+apiauth -vip $vip -username $username -domain $domain -passwd $password -apiKeyAuthentication $useApiKey -mfaCode $mfaCode -sendMfaCode $emailMfaCode -heliosAuthentication $mcm -regionid $region -tenant $tenant -noPromptForPassword $noPrompt
+
+# exit on failed authentication
+if(!$cohesity_api.authorized){
+    Write-Host "Not authenticated" -ForegroundColor Yellow
+    exit 1
+}
+
+# select helios/mcm managed cluster
+if($USING_HELIOS){
+    $thisCluster = heliosCluster $clusterName
+    if(! $thisCluster){
+        exit 1
+    }
+}
+# end authentication =========================================
 
 ### find storage domain
 $sd = api get viewBoxes | Where-Object name -eq $storageDomain
@@ -137,4 +167,3 @@ $v2View = api get -v2 file-services/views?viewIds=$($thisView.viewId)
 # $v2View.views
 $v2View.views[0].category = $category
 $null = api put -v2 file-services/views/$($thisView.viewId) $v2View.views[0]
-

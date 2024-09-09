@@ -159,6 +159,15 @@ foreach($user in $modify){
   addPermission $user 'kModify'
 }
 
+if($newView.smbPermissionsInfo.permissions.Count -eq 0){
+    $newView.sharePermissions = @($newView.sharePermissions + @{
+        "sid" = "S-1-1-0";
+        "type" = "kAllow";
+        "mode" = "kFolderSubFoldersAndFiles";
+        "access" = "kFullControl"
+    })
+}
+
 ### create the view
 "Creating view $viewName..."
 $thisView = api post views $newView

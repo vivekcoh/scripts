@@ -98,7 +98,15 @@ newView = {
     "storagePolicyOverride": {
         "disableInlineDedupAndCompression": False
     },
-    "name": viewName
+    "name": viewName,
+    "sharePermissions": [
+        {
+            "sid": "S-1-1-0",
+            "access": "kFullControl",
+            "mode": "kFolderSubFoldersAndFiles",
+            "type": "kAllow"
+        }
+    ],
 }
 
 
@@ -127,6 +135,14 @@ for user in readWrite:
 
 for user in fullControl:
     addPermission(user, 'kFullControl')
+
+if len(newView['smbPermissionsInfo']['permissions']) == 0:
+    newView['smbPermissionsInfo']['permissions'].append({
+        "sid": "S-1-1-0",
+        "type": "kAllow",
+        "mode": "kFolderSubFoldersAndFiles",
+        "access": "kFullControl"
+    })
 
 if len(allowlist) > 0:
     newView['subnetWhitelist'] = []

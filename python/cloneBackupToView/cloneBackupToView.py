@@ -66,7 +66,7 @@ existingview = None
 views = api('get', 'views')
 if views['count'] > 0:
     existingviews = [v for v in views['views'] if v['name'].lower() == viewName.lower()]
-    if(len(existingviews) > 0):
+    if len(existingviews) > 0:
         existingview = existingviews[0]
 
 if existingview is None and deleteview is not True:
@@ -119,7 +119,7 @@ if existingview is None and deleteview is not True:
     views = api('get', 'views')
     if views['count'] > 0:
         existingviews = [v for v in views['views'] if v['name'].lower() == viewName.lower()]
-        if(len(existingviews) > 0):
+        if len(existingviews) > 0:
             view = existingviews[0]
 
 else:
@@ -151,7 +151,10 @@ if len(runs) > 0:
             if objectname is None or thisObjectName.lower() == objectname.lower():
                 if sourceInfo['status'] in successStates:
                     thisObjectFound = True
-                    sourceView = sourceInfo['currentSnapshotInfo']['viewName']
+                    if 'viewName' in sourceInfo['currentSnapshotInfo']:
+                        sourceView = sourceInfo['currentSnapshotInfo']['viewName']
+                    else:
+                        sourceView = sourceInfo['currentSnapshotInfo']['rootPath'].split('/')[2]
                     if 'relativeSnapshotDirectory' in sourceInfo['currentSnapshotInfo']:
                         sourcePath = sourceInfo['currentSnapshotInfo']['relativeSnapshotDirectory']
                     else:

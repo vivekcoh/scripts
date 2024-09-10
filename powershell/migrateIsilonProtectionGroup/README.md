@@ -34,7 +34,7 @@ $repoURL = 'https://raw.githubusercontent.com/cohesity/community-automation-samp
 
 Place all files in a folder together and run the script like so:
 
-To update all Isilon protection jobs:
+To migrate an Isilon protection group:
 
 ```powershell
 ./migrateIsilonProtectionGroup.ps1 -sourceCluster myOldCluster `

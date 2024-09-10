@@ -342,7 +342,11 @@ foreach($run in $runs){
             if(!$objectName -or $sourceInfo.source.name -eq $objectName){
                 $thisObjectName = $sourceInfo.source.name
                 if($sourceInfo.status -in @('kSuccess', 'kWarning', '4', '6')){
-                    $sourceView = $sourceInfo.currentSnapshotInfo.viewName
+                    if($sourceInfo.currentSnapshotInfo.PSObject.Properties['viewName']){
+                        $sourceView = $sourceInfo.currentSnapshotInfo.viewName
+                    }else{
+                        $sourceView = $sourceInfo.currentSnapshotInfo.rootPath.split('/')[2]
+                    }
                     $x = $attemptNum = 1
                     if($sourceInfo.currentSnapshotInfo.PSObject.Properties['relativeSnapshotDirectory']){
                         $sourcePath = $sourceInfo.currentSnapshotInfo.relativeSnapshotDirectory

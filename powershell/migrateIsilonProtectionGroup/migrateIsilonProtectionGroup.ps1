@@ -111,10 +111,8 @@ if($suffix){
 $job = (api get -v2 'data-protect/protection-groups?environments=kIsilon&isActive=true').protectionGroups | Where-Object name -eq $jobName
 
 if($job){
-
     $oldPolicy = (api get -v2 data-protect/policies).policies | Where-Object id -eq $job.policyId
     $oldStorageDomain = api get viewBoxes | Where-Object id -eq $job.storageDomainId
-
     # connect to target cluster for sanity check
     if(!$deleteOldJobAndExit){
         "Connecting to target cluster..."
@@ -149,10 +147,6 @@ if($job){
             $oldStorageDomain.name = $newStorageDomainName
         }
         $newStorageDomain = api get viewBoxes | Where-Object name -eq $oldStorageDomain.name
-        if(!$newStorageDomain){
-            Write-Host "Storage Domain $($oldStorageDomain.name) not found" -ForegroundColor Yellow
-            exit
-        }
 
         # check for policy
         if($newPolicyName){
@@ -214,7 +208,11 @@ if($job){
     # connect to target cluster
     apiauth -vip $targetCluster -username $targetUser -domain $targetDomain -passwd $targetPassword -tenant $tenant -quiet
 
-    $job.storageDomainId = $newStorageDomain.id
+    if($newStorageDomain){
+        $job.storageDomainId = $newStorageDomain.id
+    }else{
+        $job.storageDomainId = $null
+    }
     $job.policyId = $newPolicy.id
     $job.isilonParams.sourceId = $newIsilon.protectionSource.id
 

@@ -344,8 +344,11 @@ foreach($run in $runs){
                 if($sourceInfo.status -in @('kSuccess', 'kWarning', '4', '6')){
                     if($sourceInfo.currentSnapshotInfo.PSObject.Properties['viewName']){
                         $sourceView = $sourceInfo.currentSnapshotInfo.viewName
-                    }else{
+                    }elseif($sourceInfo.currentSnapshotInfo.PSObject.Properties['rootPath']){
                         $sourceView = $sourceInfo.currentSnapshotInfo.rootPath.split('/')[2]
+                    }else{
+                        Write-Host "no view path found for $($job.environment) protection run" -ForegroundColor Yellow
+                        continue
                     }
                     $x = $attemptNum = 1
                     if($sourceInfo.currentSnapshotInfo.PSObject.Properties['relativeSnapshotDirectory']){

@@ -156,8 +156,14 @@ if len(runs) > 0:
                     elif 'rootPath' in sourceInfo['currentSnapshotInfo']:
                         sourceView = sourceInfo['currentSnapshotInfo']['rootPath'].split('/')[2]
                     else:
-                        print('no view path found for %s protection run' % job['environment'])
-                        continue
+                        thisRun = api('get', '/backupjobruns?id=%s&exactMatchStartTimeUsecs=%s' % (run['jobId'], run['backupRun']['stats']['startTimeUsecs']))
+                        if 'viewName' in thisRun[0]['backupJobRuns']['protectionRuns'][0]['backupRun']['latestFinishedTasks'][0]:
+                            sourceView = thisRun[0]['backupJobRuns']['protectionRuns'][0]['backupRun']['latestFinishedTasks'][0]['viewName']
+                        elif 'viewName' in thisRun[0]['backupJobRuns']['protectionRuns'][0]['backupRun']['latestFinishedTasks'][0]['currentSnapshotInfo']:
+                            sourceView = thisRun[0]['backupJobRuns']['protectionRuns'][0]['backupRun']['latestFinishedTasks'][0]['currentSnapshotInfo']['viewName']
+                        else:
+                            print('no view path found for %s protection run' % job['environment'])
+                            continue
                     if 'relativeSnapshotDirectory' in sourceInfo['currentSnapshotInfo']:
                         sourcePath = sourceInfo['currentSnapshotInfo']['relativeSnapshotDirectory']
                     else:

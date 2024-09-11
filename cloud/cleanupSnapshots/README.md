@@ -4,6 +4,8 @@ Warning: this code is provided on a best effort basis and is not in any way offi
 
 These scripts help cleanup azure snapshots. You can use which ever script is compatible with your environment.
 
+Contributor: Kanak Agarwal
+
 ## Prerequisites
 
 1. Application Id.

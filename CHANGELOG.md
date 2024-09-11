@@ -1,9 +1,12 @@
 # Change Log for cohesity/community-automation-samples
 
+## 2024-09-11
+
+* [cloneBackupToView.ps1](https://github.com/cohesity/community-automation-samples/tree/main/powershell/cloneBackupToView) [`Update`] added support for Oracle and UDA
+* [cloneBackupToView.py](https://github.com/cohesity/community-automation-samples/tree/main/python/cloneBackupToView) [`Update`] added support for Oracle and UDA
+
 ## 2024-09-10
 
-* [cloneBackupToView.ps1](https://github.com/cohesity/community-automation-samples/tree/main/powershell/cloneBackupToView) [`Update`] added support for Oracle backups
-* [cloneBackupToView.py](https://github.com/cohesity/community-automation-samples/tree/main/python/cloneBackupToView) [`Update`] added support for Oracle backups
 * [deleteView.py](https://github.com/cohesity/community-automation-samples/tree/main/python/deleteView) [`Update`] modernized authentication
 * [deleteView.ps1](https://github.com/cohesity/community-automation-samples/tree/main/powershell/deleteView) [`New`] delete a Cohesity view
 * [listViews.ps1](https://github.com/cohesity/community-automation-samples/tree/main/powershell/listViews) [`New`] List Cohesity views

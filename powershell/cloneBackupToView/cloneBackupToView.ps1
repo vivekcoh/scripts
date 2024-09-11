@@ -347,8 +347,15 @@ foreach($run in $runs){
                     }elseif($sourceInfo.currentSnapshotInfo.PSObject.Properties['rootPath']){
                         $sourceView = $sourceInfo.currentSnapshotInfo.rootPath.split('/')[2]
                     }else{
-                        Write-Host "no view path found for $($job.environment) protection run" -ForegroundColor Yellow
-                        continue
+                        $thisRun = api get "/backupjobruns?exactMatchStartTimeUsecs=$($run.backupRun.stats.startTimeUsecs)&id=$($run.jobId)"
+                        if($thisRun.backupJobRuns.protectionRuns[0].backupRun.latestFinishedTasks[0].PSObject.Properties['viewName']){
+                            $sourceView = $thisRun.backupJobRuns.protectionRuns[0].backupRun.latestFinishedTasks[0].viewName
+                        }elseif($thisRun.backupJobRuns.protectionRuns[0].backupRun.latestFinishedTasks[0].currentSnapshotInfo.PSObject.Properties['viewName']){
+                            $sourceView = $thisRun.backupJobRuns.protectionRuns[0].backupRun.latestFinishedTasks[0].currentSnapshotInfo.viewName
+                        }else{
+                            Write-Host "no view path found for $($job.environment) protection run" -ForegroundColor Yellow
+                            continue
+                        }                        
                     }
                     $x = $attemptNum = 1
                     if($sourceInfo.currentSnapshotInfo.PSObject.Properties['relativeSnapshotDirectory']){

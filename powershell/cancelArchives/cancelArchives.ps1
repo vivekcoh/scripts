@@ -21,7 +21,8 @@ param (
     [Parameter()][int]$numRuns = 1000,
     [Parameter()][switch]$commit,
     [Parameter()][string]$targetName,
-    [Parameter()][ValidateSet('MiB','GiB','TiB')][string]$unit = 'MiB'
+    [Parameter()][ValidateSet('MiB','GiB','TiB')][string]$unit = 'MiB',
+    [Parameter()][switch]$logsOnly
 )
 
 $conversion = @{'MiB' = 1024 * 1024; 'GiB' = 1024 * 1024 * 1024; 'TiB' = 1024 * 1024 * 1024 * 1024}
@@ -83,6 +84,9 @@ foreach($job in $jobs){
             break
         }
         foreach($run in $runs.runs){
+            if($logsOnly -and $run.localBackupInfo.runType -ne 'kLog'){
+                continue
+            }
             $runId = $run.id
             $startTimeUsecs = $run.localBackupInfo.startTimeUsecs
             foreach($archivalInfo in $run.archivalInfo.archivalTargetResults){

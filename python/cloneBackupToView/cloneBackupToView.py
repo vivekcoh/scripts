@@ -153,8 +153,11 @@ if len(runs) > 0:
                     thisObjectFound = True
                     if 'viewName' in sourceInfo['currentSnapshotInfo']:
                         sourceView = sourceInfo['currentSnapshotInfo']['viewName']
-                    else:
+                    elif 'rootPath' in sourceInfo['currentSnapshotInfo']:
                         sourceView = sourceInfo['currentSnapshotInfo']['rootPath'].split('/')[2]
+                    else:
+                        print('no view path found for %s protection run' % job['environment'])
+                        continue
                     if 'relativeSnapshotDirectory' in sourceInfo['currentSnapshotInfo']:
                         sourcePath = sourceInfo['currentSnapshotInfo']['relativeSnapshotDirectory']
                     else:

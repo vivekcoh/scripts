@@ -1,8 +1,16 @@
 [CmdletBinding()]
 param (
-    [Parameter(Mandatory = $True)][string]$vip, # Cohesity cluster to connect to
-    [Parameter(Mandatory = $True)][string]$username, #cohesity username
-    [Parameter()][string]$domain = 'local',  # local or AD domain
+    [Parameter()][string]$vip='helios.cohesity.com',
+    [Parameter()][string]$username = 'helios',
+    [Parameter()][string]$domain = 'local',
+    [Parameter()][string]$tenant,
+    [Parameter()][switch]$useApiKey,
+    [Parameter()][string]$password,
+    [Parameter()][switch]$noPrompt,
+    [Parameter()][switch]$mcm,
+    [Parameter()][string]$mfaCode,
+    [Parameter()][switch]$emailMfaCode,
+    [Parameter()][string]$clusterName,
     [Parameter()][Int64]$days = 31, # number of days back to gather statistics
     [Parameter()][ValidateSet("Daily","Weekly","Monthly")][string]$rollup = 'Daily', # show daily, weekly or monthly
     [Parameter()][ValidateSet('KiB','MiB','GiB','TiB')][string]$unit = 'GiB',
@@ -15,8 +23,30 @@ param (
 # source the cohesity-api helper code
 . $(Join-Path -Path $PSScriptRoot -ChildPath cohesity-api.ps1)
 
+# authentication =============================================
+# demand clusterName for Helios/MCM
+if(($vip -eq 'helios.cohesity.com' -or $mcm) -and ! $clusterName){
+    Write-Host "-clusterName required when connecting to Helios/MCM" -ForegroundColor Yellow
+    exit 1
+}
+
 # authenticate
-apiauth -vip $vip -username $username -domain $domain
+apiauth -vip $vip -username $username -domain $domain -passwd $password -apiKeyAuthentication $useApiKey -mfaCode $mfaCode -sendMfaCode $emailMfaCode -heliosAuthentication $mcm -regionid $region -tenant $tenant -noPromptForPassword $noPrompt
+
+# exit on failed authentication
+if(!$cohesity_api.authorized){
+    Write-Host "Not authenticated" -ForegroundColor Yellow
+    exit 1
+}
+
+# select helios/mcm managed cluster
+if($USING_HELIOS){
+    $thisCluster = heliosCluster $clusterName
+    if(! $thisCluster){
+        exit 1
+    }
+}
+# end authentication =========================================
 
 $conversion = @{'Kib' = 1024; 'MiB' = 1024 * 1024; 'GiB' = 1024 * 1024 * 1024; 'TiB' = 1024 * 1024 * 1024 * 1024}
 

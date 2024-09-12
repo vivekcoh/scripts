@@ -26,7 +26,7 @@ foreach($v in $vip){
     }
 
     $cluster = api get cluster
-    $sources = api get "protectionSources/registrationInfo?useCachedData=false&pruneNonCriticalInfo=true&includeExternalMetadata=true&includeEntityPermissionInfo=true&includeApplicationsTreeInfo=false&allUnderHierarchy=true&environments=kAcropolis&environments=kHyperV&environments=kHyperVVSS&environments=kKVM&environments=kVCD&environments=kVMware"
+    $sources = api get "protectionSources/registrationInfo?useCachedData=false&pruneNonCriticalInfo=true&includeExternalMetadata=true&includeEntityPermissionInfo=true&includeApplicationsTreeInfo=false&allUnderHierarchy=true&environments=kAcropolis&environments=kHyperV&environments=kHyperVVSS&environments=kKVM&environments=kVCD&environments=kVMware&kAzure"
     $protectedVMs = 0
     foreach($rootNode in $sources.rootNodes){
         if($rootNode.stats.protectedCount -gt 0){

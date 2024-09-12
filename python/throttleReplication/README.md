@@ -80,6 +80,9 @@ To define a quiet period with a bandwidth limit of 10 Mpbs on weekdays from 9am 
 
 * -n, --remoteclustername: (optional) name of a remote cluster (repeat for multiple)
 * -l, --remoteclusrterlist: (optional) text file of remote clusters (one per line)
+* -ru, --remoteusername: (optional) name of user to authenticate replication
+* -rp, --remotepassword: (optional) password of user to authenticate replication
+* -pp, --promotforremotepassword: (optional) prompt for password of user to authenticate replication
 * -block, --block: (optional) block replication
 * -clear, --clear: (optional) unblock replication, remove all throttles and quiet periods
 * -limit, --limit: (optional) set a full time hard limit

@@ -3,6 +3,7 @@
 
 ### import pyhesity wrapper module
 from pyhesity import *
+import getpass
 
 ### command line arguments
 import argparse
@@ -19,6 +20,9 @@ parser.add_argument('-m', '--mfacode', type=str, default=None)
 parser.add_argument('-em', '--emailmfacode', action='store_true')
 parser.add_argument('-n', '--remoteclustername', action='append', type=str)
 parser.add_argument('-l', '--remoteclusterlist', type=str)
+parser.add_argument('-ru', '--remoteusername', type=str, default=None)
+parser.add_argument('-rp', '--remotepassword', type=str, default=None)
+parser.add_argument('-pp', '--promotforremotepassword', action='store_true')
 parser.add_argument('-block', '--block', action='store_true')
 parser.add_argument('-limit', '--limit', action='store_true')
 parser.add_argument('-clear', '--clear', action='store_true')
@@ -50,6 +54,9 @@ mfacode = args.mfacode
 emailmfacode = args.emailmfacode
 remoteclustername = args.remoteclustername
 remoteclusterlist = args.remoteclusterlist
+remoteusername = args.remoteusername
+remotepassword = args.remotepassword
+promotforremotepassword = args.promotforremotepassword
 block = args.block
 limit = args.limit
 clear = args.clear
@@ -216,5 +223,16 @@ for remotecluster in remoteclusters:
                     bytesPerSecond = int(bandwidth * 1024 * 1024 / 8)
                 remotecluster['bandwidthLimit']['rateLimitBytesPerSec'] = bytesPerSecond
                 print('applying bandwidth limit to %s' % remotecluster['name'])
+
+        if remoteusername is None:
+            remoteusername = remotecluster['userName']
+        else:
+            remotecluster['userName'] = remoteusername
+
+        if promotforremotepassword is True:
+            remotepassword = getpass.getpass("  Enter password for user %s at %s: " % (remoteusername, remotecluster['name']))
+
+        if remotepassword is not None:
+            remotecluster['password'] = remotepassword
 
         result = api('put', 'remoteClusters/%s' % remotecluster['clusterId'], remotecluster)

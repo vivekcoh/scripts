@@ -2,6 +2,7 @@
 param (
     [Parameter()][string]$vip='helios.cohesity.com',
     [Parameter()][string]$username='helios',
+    [Parameter()][switch]$EntraId,
     [Parameter()][string]$startDate = '',
     [Parameter()][string]$endDate = '',
     [Parameter()][switch]$thisCalendarMonth,
@@ -16,7 +17,8 @@ param (
     [Parameter()][switch]$excludeLogs,
     [Parameter()][array]$environment,
     [Parameter()][array]$excludeEnvironment,
-    [Parameter()][switch]$replicationOnly
+    [Parameter()][switch]$replicationOnly,
+    [Parameter()][int]$timeoutSeconds = 600
 )
 
 # gather list from command line params and file
@@ -44,7 +46,7 @@ function gatherList($Param=$null, $FilePath=$null, $Required=$True, $Name='items
 . $(Join-Path -Path $PSScriptRoot -ChildPath cohesity-api.ps1)
 
 # authenticate
-apiauth -vip $vip -username $username -domain 'local' -helios
+apiauth -vip $vip -username $username -domain 'local' -helios -entraIdAuthentication $EntraId
 
 $allClusters = heliosClusters
 $regions = api get -mcmv2 dms/regions
@@ -220,7 +222,7 @@ foreach($cluster in ($selectedClusters)){
         if($replicationOnly){
             $reportParams.filters = @($reportParams.filters + $replicationFilter)
         }
-        $preview = api post -reportingV2 "components/$reportNumber/preview" $reportParams
+        $preview = api post -reportingV2 "components/$reportNumber/preview" $reportParams -TimeoutSec $timeoutSeconds
         Write-Host "($($preview.component.data.Count) rows)" 
         if($preview.component.data.Count -eq 50000){
             Write-Host "Hit limit of records. Try reducing -dayRange (e.g. -dayRange 1)" -ForegroundColor Yellow

@@ -1,7 +1,25 @@
 # Change Log for cohesity/community-automation-samples
 
+## 2024-09-19
+
+* [obfuscateLogs.py](https://github.com/cohesity/community-automation-samples/tree/main/python/obfuscateLogs) [`Update`] added masking for dir op file names
+
+## 2024-09-18
+
+* [heliosCSVReport.ps1](https://github.com/cohesity/community-automation-samples/tree/main/reports/helios-reporting/powershell/heliosCSVReport) [`Update`] added -timeoutSeconds parameter
+
+## 2024-09-13
+
+* [clusterNumberOfProtectedVMs.ps1](https://github.com/cohesity/community-automation-samples/tree/main/reports/powershell/clusterNumberOfProtectedVMs) [`Update`] added support for Azure and AWS VMs
+
+## 2024-09-12
+
+* [throttleReplication.py](https://github.com/cohesity/community-automation-samples/tree/main/python/throttleReplication) [`Update`] added support for updated credentials
+
 ## 2024-09-11
 
+* [cancelArchives.ps1](https://github.com/cohesity/community-automation-samples/tree/main/powershell/cancelArchives) [`Update`] added logs only option
+* [consumptionTrend.ps1](https://github.com/cohesity/community-automation-samples/tree/main/reports/powershell/consumptionTrend) [`Update`] modernized authentication
 * [cloneBackupToView.ps1](https://github.com/cohesity/community-automation-samples/tree/main/powershell/cloneBackupToView) [`Update`] added support for Oracle and UDA
 * [cloneBackupToView.py](https://github.com/cohesity/community-automation-samples/tree/main/python/cloneBackupToView) [`Update`] added support for Oracle and UDA
 

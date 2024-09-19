@@ -75,7 +75,10 @@ newerthanUsecs = timeAgo(newerthan, 'days')
 olderthanUsecs = timeAgo(olderthan, 'days')
 
 # get replication target info
-remote = [r for r in api('get', 'remoteClusters') if r['name'].lower() == remotecluster.lower()]
+remote = None
+remoteClusters = api('get', 'remote-clusters', v=2)
+if remoteClusters is not None and 'remoteClusters' in remoteClusters and len(remoteClusters['remoteClusters']) > 0:
+    remote = [r for r in remoteClusters['remoteClusters'] if r['clusterName'].lower() == remotecluster.lower()]
 if remote is None or len(remote) == 0:
     print('remote cluster %s not found' % remotecluster)
     exit(1)
@@ -128,57 +131,84 @@ for job in sorted(jobs, key=lambda job: job['name'].lower()):
                     startdate = usecsToDate(startdateusecs)
                     if newerthan > 0 and startdateusecs < newerthanUsecs:
                         continue
-                    # check for replication
                     replicated = False
+                    needsResync = False
                     if 'replicationInfo' in run:
                         if 'replicationTargetResults' in run['replicationInfo'] and len(run['replicationInfo']['replicationTargetResults']) > 0:
                             for replicationTargetResult in run['replicationInfo']['replicationTargetResults']:
-                                if 'clusterName' in replicationTargetResult and replicationTargetResult['clusterName'].lower() == remotecluster.lower() and replicationTargetResult['status'] in ['Succeeded', 'Running', 'Accepted', 'Canceling']:
+                                if 'clusterId' in replicationTargetResult and replicationTargetResult['clusterId'] ==  remote['clusterId'] and replicationTargetResult['status'] in ['Succeeded', 'Running', 'Accepted', 'Canceling'] and replicationTargetResult['expiryTimeUsecs'] > 0:
                                     replicated = True
-                                    if resync and replicationTargetResult['clusterName'].lower() == remotecluster.lower() and replicationTargetResult['status'] == 'Succeeded':
+                                    if resync and replicationTargetResult['clusterId'] == remote['clusterId'] and replicationTargetResult['status'] == 'Succeeded':
                                         replicated = False
+                                        needsResync = True
 
                     if replicated is False:
-                        startTimeUsecs = startdateusecs
-
-                        if keepfor > 0:
-                            expireTimeUsecs = startTimeUsecs + (int(keepfor * 86400000000))
-                        else:
-                            thisrun = api('get', '/backupjobruns?allUnderHierarchy=true&exactMatchStartTimeUsecs=%s&excludeTasks=true&id=%s' % (startdateusecs, jobuid['id']))
-                            expireTimeUsecs = thisrun[0]['backupJobRuns']['protectionRuns'][0]['copyRun']['finishedTasks'][0]['expiryTimeUsecs']
-
-                        daysToKeep = int(round((expireTimeUsecs - nowUsecs) / 86400000000, 0)) + 1
-                        if daysToKeep == 0:
-                            daysToKeep = 1
-
+                        
                         if commit:
-                            # create replication task definition
-                            replicationTask = {
-                                'jobRuns': [
-                                    {
-                                        'copyRunTargets': [
-                                            {
-                                                "replicationTarget": {
-                                                    "clusterId": remote['clusterId'],
-                                                    "clusterName": remote['name']
-                                                },
-                                                'daysToKeep': int(daysToKeep),
-                                                'type': 'kRemote'
+                            if needsResync is False:
+                                startTimeUsecs = startdateusecs
+                                if keepfor > 0:
+                                    expireTimeUsecs = startTimeUsecs + (int(keepfor * 86400000000))
+                                else:
+                                    thisrun = api('get', '/backupjobruns?allUnderHierarchy=true&exactMatchStartTimeUsecs=%s&excludeTasks=true&id=%s' % (startdateusecs, jobuid['id']))
+                                    expireTimeUsecs = thisrun[0]['backupJobRuns']['protectionRuns'][0]['copyRun']['finishedTasks'][0]['expiryTimeUsecs']
+
+                                daysToKeep = int(round((expireTimeUsecs - nowUsecs) / 86400000000, 0))
+                                if daysToKeep <= 0:
+                                    daysToKeep = 1
+                                replicationTask = {
+                                    "updateProtectionGroupRunParams": [
+                                        {
+                                            "runId": run['id'],
+                                            "replicationSnapshotConfig": {
+                                                "newSnapshotConfig": [
+                                                    {
+                                                        "id": remote['clusterId'],
+                                                        "retention": {
+                                                            "unit": "Days",
+                                                            "duration": int(daysToKeep)
+                                                        }
+                                                    }
+                                                ]
                                             }
-                                        ],
-                                        'runStartTimeUsecs': startdateusecs,
-                                        'jobUid': jobuid
-                                    }
-                                ]
-                            }
-                            print('  Replicating  %s  for %s days' % (startdate, daysToKeep))
+                                        }
+                                    ]
+                                }
+                            else:
+                                if keepfor == 0:
+                                    daysToKeep = 0
+                                else:
+                                    startTimeUsecs = startdateusecs
+                                    thisrun = api('get', '/backupjobruns?allUnderHierarchy=true&exactMatchStartTimeUsecs=%s&excludeTasks=true&id=%s' % (startdateusecs, jobuid['id']))
+                                    expireTimeUsecs = thisrun[0]['backupJobRuns']['protectionRuns'][0]['copyRun']['finishedTasks'][0]['expiryTimeUsecs']
+                                    retentionDays = int(round((expireTimeUsecs - startTimeUsecs) / 86400000000))
+                                    daysToKeep = keepfor - retentionDays
+                                    if daysToKeep < 1:
+                                        daysToKeep = 1
+                                replicationTask = {
+                                    "updateProtectionGroupRunParams": [
+                                        {
+                                            "runId": run['id'],
+                                            "replicationSnapshotConfig": {
+                                               "updateExistingSnapshotConfig": [
+                                                    {
+                                                        "id": remote['clusterId'],
+                                                        "name": remote['clusterName'],
+                                                        "resync": True,
+                                                        "daysToKeep": int(daysToKeep)
+                                                    }
+                                                ]
+                                            }
+                                        }
+                                    ]
+                                }
+                            print('  Replicating  %s' % startdate)
                             runstoreplicate[startdateusecs] = replicationTask
                         else:
-                            print('  Would replicate  %s (%s)  for %s days' % (startdate, run['protectionGroupInstanceId'], daysToKeep))
-                        # display(run)
+                            print('  Would replicate  %s (%s)' % (startdate, run['protectionGroupInstanceId']))
                     else:
                         print('  Already replicated  %s' % startdate)
         if len(runstoreplicate.keys()) > 0:
             print('  Committing replications...')
         for rundate in sorted(runstoreplicate.keys()):
-            result = api('put', 'protectionRuns', runstoreplicate[rundate])
+            result = api("put", "data-protect/protection-groups/%s/runs" % job['id'], runstoreplicate[rundate], v=2)

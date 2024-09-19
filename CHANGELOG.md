@@ -2,6 +2,7 @@
 
 ## 2024-09-19
 
+* [replicateOldSnapshots.py](https://github.com/cohesity/community-automation-samples/tree/main/python/replicateOldSnapshots) [`Update`] updated to use V2 API
 * [obfuscateLogs.py](https://github.com/cohesity/community-automation-samples/tree/main/python/obfuscateLogs) [`Update`] added masking for dir op file names
 
 ## 2024-09-18

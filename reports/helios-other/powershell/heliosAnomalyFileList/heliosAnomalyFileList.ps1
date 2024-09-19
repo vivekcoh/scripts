@@ -82,8 +82,8 @@ foreach($alert in $alerts | Where-Object {$_.alertDocument.alertName -eq 'DataIn
                 "protectionGroupIds" = @(
                     "$($status.snapshot.clusterId):$($status.snapshot.incarnationId):$($status.snapshot.protectionGroupId)"
                 );
-                "fromRunStartTimeUsecs" = (timeAgo $days days);
-                "toRunStartTimeUsecs" = (timeAgo 1 minute)
+                "fromRunStartTimeUsecs" = $anomalousJobStartTimeUsecs;
+                "toRunStartTimeUsecs" = $anomalousJobStartTimeUsecs;
             }
             $details = api post -mcmv2 data-protect/copystats/details $detailsQuery
             $totalFiles = $details[0].indexingStats.deletedDocumentCount + $details[0].indexingStats.newDocumentCount + $details[0].indexingStats.updatedDocumentCount
@@ -127,7 +127,7 @@ foreach($alert in $alerts | Where-Object {$_.alertDocument.alertName -eq 'DataIn
                     }else{
                         Start-Sleep $sleepTime
                     }
-                    if(($diffStatusCount -ge $retryCount) -or ($filesCounted -eq $totalFiles) ){
+                    if(($diffStatusCount -ge $retryCount) -or ($filesCounted -ge $totalFiles) ){
                         break
                     }
                 }

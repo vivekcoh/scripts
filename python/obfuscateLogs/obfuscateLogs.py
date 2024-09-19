@@ -99,7 +99,6 @@ def obfuscatefile(root, filepath):
     filename = os.path.basename(filepath)
     if filename.startswith('xxx-'):
         return
-    print(filepath)
     outfile = os.path.join(root, 'xxx-%s' % filename)
     with codecs.open(filepath, 'r', 'latin-1') as f_in:
         with codecs.open(outfile, 'w', 'latin-1') as f_out:
@@ -112,6 +111,22 @@ def obfuscatefile(root, filepath):
                 if skipline is False and ('/' in line or '\\' in line):
                     tags = ''.join(re.findall(r'(<.*?[\w:|\.|-|"|=]+>)', line))
                     lineparts = re.split('=|\"|\[|\>|\<', line)
+                    if 'dir_sync_tx2_op.cc' in line:
+                        lineparts = line.split('Looking up ')
+                        
+                        if len(lineparts) > 1:
+                            lineparts2 = lineparts[1].split(' in dir')
+                            if len(lineparts2) > 1:
+                                securefile = lineparts2[0]
+                                line = line.replace(securefile, 'xxx')
+
+                        lineparts = line.split('for entry=')
+                        if len(lineparts) > 1:
+                            lineparts2 = lineparts[1].split(' in dir=')
+                            if len(lineparts2) > 1:
+                                securefile = lineparts2[0]
+                                line = line.replace(securefile, 'xxx')
+                                         
                     for linepart in lineparts:
                         windowspaths = re.findall(r'(\\.+[\w:|\.|-]+)', linepart)
                         paths = [p for p in windowspaths if p not in tags and p not in [i for i in ignore_paths]]
@@ -225,7 +240,6 @@ if __name__ == '__main__':
         print('log folder free space is %s GiB' % round(freespace / GiB, 2))
         print('at least %s GiB free space is recommended to proceed' % round(logfoldersize * freespacemultiplier / GiB, 2))
         exit()
-    exit()
     start_time = time.time()
     walkdir(logpath, parallel=args.parallel, max_workers=args.workers)
     end_time = time.time()

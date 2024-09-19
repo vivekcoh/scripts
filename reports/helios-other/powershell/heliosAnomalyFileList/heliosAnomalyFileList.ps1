@@ -121,7 +121,7 @@ foreach($alert in $alerts | Where-Object {$_.alertDocument.alertName -eq 'DataIn
                             $filesCounted += 1
                             """{0}"",""{1}"",""{2}"",""{3}"",""{4}"",""{5}"",""{6}"",""{7}"",""{8}""" -f $clusterName, $jobName, $objectType, $(usecsToDate $jobStartTimeUsecs), $object, $strength, $totalFiles, $filePath, $operation | Out-File -FilePath $outfileName -Append
                         }
-                        Write-Host "`r  $filesCounted of $totalFiles" -NoNewLine
+                        Write-Host "  $filesCounted of $totalFiles"
                         $diffParams.pageNumber += 1
                         $diffStatusCount = 0
                     }else{

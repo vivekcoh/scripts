@@ -9,6 +9,7 @@ Note: there's a new experimental V2 version of the script that uses the V2 API. 
 ## Components
 
 * [replicateOldSnapshots.py](https://raw.githubusercontent.com/cohesity/community-automation-samples/main/python/replicateOldSnapshots/replicateOldSnapshots.py): the main python script
+* [replicateOldSnapshotsV2.py](https://raw.githubusercontent.com/cohesity/community-automation-samples/main/python/replicateOldSnapshots/replicateOldSnapshotsV2.py): experimental V2 version
 * [pyhesity.py](https://raw.githubusercontent.com/cohesity/community-automation-samples/main/python/pyhesity/pyhesity.py): the Cohesity REST API helper module
 
 You can download the scripts using the following commands:

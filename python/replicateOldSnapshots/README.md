@@ -4,6 +4,8 @@ Warning: this code is provided on a best effort basis and is not in any way offi
 
 This python script replicates old existing snapshots.
 
+Note: there's a new experimental V2 version of the script that uses the V2 API. Feedback is welcome.
+
 ## Components
 
 * [replicateOldSnapshots.py](https://raw.githubusercontent.com/cohesity/community-automation-samples/main/python/replicateOldSnapshots/replicateOldSnapshots.py): the main python script
@@ -14,6 +16,7 @@ You can download the scripts using the following commands:
 ```bash
 # download commands
 curl -O https://raw.githubusercontent.com/cohesity/community-automation-samples/main/python/replicateOldSnapshots/replicateOldSnapshots.py
+curl -O https://raw.githubusercontent.com/cohesity/community-automation-samples/main/python/replicateOldSnapshots/replicateOldSnapshotsV2.py
 curl -O https://raw.githubusercontent.com/cohesity/community-automation-samples/main/python/pyhesity.py
 chmod +x replicateOldSnapshots.py
 

@@ -1,6 +1,6 @@
 # . . . . . . . . . . . . . . . . . . .
 #  PowerShell Module for Cohesity API
-#  Version 2024.06.24 - Brian Seltzer
+#  Version 2024.09.20 - Brian Seltzer
 # . . . . . . . . . . . . . . . . . . .
 #
 # 2023.02.10 - added -region to api function (for DMaaS)
@@ -37,10 +37,11 @@
 # 2024-05-02 - added quiet switch to fileDownload function
 # 2024-05-17 - added support for EntraID (Open ID) authentication
 # 2024-06-24 - fixed authentication error for SaaS connectors
+# 2024-09-20 - allow posts to read-only helios cluster (for advanced queries)
 #
 # . . . . . . . . . . . . . . . . . . .
 
-$versionCohesityAPI = '2024.06.24'
+$versionCohesityAPI = '2024.09.20'
 $heliosEndpoints = @('helios.cohesity.com', 'helios.gov-cohesity.com')
 
 # state cache
@@ -783,11 +784,11 @@ function api($method,
             return $null
         }
     }else{
-        if($method -ne 'get' -and $cohesity_api.clusterReadOnly -eq $true){
-            $cohesity_api.last_api_error = 'invalid put/post/delete to readonly cluster'
-            Write-Host "Cluster connection is READ-ONLY" -ForegroundColor Yellow
-            return $null
-        }
+        # if($method -ne 'get' -and $cohesity_api.clusterReadOnly -eq $true){
+        #     $cohesity_api.last_api_error = 'invalid put/post/delete to readonly cluster'
+        #     Write-Host "Cluster connection is READ-ONLY" -ForegroundColor Yellow
+        #     return $null
+        # }
         if($method -notin $methods){
             $cohesity_api.last_api_error = "invalid api method: $method"
             if($cohesity_api.reportApiErrors){

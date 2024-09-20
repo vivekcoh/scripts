@@ -60,7 +60,7 @@ foreach($alert in $alerts | Where-Object {$_.alertDocument.alertName -eq 'DataIn
             $clusterIncarnationId = ($alert.propertyList | Where-Object key -eq 'clusterIncarnationId').value
             $partitionId = ($alert.propertyList | Where-Object key -eq 'clusterPartitionId').value
             $anomalousJobInstanceId = ($alert.propertyList | Where-Object key -eq 'anomalousJobInstanceId').value
-            $anomalousJobStartTimeUsecs = $alert.firstTimestampUsecs
+            $anomalousJobStartTimeUsecs = $alert.latestTimestampUsecs
 
             $statusQuery = @{
                 "clusterId" = [Int64]$clusterId;
@@ -111,7 +111,7 @@ foreach($alert in $alerts | Where-Object {$_.alertDocument.alertName -eq 'DataIn
                 $filesCounted = 0
                 
                 while(1){
-                    $diff = api post -v2 data-protect/objects/$entityId/snapshotDiff $diffParams -timeout $timeout -quiet
+                    $diff = api post -v2 data-protect/objects/$entityId/snapshotDiff $diffParams -timeout $timeout
                     $diffStatus = $diff.status
                     $diffStatusCount += 1
                     if($diffStatus -eq 'kCompleted'){

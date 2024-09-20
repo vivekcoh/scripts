@@ -1,5 +1,10 @@
 # Change Log for cohesity/community-automation-samples
 
+## 2024-09-20
+
+* [cohesity-api.ps1](https://github.com/cohesity/community-automation-samples/tree/main/powershell/cohesity-api) [`Update`] allow PUT/POST requests to Read-only Helios clusters for advanced queries
+* [heliosAnomalyFileList.ps1](https://github.com/cohesity/community-automation-samples/tree/main/reports/helios-other/powershell/heliosAnomalyFileList) [`Fix`] fixed snapshot selection issue
+
 ## 2024-09-19
 
 * [replicateOldSnapshots.py](https://github.com/cohesity/community-automation-samples/tree/main/python/replicateOldSnapshots) [`Update`] updated to use V2 API

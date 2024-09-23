@@ -89,6 +89,7 @@ if($jobNames.Count -gt 0){
 
 # set time range
 $startTime = [Int64]($cluster.createdTimeMsecs * 1000)
+$nowUsecs = dateToUsecs (Get-Date)
 $endTime = dateToUsecs (Get-Date)
 if($olderThan){
     $endTime = timeAgo $olderThan Days
@@ -144,7 +145,7 @@ foreach($job in $jobs.protectionGroups | Sort-Object -Property name){
                                     $expireTimeUsecs = $thisRun[0].backupJobRuns.protectionRuns[0].copyRun.finishedTasks[0].expiryTimeUsecs
                                 }
     
-                                $daysToKeep = [math]::Round(($expireTimeUsecs - $endTime) / 86400000000, 0) + 1
+                                $daysToKeep = [math]::Round(($expireTimeUsecs - $nowUsecs) / 86400000000, 0)
                                 if($daysToKeep -eq 0){
                                     $daysToKeep = 1
                                 }

@@ -27,7 +27,8 @@ param (
     [Parameter()][switch]$autoProtectRemaining,
     [Parameter()][switch]$force,
     [Parameter()][array]$includeDomain,
-    [Parameter()][switch]$clear
+    [Parameter()][switch]$clear,
+    [Parameter()][switch]$reprotect
 )
 
 # gather list from command line params and file
@@ -356,10 +357,11 @@ if($autoProtectRemaining){
                     }else{
                         $mailboxId = $smtpIndex["$mailboxName"]
                     }
-                    if($mailboxId -in $protectedIndex){
+                    if($mailboxId -in $protectedIndex -and !$reprotect){
                         Write-Host "$mailboxName already protected" -ForegroundColor Green
                     }else{
                         Write-Host "adding $mailboxName"
+                        $job.office365Params.objects = @($job.office365Params.objects | Where-Object id -ne $mailboxId)
                         $job.office365Params.objects = @($job.office365Params.objects + @{'id' = $mailboxId})
                         $mailboxesAdded += 1
                     }

@@ -111,7 +111,7 @@ for job in sorted(jobs, key=lambda job: job['name'].lower()):
             jobName = job['name']
             print("Getting tasks for %s" % jobName)
             # find runs with unfinished replication tasks
-            runs = api('get', 'protectionRuns?jobId=%s&numRuns=%s&excludeTasks=true&excludeNonRestoreableRuns=true' % (jobId, numruns))
+            runs = api('get', 'protectionRuns?jobId=%s&numRuns=%s&excludeTasks=true&excludeNonRestoreableRuns=true&endTimeUsecs=%s' % (jobId, numruns, nowUsecs))
             if olderthan > 0:
                 runs = [r for r in runs if r['backupRun']['stats']['startTimeUsecs'] < olderthanusecs]
             if youngerthan > 0:
@@ -178,7 +178,10 @@ if len(runningTasks.keys()) > 0:
                                     "clusterIncarnationId": task['taskUid']['clusterIncarnationId']
                                 }
                             }
-                            result = api('post', 'protectionRuns/cancel/%s' % t['jobId'], cancelTaskParams)
+                            try:
+                                result = api('post', 'protectionRuns/cancel/%s' % t['jobId'], cancelTaskParams)
+                            except Exception:
+                                pass
                         else:
                             print('                       Replication Task ID: %s  %s' % (task['taskUid']['objectId'], noLongerNeeded))
         elif showfinished:

@@ -26,7 +26,8 @@ param (
     [Parameter()][string]$sourceName,
     [Parameter()][switch]$autoProtectRemaining,
     [Parameter()][switch]$force,
-    [Parameter()][array]$includeDomain
+    [Parameter()][array]$includeDomain,
+    [Parameter()][switch]$clear
 )
 
 # gather list from command line params and file
@@ -201,6 +202,10 @@ if($job){
     }
 
     $job = $job | ConvertTo-JSON -Depth 99 | ConvertFrom-JSON
+}
+
+if($clear){
+    $job.office365Params.objects = @()
 }
 
 if($job.office365Params.PSObject.Properties['sourceId']){

@@ -97,6 +97,7 @@ To create an autoprotect job that excludes mailboxes that are already protected:
 * -autoProtectRemaining: (optional) autoprotect at the source and exclude already protected mailboxes
 * -force: (optional) force protect mailboxes that may be autoprotected in another job
 * -includeDomain: (optional) one or more SMTP domains (comma separated) to include (all domains inclluded by default)
+* -clear: (optional) clear existing selections
 
 ## New Job Parameters
 

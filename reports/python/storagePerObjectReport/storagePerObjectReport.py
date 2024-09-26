@@ -1,5 +1,5 @@
 #!/usr/bin/env python
-"""Storage Per Object Report version 2024.07.02 for Python"""
+"""Storage Per Object Report version 2024.09.26 for Python"""
 
 # import pyhesity wrapper module
 from pyhesity import *
@@ -44,7 +44,7 @@ skipdeleted = args.skipdeleted
 debug = args.debug
 includearchives = args.includearchives
 
-scriptVersion = '2024-07-02'
+scriptVersion = '2024-09-26'
 
 if vips is None or len(vips) == 0:
     vips = ['helios.cohesity.com']
@@ -586,8 +586,11 @@ def reportStorage():
             objWeight = 1
             statsAge = '-'
             objGrowth = 0
-            if jobName != '-' and jobName in viewJobStats and len( viewJobStats[jobName]) > 0:
-                objWeight = viewStats['storageConsumedBytes'] / viewJobAltStats[jobName]["totalConsumed"]
+            if jobName != '-' and jobName in viewJobStats and len(viewJobStats[jobName]) > 0:
+                if viewJobAltStats[jobName]["totalConsumed"] == 0:
+                    objWeight = 0
+                else:
+                    objWeight = viewStats['storageConsumedBytes'] / viewJobAltStats[jobName]["totalConsumed"]
                 if 'dataInBytes' in viewJobStats[jobName][0]['stats']:
                     dataIn = viewJobStats[jobName][0]['stats']['dataInBytes'] * objWeight
                 if 'dataInBytesAfterDedup' in viewJobStats[jobName][0]['stats']:
@@ -596,15 +599,15 @@ def reportStorage():
                     jobWritten = viewJobStats[jobName][0]['stats']['dataWrittenBytes'] * objWeight
                 if 'localTotalPhysicalUsageBytes' in viewJobStats[jobName][0]['stats']:
                     consumption =  viewJobStats[jobName][0]['stats']['localTotalPhysicalUsageBytes'] * objWeight
-                if 'storageConsumedBytes' in viewJobStats[jobName][0]['stats']:
+                if 'storageConsumedBytes' in viewJobStats[jobName][0]['stats'] and 'storageConsumedBytesPrev' in viewJobStats[jobName][0]['stats']:
                     objGrowth = round(objWeight * (viewJobStats[jobName][0]['stats']['storageConsumedBytes'] - viewJobStats[jobName][0]['stats']['storageConsumedBytesPrev']) / multiplier, 1)
             else:
-                dataIn = viewStats['dataInBytes']
-                dataInAfterDedup = viewStats['dataInBytesAfterDedup']
-                jobWritten = viewStats['dataWrittenBytes']
-                consumption = viewStats['localTotalPhysicalUsageBytes']
+                dataIn = viewStats.get('dataInBytes', 0)
+                dataInAfterDedup = viewStats.get('dataInBytesAfterDedup', 0)
+                jobWritten = viewStats.get('dataWrittenBytes', 0)
+                consumption = viewStats.get('localTotalPhysicalUsageBytes', 0)
                 try:
-                    objGrowth = round((viewStats['storageConsumedBytes'] - viewStats['storageConsumedBytesPrev']) / multiplier, 1)
+                    objGrowth = round((viewStats.get('storageConsumedBytes', 0) - viewStats.get('storageConsumedBytesPrev', 0)) / multiplier, 1)
                 except Exception:
                     pass
             statsTimeUsecs = view['stats']['dataUsageStats'].get('dataWrittenBytesTimestampUsec', 0)

@@ -207,7 +207,7 @@ if($vCenterName){
 
     function walkVMFolders($node, $parent=$null, $fullPath=''){
         $fullPath = "{0}/{1}" -f $fullPath, $node.protectionSource.name
-        $relativePath = $fullPath.split('vm/', 2)[1]
+        $relativePath = ($fullPath -split 'vm/', 2)[1]
         if($relativePath){
             $vmFolderId[$fullPath] = $node.protectionSource.id
             $vmFolderId[$relativePath] = $node.protectionSource.id

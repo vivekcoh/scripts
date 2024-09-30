@@ -329,28 +329,28 @@ def restore(thesefiles, doc, version, targetEntity, singleFile):
             exit(1)
 
 
-def listdir(searchPath, dirPath, instance, volumeInfoCookie=None, volumeName=None, cookie=None):
+def listdir(searchPath, dirPath, instance, volumeInfoCookie=None, volumeName=None, cookie=None, useLibrarian=False):
     global foundFile
     thisDirPath = quote_plus(dirPath).replace('%2F%2F', '%2F')
     if cookie is not None:
         if volumeName is not None:
-            dirList = api('get', '/vm/directoryList?%s&useLibrarian=false&statFileEntries=false&dirPath=%s&volumeInfoCookie=%s&volumeName=%s&cookie=%s' % (instance, thisDirPath, volumeInfoCookie, volumeName, cookie), quiet=True)
+            dirList = api('get', '/vm/directoryList?%s&useLibrarian=%s&statFileEntries=false&dirPath=%s&volumeInfoCookie=%s&volumeName=%s&cookie=%s' % (instance, useLibrarian, thisDirPath, volumeInfoCookie, volumeName, cookie), quiet=True)
         else:
-            dirList = api('get', '/vm/directoryList?%s&useLibrarian=false&statFileEntries=false&dirPath=%s&cookie=%s' % (instance, thisDirPath, cookie), quiet=True)
+            dirList = api('get', '/vm/directoryList?%s&useLibrarian=%s&statFileEntries=false&dirPath=%s&cookie=%s' % (instance, useLibrarian, thisDirPath, cookie), quiet=True)
     else:
         if volumeName is not None:
-            dirList = api('get', '/vm/directoryList?%s&useLibrarian=false&statFileEntries=false&dirPath=%s&volumeInfoCookie=%s&volumeName=%s' % (instance, thisDirPath, volumeInfoCookie, volumeName), quiet=True)
+            dirList = api('get', '/vm/directoryList?%s&useLibrarian=%s&statFileEntries=false&dirPath=%s&volumeInfoCookie=%s&volumeName=%s' % (instance, useLibrarian, thisDirPath, volumeInfoCookie, volumeName), quiet=True)
         else:
-            dirList = api('get', '/vm/directoryList?%s&useLibrarian=false&statFileEntries=false&dirPath=%s' % (instance, thisDirPath), quiet=True)
+            dirList = api('get', '/vm/directoryList?%s&useLibrarian=%s&statFileEntries=false&dirPath=%s' % (instance, useLibrarian, thisDirPath), quiet=True)
     if dirList and 'entries' in dirList:
         for entry in sorted(dirList['entries'], key=lambda e: e['name']):
             if entry['fullPath'].lower() == searchPath.lower():
                 foundFile = entry['fullPath']
                 break
             if entry['type'] == 'kDirectory' and entry['fullPath'].lower() in searchPath.lower():
-                listdir(searchPath, '%s/%s' % (dirPath, entry['name']), instance, volumeInfoCookie, volumeName)
+                listdir(searchPath, '%s/%s' % (dirPath, entry['name']), instance, volumeInfoCookie, volumeName, useLibrarian=useLibrarian)
     if dirList and 'cookie' in dirList:
-        listdir(searchPath, '%s' % dirPath, instance, volumeInfoCookie, volumeName, dirList['cookie'])
+        listdir(searchPath, '%s' % dirPath, instance, volumeInfoCookie, volumeName, dirList['cookie'], useLibrarian=useLibrarian)
 
 
 if independentRestores is False:
@@ -370,6 +370,11 @@ else:
         if noindex or (unindexedSnapshots is not None and len(unindexedSnapshots) > 0):
             foundFile = None
             for version in versions:
+
+                useLibrarian = False
+                if sorted(version['replicaInfo']['replicaVec'], key=lambda replica: replica['target']['type'])[0]['target']['type'] == 3:
+                    useLibrarian = True
+
                 if foundFile is None:
                     attemptNum = 0
                     if 'attemptNum' in version['instanceId']:
@@ -384,7 +389,7 @@ else:
                                     version['instanceId']['jobStartTimeUsecs'],
                                     doc['objectId']['jobUid']['objectId']))
                     # perform quick case sensitive exact match
-                    thisFile = api('get', '/vm/directoryList?%s&statFileEntries=false&dirPath=%s' % (instance, encodedFile), quiet=True)
+                    thisFile = api('get', '/vm/directoryList?%s&statFileEntries=false&useLibrarian=%s&dirPath=%s' % (instance, useLibrarian, encodedFile), quiet=True)
                     if thisFile is not None and thisFile != "error":
                         foundFile = file
                     if foundFile is None:
@@ -396,9 +401,9 @@ else:
                                 volumeInfoCookie = volumeList['volumeInfoCookie']
                                 for volume in sorted(volumeList['volumeInfos'], key=lambda v: v['name']):
                                     volumeName = quote_plus(volume['name'])
-                                    listdir(file, '/', instance, volumeInfoCookie, volumeName)
+                                    listdir(file, '/', instance, volumeInfoCookie, volumeName, useLibrarian=useLibrarian)
                         else:
-                            listdir(file, '/', instance)
+                            listdir(file, '/', instance, useLibrarian=useLibrarian)
                 if foundFile is not None:
                     if restoreChildren is True:
                         foundFile = foundFile + '/*'

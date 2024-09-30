@@ -31,9 +31,10 @@ parser.add_argument('-is', '--incrementalsla', type=int, default=60)
 parser.add_argument('-fs', '--fullsla', type=int, default=120)
 parser.add_argument('-z', '--paused', action='store_true')
 parser.add_argument('-ch', '--channels', type=int, default=None)
-parser.add_argument('-cn', '--channelnode', type=str, default=None)
+parser.add_argument('-cn', '--channelnode', action='append', type=str)
 parser.add_argument('-cp', '--channelport', type=int, default=1521)
 parser.add_argument('-l', '--deletelogdays', type=int, default=0)
+parser.add_argument('-lh', '--deleteloghours', type=int, default=0)
 parser.add_argument('-pm', '--persistmounts', action='store_true')
 
 args = parser.parse_args()
@@ -62,16 +63,17 @@ incrementalsla = args.incrementalsla
 fullsla = args.fullsla
 paused = args.paused
 channels = args.channels
-channelnode = args.channelnode
+channelnodes = args.channelnode
 channelport = args.channelport
 persistmounts = args.persistmounts
 deletelogdays = args.deletelogdays
+deleteloghours = args.deleteloghours
 
-if channels is not None and channelnode is None:
+if channels is not None and channelnodes is None:
     print('channel node required if setting channels')
     exit()
 
-if channelnode is not None and channels is None:
+if channelnodes is not None and channels is None:
     print('channels required if setting channel node')
     exit()
 
@@ -235,7 +237,7 @@ for server in servernames:
                     }
                 else:
                     thisDB = thisDB[0]
-                if (channels is not None and channelnode is not None) or deletelogdays > 0:
+                if (channels is not None and channelnodes is not None) or deletelogdays > 0 or deleteloghours > 0:
                     thisDB['dbChannels'] = [
                         {
                             "databaseUuid": dbNode['protectionSource']['oracleProtectionSource']['uuid'],
@@ -246,21 +248,51 @@ for server in servernames:
                     ]
                     if deletelogdays > 0:
                         thisDB['dbChannels'][0]['archiveLogRetentionDays'] = deletelogdays
-                    if (channels is not None and channelnode is not None):
-                        channelNodeObject = [n for n in sources[0]['nodes'] if n['protectionSource']['name'] == channelnode]
-                        if channelNodeObject is None or len(channelNodeObject) == 0:
-                            print("Channel node %s not found" % channelnode)
-                            exit(1)
-                        else:
-                            # display(channelNodeObject[0]['protectionSource']['physicalProtectionSource']['agents'])
-                            channelNodeId = channelNodeObject[0]['protectionSource']['physicalProtectionSource']['agents'][0]['id']
-                        thisDB['dbChannels'][0]['databaseNodeList'] = [
-                            {
-                                "hostId": str(channelNodeId),
-                                "channelCount": channels,
-                                "port": channelport
-                            }
-                        ]
+                    elif deleteloghours > 0:
+                        thisDB['dbChannels'][0]['archiveLogRetentionHours'] = deleteloghours
+                    if (channels is not None and channelnodes is not None):
+                        physicalSource = serverSource['protectionSource']['physicalProtectionSource']
+                        if 'networkingInfo' in physicalSource:
+                            serverResources = [r for r in physicalSource['networkingInfo']['resourceVec'] if r['type'] == 'kServer']
+                        
+                        for channelnode in channelnodes:
+                            channelNodeObject = None
+                            if 'networkingInfo' in physicalSource:
+                                serverResources = [r for r in physicalSource['networkingInfo']['resourceVec'] if r['type'] == 'kServer']
+                                for serverResource in serverResources:
+                                    for endpoint in serverResource['endpoints']:
+                                        if endpoint['fqdn'].lower() == channelnode.lower():
+                                            matchingagents = [a for a in physicalSource['agents'] if a['name'].lower() == endpoint['fqdn'].lower()]
+                                            if len(matchingagents) > 0:
+                                                channelNodeObject = matchingagents[0]
+                                                break
+                                            elif 'ipv4Addr' in endpoint:
+                                                matchingagents = [a for a in physicalSource['agents'] if a['name'].lower() == endpoint['ipv4Addr'].lower()]
+                                                if len(matchingagents) > 0:
+                                                    channelNodeObject = matchingagents[0]
+                                                    break
+                                            elif 'ipv6Addr' in endpoint:
+                                                matchingagents = [a for a in physicalSource['agents'] if a['name'].lower() == endpoint['ipv6Addr'].lower()]
+                                                if len(matchingagents) > 0:
+                                                    channelNodeObject = matchingagents[0]
+                                                    break
+                            else:
+                                for agent in physicalSource['agents']:
+                                    if agent['name'].lower() == channelnode.lower():
+                                        channelNodeObject = agent
+                                        break
+                            if channelNodeObject is None or len(channelNodeObject) == 0:
+                                print("Channel node %s not found" % channelnode)
+                                exit(1)
+                            else:
+                                channelNodeId = channelNodeObject['id']
+                                thisDB['dbChannels'][0]['databaseNodeList'].append(
+                                    {
+                                        "hostId": str(channelNodeId),
+                                        "channelCount": channels,
+                                        "port": channelport
+                                    }
+                                )
                 thisObject['dbParams'].append(thisDB)
         job['oracleParams']['objects'].append(thisObject)
 

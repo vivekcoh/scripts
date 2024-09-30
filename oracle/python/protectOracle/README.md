@@ -98,8 +98,9 @@ Place both files in a folder together and run the main script like so:
 * -jn, --jobname: name of protection job
 * -pm, --persistmounts: (optional) persist mount points
 * -l, --deletelogdays: (optional) delete logs after X days (default is none)
+* -lh --deleteloghours: (optional) delete logs after X hours (default is none)
 * -ch, --channels: (optional)  number of channels (default is auto)
-* -cn, --channelnode: (optional) node to protect (default is auto)
+* -cn, --channelnode: (optional) RAC node to protect (repeat for multiple)
 * -cp, --channelport: (optional) channel port (default is 1521)
 
 ## New Job Parameters

@@ -33,6 +33,10 @@ useApiKey = args.useApiKey
 
 GiB = 1024 * 1024 * 1024
 
+def output(mystring):
+    print(mystring)
+    f.write(mystring + '\n')
+
 # authenticate
 apiauth(vip=vip, username=username, domain=domain, password=password, useApiKey=useApiKey)
 
@@ -47,25 +51,14 @@ outfileName = '%s/%s-%s-clusterInfo.txt' % (folder, dateString, cluster['name'])
 f = codecs.open(outfileName, 'w', 'utf-8')
 
 status = api('get', '/nexus/cluster/status')
-config = status['clusterConfig']['proto']
 nodeStatus = status['nodeStatus']
 nodes = api('get', 'nodes')
-if config is not None:
-    chassisList = config['chassisVec']
-    nodeList = config['nodeVec']
-    hostName = status['clusterConfig']['proto']['clusterPartitionVec'][0]['hostName']
-else:
-    chassisList = (api('get', 'chassis', v=2))['chassis']
-    partition = api('get', 'clusterPartitions')
-    hostName = partition[0]['hostName']
+
+chassisList = (api('get', 'chassis', v=2))['chassis']
+partition = api('get', 'clusterPartitions')
+hostName = partition[0]['hostName']
 
 title = 'clusterInfo: %s (%s)' % (cluster['name'], dateString)
-
-
-def output(mystring):
-    print(mystring)
-    f.write(mystring + '\n')
-
 
 physicalCapacity = round((float(cluster['stats']['usagePerfStats']['physicalCapacityBytes']) / GiB), 1)
 usedCapacity = round((float(cluster['stats']['usagePerfStats']['totalPhysicalUsageBytes'] / GiB)), 1)

@@ -74,7 +74,9 @@ title = 'clusterInfo: %s (%s)' % (cluster['name'], dateString)
 
 physicalCapacity = round((float(cluster['stats']['usagePerfStats']['physicalCapacityBytes']) / GiB), 1)
 usedCapacity = round((float(cluster['stats']['usagePerfStats']['totalPhysicalUsageBytes'] / GiB)), 1)
-usedPct = int(round((100 * usedCapacity / physicalCapacity), 0))
+usedPct = 0
+if physicalCapacity > 0 and usedCapacity > 0:
+    usedPct = int(round((100 * usedCapacity / physicalCapacity), 0))
 
 # cluster info
 output('\n------------------------------------')

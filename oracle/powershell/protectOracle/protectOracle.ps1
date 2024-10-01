@@ -20,9 +20,10 @@ param (
     [Parameter()][array]$dbName,
     [Parameter()][string]$dbList,
     [Parameter()][int]$channels,
-    [Parameter()][string]$channelNode,
+    [Parameter()][array]$channelNode,
     [Parameter()][int]$channelPort = 1521,
     [Parameter()][int]$deleteLogDays = 0,
+    [Parameter()][int]$deleteLogHours = 0,
     [Parameter()][string]$policyname,
     [Parameter()][string]$startTime = '20:00', # e.g. 23:30 for 11:30 PM
     [Parameter()][string]$timeZone = 'America/Los_Angeles', # e.g. 'America/New_York'
@@ -196,7 +197,7 @@ foreach($servername in $serverNames){
                         "dbChannels" = @()
                     }
                 }
-                if(($channels -and $channelNode) -or $deleteLogDays -gt 0){
+                if(($channels -and $channelNode) -or $deleteLogDays -gt 0 -or $deleteLogHours -gt 0){
                     $thisDB.dbChannels = @(
                         @{
                             "databaseUuid" = $dbNode.protectionSource.oracleProtectionSource.uuid;
@@ -207,22 +208,61 @@ foreach($servername in $serverNames){
                     )
                     if($deleteLogDays -gt 0){
                         $thisDB.dbChannels[0]['archiveLogRetentionDays'] = $deleteLogDays
+                    }elseif($deleteLogHours -gt 0){
+                        $thisDB.dbChannels[0]['archiveLogRetentionHours'] = $deleteLogHours
                     }
                     if($channels -and $channelNode){
-                        $channelNodeObject = $sources.nodes | Where-Object {$_.protectionSource.name -eq $channelNode}
-                        if(!$channelNodeObject){
-                            Write-Host "Channel node $channelNode not found" -ForegroundColor Yellow
-                            exit
-                        }else{
-                            $channelNodeId = $channelNodeObject.protectionSource.physicalProtectionSource.agents.id
+                        $physicalSource = $server.protectionSource.physicalProtectionSource
+                        if($physicalSource.PSObject.Properties['networkingInfo']){
+                            $serverResources = $physicalSource.networkingInfo.resourceVec | Where-Object type -eq 'kServer'
                         }
-                        $thisDB.dbChannels[0].databaseNodeList = @(
-                            @{
+                        foreach($cnode in $channelNode){
+                            $channelNodeObject = $null
+                            if($physicalSource.PSObject.Properties['networkingInfo']){
+                                foreach($serverResource in $serverResources){
+                                    foreach($endpoint in $serverResource.endpoints){
+                                        if($endpoint.fqdn -eq $cnode){
+                                            $matchingAgents = $physicalSource.agents | Where-Object {$_.name -eq $endpoint.fqdn}
+                                            if($matchingAgents){
+                                                $channelNodeObject = $matchingAgents[0]
+                                                break
+                                            }elseif($endpoint.PSObject.Properties['ipv4Addr']){
+                                                $matchingAgents = $physicalSource.agents | Where-Object {$_.name -eq $endpoint.ipv4Addr}
+                                                if($matchingAgents){
+                                                    $channelNodeObject = $matchingAgents[0]
+                                                    break
+                                                }
+                                            }elseif($endpoint.PSObject.Properties['ipv6Addr']){
+                                                $matchingAgents = $physicalSource.agents | Where-Object {$_.name -eq $endpoint.ipv6Addr}
+                                                if($matchingAgents){
+                                                    $channelNodeObject = $matchingAgents[0]
+                                                    break
+                                                }
+                                            }
+                                        }
+                                    }
+                                }
+                            }else{
+                                foreach($agent in $physicalSource.agents){
+                                    if($agent.name -eq $cnode){
+                                        $channelNodeObject = $agent
+                                        break
+                                    }
+                                }
+                            }
+                            
+                            if(!$channelNodeObject){
+                                Write-Host "Channel node $cnode not found" -ForegroundColor Yellow
+                                exit 1
+                            }else{
+                                $channelNodeId = $channelNodeObject.id
+                            }
+                            $thisDB.dbChannels[0].databaseNodeList = @($thisDB.dbChannels[0].databaseNodeList + @{
                                 "hostId" = [string]$channelNodeId;
                                 "channelCount" = $channels;
                                 "port" = $channelPort
-                            }
-                        )
+                            })
+                        }
                     }
                 }
                 $thisObject.dbParams = @($thisObject.dbParams + $thisDB)
@@ -231,7 +271,7 @@ foreach($servername in $serverNames){
         $job.oracleParams.objects = @($job.oracleParams.objects + $thisObject)
     }
 }
-# $job | ConvertTo-Json -Depth 99
+$job | toJson
 
 if($newJob -eq $True){
     $null = api post -v2 data-protect/protection-groups $job

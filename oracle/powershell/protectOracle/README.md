@@ -71,6 +71,7 @@ or:
 * -channelNode: (optional) name of RAC oracle node to use for backup
 * -channelPort: (optional) Oracle port (Default is 1521)
 * -deleteLogDays: (optional) delete archive logs after X days (default is no delete)
+* -deleteLogHours: (optional) delete archive logs after X hours (default is no delete)
 
 ## New Job Parameters
 

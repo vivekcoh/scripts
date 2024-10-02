@@ -1,5 +1,30 @@
 # Change Log for cohesity/community-automation-samples
 
+## 2024-10-02
+
+* [updateLocalUserPassword.py](https://github.com/cohesity/community-automation-samples/tree/main/python/updateLocalUserPassword) [`New`] update a local user's password
+* [storagePerObjectReport.py](https://github.com/cohesity/community-automation-samples/tree/main/reports/python/storagePerObjectReport) [`Fix`] handle bookkeeper stats error
+
+## 2024-10-01
+
+* [recoveryPoints.py](https://github.com/cohesity/community-automation-samples/tree/main/reports/python/recoveryPoints) ['Update`] added support for Helios authentication
+* [protectOracle.ps1](https://github.com/cohesity/community-automation-samples/tree/main/oracle/powershell/protectOracle) [`Fix`] fixed Rack node selection and added -deleteoghours parameter
+* [clusterInfo.py](https://github.com/cohesity/community-automation-samples/tree/main/python/clusterInfo) [`Fix`] removed legacy code
+
+## 2024-09-30
+
+* [protectOracle.py](https://github.com/cohesity/community-automation-samples/tree/main/oracle/python/protectOracle) [`Fix`] fixed Rack node selection and added -deleteoghours parameter
+* [restoreFiles.py](https://github.com/cohesity/community-automation-samples/tree/main/python/restoreFiles) [`Fix`] fixed restore from archive issue
+
+## 2024-09-25
+
+* [replicationQueue.py](https://github.com/cohesity/community-automation-samples/tree/main/python/replicationQueue) [`Fix`] fixed time range issue
+* [protectO365Mailboxes](https://github.com/cohesity/community-automation-samples/tree/main/powershell/protectO365Mailboxes) [`Update`] added -clear and -reprotect options
+
+## 2024-09-23
+
+* [replicateOldSnapshots.ps1](https://github.com/cohesity/community-automation-samples/tree/main/powershell/replicateOldSnapshots) [`Fix`] Fixed incorrect expiration date
+
 ## 2024-09-20
 
 * [cohesity-api.ps1](https://github.com/cohesity/community-automation-samples/tree/main/powershell/cohesity-api) [`Update`] allow PUT/POST requests to Read-only Helios clusters for advanced queries

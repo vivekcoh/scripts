@@ -9,20 +9,56 @@
 # process commandline arguments
 [CmdletBinding()]
 param (
-    [Parameter(Mandatory = $True)][string]$vip, # Cohesity cluster to connect to
-    [Parameter(Mandatory = $True)][string]$username, # Cohesity username
-    [Parameter()][string]$domain = 'local', # Cohesity user domain name
+    [Parameter()][string]$vip='helios.cohesity.com',
+    [Parameter()][string]$username = 'helios',
+    [Parameter()][string]$domain = 'local',
+    [Parameter()][string]$tenant,
+    [Parameter()][switch]$useApiKey,
+    [Parameter()][string]$password,
+    [Parameter()][switch]$noPrompt,
+    [Parameter()][switch]$mcm,
+    [Parameter()][string]$mfaCode,
+    [Parameter()][switch]$emailMfaCode,
+    [Parameter()][string]$clusterName,
+    [Parameter()][switch]$comparePreviousVolumeList,
     [Parameter()][string]$smtpServer, # outbound smtp server '192.168.1.95'
     [Parameter()][string]$smtpPort = 25, # outbound smtp port
     [Parameter()][array]$sendTo, # send to address
     [Parameter()][string]$sendFrom # send from address
 )
 
+$versions = 1
+if($comparePreviousVolumeList){
+    $versions = 2
+}
+
 # source the cohesity-api helper code
 . $(Join-Path -Path $PSScriptRoot -ChildPath cohesity-api.ps1)
 
+# authentication =============================================
+# demand clusterName for Helios/MCM
+if(($vip -eq 'helios.cohesity.com' -or $mcm) -and ! $clusterName){
+    Write-Host "-clusterName required when connecting to Helios/MCM" -ForegroundColor Yellow
+    exit 1
+}
+
 # authenticate
-apiauth -vip $vip -username $username -domain $domain
+apiauth -vip $vip -username $username -domain $domain -passwd $password -apiKeyAuthentication $useApiKey -mfaCode $mfaCode -sendMfaCode $emailMfaCode -heliosAuthentication $mcm -regionid $region -tenant $tenant -noPromptForPassword $noPrompt
+
+# exit on failed authentication
+if(!$cohesity_api.authorized){
+    Write-Host "Not authenticated" -ForegroundColor Yellow
+    exit 1
+}
+
+# select helios/mcm managed cluster
+if($USING_HELIOS){
+    $thisCluster = heliosCluster $clusterName
+    if(! $thisCluster){
+        exit 1
+    }
+}
+# end authentication =========================================
 
 $date = (get-date).ToString()
 
@@ -147,6 +183,7 @@ $html += '</span>
     <th>Status</th>
     <th>Validated</th>
     <th>Volumes</th>
+    <th>Warnings</th>
 </tr>'
 
 $finishedStates = @('kCanceled', 'kSuccess', 'kFailure', 'kWarning')
@@ -167,52 +204,75 @@ foreach($vm in $vms){
             # narrow search to latest available recovery point
             $vm = ($search.vms | Sort-Object -Property @{Expression={$_.vmDocument.versions[0].snapshotTimestampUsecs}; Ascending = $False})[0]
             $doc = $vm.vmDocument
-            $version = $doc.versions[0]
-            $jobId = $doc.objectId.jobId
-            $jobName = $doc.jobName
-            # get latest completed run status and date
-            $lastRecoveryPoint = $version.instanceId.jobStartTimeUsecs
-            $run = (api get "protectionRuns?jobId=$jobId&numRuns=2" | Where-Object {$_.backupRun.status -in $finishedStates})[0]
-            $lastRunUsecs = $run.backupRun.stats.startTimeUsecs
-            $lastStatus = $run.backupRun.status
-            # get latest recovery point dirlist
-            $readableBackup = $False
-            $instance = ("attemptNum={0}&clusterId={1}&clusterIncarnationId={2}&entityId={3}&jobId={4}&jobInstanceId={5}&jobStartTimeUsecs={6}&jobUidObjectId={7}" -f `
-                    $version.instanceId.attemptNum,
-                    $doc.objectId.jobUid.clusterId,
-                    $doc.objectId.jobUid.clusterIncarnationId,
-                    $doc.objectId.entity.id,
-                    $doc.objectId.jobId,
-                    $version.instanceId.jobInstanceId,
-                    $version.instanceId.jobStartTimeUsecs,
-                    $doc.objectId.jobUid.objectId)
-            $volumeDisplayList = @()
-            $volumeList = api get "/vm/volumeInfo?$instance&statFileEntries=false"
-            if($volumeList.volumeInfos){
-                $volumeDisplayList = $volumeList.volumeInfos.displayName
-                $readableBackup = $True
-            }                
-            $lastBackupReadable = (($lastRecoveryPoint -eq $lastRunUsecs) -and $readableBackup)
-            if($status -eq 'Failure' -or $False -eq $lastBackupReadable){
-                $html += "<tr style='color:BA3415;'>"
-            }else{
-                $html += "<tr>"
+            $versionNum = $versions - 1
+            $previousVolumeDisplayList = $null
+            $warning = ''
+            $warningString = ''
+            while($versionNum -ge 0){
+                $version = $doc.versions[$versionNum]
+                $jobId = $doc.objectId.jobId
+                $jobName = $doc.jobName
+                # get latest completed run status and date
+                $lastRecoveryPoint = $version.instanceId.jobStartTimeUsecs
+                $run = (api get "protectionRuns?jobId=$jobId&numRuns=2" | Where-Object {$_.backupRun.status -in $finishedStates})[0]
+                $lastRunUsecs = $run.backupRun.stats.startTimeUsecs
+                $lastStatus = $run.backupRun.status
+                # get latest recovery point dirlist
+                $readableBackup = $False
+                $instance = ("attemptNum={0}&clusterId={1}&clusterIncarnationId={2}&entityId={3}&jobId={4}&jobInstanceId={5}&jobStartTimeUsecs={6}&jobUidObjectId={7}" -f `
+                        $version.instanceId.attemptNum,
+                        $doc.objectId.jobUid.clusterId,
+                        $doc.objectId.jobUid.clusterIncarnationId,
+                        $doc.objectId.entity.id,
+                        $doc.objectId.jobId,
+                        $version.instanceId.jobInstanceId,
+                        $version.instanceId.jobStartTimeUsecs,
+                        $doc.objectId.jobUid.objectId)
+                $volumeDisplayList = @()
+                $volumeList = api get "/vm/volumeInfo?$instance&statFileEntries=false"
+                if($volumeList.volumeInfos){
+                    $volumeDisplayList = $volumeList.volumeInfos.displayName
+                    $readableBackup = $True
+                }
+                if($versionNum -gt 0){
+                    $previousVolumeDisplayList = $volumeDisplayList
+                    if($object -eq 'Linux9a'){
+                        $previousVolumeDisplayList = @($previousVolumeDisplayList + 'lvol_3')
+                    }
+                }else{
+                    if($previousVolumeDisplayList -ne $null){
+                        $compare = Compare-Object -ReferenceObject $volumeDisplayList -DifferenceObject $previousVolumeDisplayList
+                        if($compare -ne $null){
+                            $warning = "Previous volumes: $($previousVolumeDisplayList | Sort-Object)"
+                            $warningString = "*** Volume Change Detected! ***"
+                        }
+                    }
+                    $lastBackupReadable = (($lastRecoveryPoint -eq $lastRunUsecs) -and $readableBackup)
+                    if($status -eq 'Failure' -or $False -eq $lastBackupReadable){
+                        $html += "<tr style='color:BA3415;'>"
+                    }else{
+                        $html += "<tr>"
+                    }
+                    $volumeDisplay = $(($volumeDisplayList | sort) -join '<br/>')
+                    $html += ("<td>{0}</td>
+                    <td>{1}</td>
+                    <td>{2}</td>
+                    <td>{3}</td>
+                    <td>{4}</td>
+                    <td>{5}</td>
+                    <td>{6}</td>
+                    </tr>" -f $object, $jobName, (usecsToDate $lastRunUsecs), $lastStatus.subString(1), $lastBackupReadable, $volumeDisplay, $warning)
+        
+                    Write-Host ("{0}  {1}  {2}  {3}  {4}  {5}" -f `
+                                $object,
+                                $jobName,
+                                (usecsToDate $lastRunUsecs),
+                                $lastStatus.subString(1),
+                                $lastBackupReadable,
+                                $warningString)
+                }
+                $versionNum = $versionNum - 1
             }
-            $volumeDisplay = $(($volumeDisplayList | sort) -join '<br/>')
-            $html += ("<td>{0}</td>
-            <td>{1}</td>
-            <td>{2}</td>
-            <td>{3}</td>
-            <td>{4}</td>
-            <td>{5}</td>
-            </tr>" -f $object, $jobName, (usecsToDate $lastRunUsecs), $lastStatus.subString(1), $lastBackupReadable, $volumeDisplay)
-
-            Write-Host ("{0}  {1}  {2}  {3}  {4}" -f `
-                        $object,
-                        $jobName,
-                        (usecsToDate $lastRunUsecs),
-                        $lastStatus.subString(1),
-                        $lastBackupReadable)
         }
     }
 }

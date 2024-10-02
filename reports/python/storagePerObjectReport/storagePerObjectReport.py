@@ -1,5 +1,5 @@
 #!/usr/bin/env python
-"""Storage Per Object Report version 2024.09.26 for Python"""
+"""Storage Per Object Report version 2024.10.02 for Python"""
 
 # import pyhesity wrapper module
 from pyhesity import *
@@ -648,7 +648,11 @@ def reportStorage():
     bookKeeperStart = int(midnightusecs / 1000 - (29 * 86400000))
     bookKeeperEnd = int(midnightusecs / 1000 + 86400000)
     bookKeeperStats = api('get', 'statistics/timeSeriesStats?startTimeMsecs=%s&schemaName=MRCounters&metricName=bytes_value&rollupIntervalSecs=180&rollupFunction=average&entityId=BookkeeperChunkBytesPhysical&endTimeMsecs=%s' % (bookKeeperStart, bookKeeperEnd))
-    bookKeeperBytes = bookKeeperStats['dataPointVec'][-1]['data']['int64Value']
+    try:
+        bookKeeperBytes = bookKeeperStats['dataPointVec'][-1]['data']['int64Value']
+    except Exception:
+        print('*** Error getting bookkeeper stats ***')
+        bookKeeperBytes = 0
     clusterUsedBytes = cluster['stats']['usagePerfStats']['totalPhysicalUsageBytes']
     unaccounted = clusterUsedBytes - bookKeeperBytes
     unaccountedPercent = 0

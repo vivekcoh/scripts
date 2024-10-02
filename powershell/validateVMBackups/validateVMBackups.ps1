@@ -236,9 +236,6 @@ foreach($vm in $vms){
                 }
                 if($versionNum -gt 0){
                     $previousVolumeDisplayList = $volumeDisplayList
-                    if($object -eq 'Linux9a'){
-                        $previousVolumeDisplayList = @($previousVolumeDisplayList + 'lvol_3')
-                    }
                 }else{
                     if($previousVolumeDisplayList -ne $null){
                         $compare = Compare-Object -ReferenceObject $volumeDisplayList -DifferenceObject $previousVolumeDisplayList

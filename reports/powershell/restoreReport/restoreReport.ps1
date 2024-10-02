@@ -262,72 +262,74 @@ while(1){
         $restorePoint = ''
         $state = $restore.restoreTask.performRestoreTaskState
         $base = $state.base
-        $taskId = $base.taskId
-        if($taskId -ne $lastTaskId){
-            $lastTaskId = $taskId
-            $taskName = $base.name
-            $status = ($base.publicStatus).Substring(1)
-            $startTime = usecsToDate $base.startTimeUsecs
-            $duration = '-'
-            if($base.PSObject.properties['endTimeUsecs']){
-                $endTime = usecsToDate $base.endTimeUsecs
-                $duration = [math]::Round(($endTime - $startTime).TotalMinutes)
-                $endUsecs = $base.endTimeUsecs - 1
-            }
-            $restoreType = ($base.userInfo.pulseAttributeVec | Where-Object {$_.key -eq 'taskType'}).value.data.stringValue
-            if($restoreType -eq 'clone'){
-                $link = "https://$vip/more/devops/clone/detail/$taskId"
-            }else{
-                $link = "https://$vip/recovery/detail/$($cluster.id):$($cluster.incarnationId):$($taskId)"
-            }
-            if($state.PSObject.properties['objects']){
-                foreach ($object in $state.objects){
-                    $restorePoint = ''
-                    # $object.entity | toJson
-                    $objectType = $entityType[$object.entity.type]
-                    # $objectType
-                    $targetObject = $objectName = $object.entity.displayName
-                    $restorePoint = usecsToDate $object.startTimeUsecs
-                    # vmware prefix/suffix
-                    if($state.renameRestoredObjectParam.prefix){
-                        $targetObject = "$($state.renameRestoredObjectParam.prefix)$targetObject"
-                    }
-                    if($state.renameRestoredObjectParam.suffix){
-                        $targetObject = "$targetObject$($state.renameRestoredObjectParam.suffix)"
-                    }
-                    # netapp, isilon, genericNas
-                    if($state.restoreInfo.type -in @(9, 11, 14)){
-                        $targetObject = $state.fullViewName
-                    }
-                    output $startTime $taskName $objectName $objectType $targetObject $status $duration $restorePoint $base.user $link
-                    $restoresCounted += 1
+        if($base -ne $null){
+            $taskId = $base.taskId
+            if($taskId -ne $lastTaskId){
+                $lastTaskId = $taskId
+                $taskName = $base.name
+                $status = ($base.publicStatus).Substring(1)
+                $startTime = usecsToDate $base.startTimeUsecs
+                $duration = '-'
+                if($base.PSObject.properties['endTimeUsecs']){
+                    $endTime = usecsToDate $base.endTimeUsecs
+                    $duration = [math]::Round(($endTime - $startTime).TotalMinutes)
+                    $endUsecs = $base.endTimeUsecs - 1
                 }
-            }elseif($state.PSObject.properties['restoreAppTaskState']){
-                $appState = $state.restoreAppTaskState
-                if($appState.PSObject.Properties['childRestoreAppParamsVec']){
-                    foreach ($childRestore in $appState.childRestoreAppParamsVec){
-                        $restorePoint = usecsToDate $childRestore.ownerRestoreInfo.ownerObject.startTimeUsecs
-                        $targetServer = $sourceServer = $childRestore.ownerRestoreInfo.ownerObject.entity.displayName                    
-    
-                        foreach($app in $childRestore.restoreAppObjectVec){
+                $restoreType = ($base.userInfo.pulseAttributeVec | Where-Object {$_.key -eq 'taskType'}).value.data.stringValue
+                if($restoreType -eq 'clone'){
+                    $link = "https://$vip/more/devops/clone/detail/$taskId"
+                }else{
+                    $link = "https://$vip/recovery/detail/$($cluster.id):$($cluster.incarnationId):$($taskId)"
+                }
+                if($state.PSObject.properties['objects']){
+                    foreach ($object in $state.objects){
+                        $restorePoint = ''
+                        # $object.entity | toJson
+                        $objectType = $entityType[$object.entity.type]
+                        # $objectType
+                        $targetObject = $objectName = $object.entity.displayName
+                        $restorePoint = usecsToDate $object.startTimeUsecs
+                        # vmware prefix/suffix
+                        if($state.renameRestoredObjectParam.prefix){
+                            $targetObject = "$($state.renameRestoredObjectParam.prefix)$targetObject"
+                        }
+                        if($state.renameRestoredObjectParam.suffix){
+                            $targetObject = "$targetObject$($state.renameRestoredObjectParam.suffix)"
+                        }
+                        # netapp, isilon, genericNas
+                        if($state.restoreInfo.type -in @(9, 11, 14)){
+                            $targetObject = $state.fullViewName
+                        }
+                        output $startTime $taskName $objectName $objectType $targetObject $status $duration $restorePoint $base.user $link
+                        $restoresCounted += 1
+                    }
+                }elseif($state.PSObject.properties['restoreAppTaskState']){
+                    $appState = $state.restoreAppTaskState
+                    if($appState.PSObject.Properties['childRestoreAppParamsVec']){
+                        foreach ($childRestore in $appState.childRestoreAppParamsVec){
+                            $restorePoint = usecsToDate $childRestore.ownerRestoreInfo.ownerObject.startTimeUsecs
+                            $targetServer = $sourceServer = $childRestore.ownerRestoreInfo.ownerObject.entity.displayName                    
+        
+                            foreach($app in $childRestore.restoreAppObjectVec){
+                                $targetObject, $objectName, $objectType = getTarget($app)
+                                output $startTime $taskName "$sourceServer/$objectName" $objectType $targetObject $status $duration $restorePoint $base.user $link
+                                $restoresCounted += 1
+                            }
+                        }
+                    }
+                    if($appState.PSObject.Properties['restoreAppParams']){
+        
+                        foreach ($app in $appState.restoreAppParams.restoreAppObjectVec){
+                            $restorePoint = usecsToDate $appState.restoreAppParams.ownerRestoreInfo.ownerObject.startTimeUsecs
+                            $targetServer = $sourceServer = $appState.restoreAppParams.ownerRestoreInfo.ownerObject.entity.displayName
                             $targetObject, $objectName, $objectType = getTarget($app)
                             output $startTime $taskName "$sourceServer/$objectName" $objectType $targetObject $status $duration $restorePoint $base.user $link
                             $restoresCounted += 1
                         }
                     }
+                }else{
+                    "***************more types****************"
                 }
-                if($appState.PSObject.Properties['restoreAppParams']){
-    
-                    foreach ($app in $appState.restoreAppParams.restoreAppObjectVec){
-                        $restorePoint = usecsToDate $appState.restoreAppParams.ownerRestoreInfo.ownerObject.startTimeUsecs
-                        $targetServer = $sourceServer = $appState.restoreAppParams.ownerRestoreInfo.ownerObject.entity.displayName
-                        $targetObject, $objectName, $objectType = getTarget($app)
-                        output $startTime $taskName "$sourceServer/$objectName" $objectType $targetObject $status $duration $restorePoint $base.user $link
-                        $restoresCounted += 1
-                    }
-                }
-            }else{
-                "***************more types****************"
             }
         }
     }

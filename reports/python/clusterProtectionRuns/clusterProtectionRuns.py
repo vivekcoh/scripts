@@ -56,7 +56,7 @@ nowUsecs = dateToUsecs(now.strftime("%Y-%m-%d %H:%M:%S"))
 dateString = now.strftime("%Y-%m-%d")
 outfile = 'protectionRunsReport-%s.tsv' % dateString
 f = codecs.open(outfile, 'w')
-f.write('Start Time\tEnd Time\tDuration\tstatus\tslaStatus\tsnapshotStatus\tobjectName\tsourceName\tgroupName\tpolicyName\tObject Type\tbackupType\tSystem Name\tLogical Size %s\tData Read %s\tData Written %s\tOrganization Name\n' % (unit, unit, unit))
+f.write('Start Time\tEnd Time\tDuration\tstatus\tslaStatus\tsnapshotStatus\tobjectName\tsourceName\tgroupName\tpolicyName\tObject Type\tbackupType\tSystem Name\tLogical Size %s\tData Read %s\tData Written %s\tOrganization Name\tTag\n' % (unit, unit, unit))
 
 for vip in vips:
     # authenticate
@@ -116,6 +116,9 @@ for vip in vips:
                         localSources = {}
                         if 'isLocalSnapshotsDeleted' not in run or run['isLocalSnapshotsDeleted'] is False:
                             runType = backupInfo['runType']
+                            tag = ''
+                            if 'externallyTriggeredBackupTag' in run:
+                                tag = run['externallyTriggeredBackupTag']
                             if includelogs or runType != 'kLog':
                                 runStartTime = usecsToDate(backupInfo['startTimeUsecs'])
                                 if days is not None and daysBackUsecs > backupInfo['startTimeUsecs']:
@@ -154,7 +157,7 @@ for vip in vips:
                                         objectBytesWritten = round(object[snapshotInfo]['snapshotInfo']['stats'].get('bytesWritten', 0) / multiplier, 1)
                                         objectBytesRead = round(object[snapshotInfo]['snapshotInfo']['stats'].get('bytesRead', 0) / multiplier, 1)
                                         print('        %s' % objectName)
-                                        f.write('%s\t%s\t%s\t%s\t%s\tActive\t%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\n' % (objectStartTime, objectEndTime, objectDurationSeconds, objectStatus, slaStatus, objectName, registeredSourceName, job['name'], policyName, environment, runType, cluster['name'], objectLogicalSizeBytes, objectBytesRead, objectBytesWritten, tenant))
+                                        f.write('%s\t%s\t%s\t%s\t%s\tActive\t%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\n' % (objectStartTime, objectEndTime, objectDurationSeconds, objectStatus, slaStatus, objectName, registeredSourceName, job['name'], policyName, environment, runType, cluster['name'], objectLogicalSizeBytes, objectBytesRead, objectBytesWritten, tenant, tag))
                     except Exception:
                         pass
 f.close()

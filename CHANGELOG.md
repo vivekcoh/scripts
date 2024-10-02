@@ -7,7 +7,7 @@
 
 ## 2024-10-01
 
-* [recoveryPoints.py](https://github.com/cohesity/community-automation-samples/tree/main/reports/python/recoveryPoints) ['Update`] added support for Helios authentication
+* [recoveryPoints.py](https://github.com/cohesity/community-automation-samples/tree/main/reports/python/recoveryPoints) [`Update`] added support for Helios authentication
 * [protectOracle.ps1](https://github.com/cohesity/community-automation-samples/tree/main/oracle/powershell/protectOracle) [`Fix`] fixed Rack node selection and added -deleteoghours parameter
 * [clusterInfo.py](https://github.com/cohesity/community-automation-samples/tree/main/python/clusterInfo) [`Fix`] removed legacy code
 

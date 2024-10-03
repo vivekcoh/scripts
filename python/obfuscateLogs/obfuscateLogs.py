@@ -52,7 +52,6 @@ match_paths = [
     '/home/cohesity',
     '/home_cohesity_data',
     '/cohesity_users_home*',
-    '_Domain/',
     '/home/support/',
     '/COHESITY_YODA',
     '/cohesity_logs',
@@ -94,6 +93,8 @@ match_paths = [
     '/statsz from ',
     '/tracez?component'
 ]
+#     '_Domain/',
+
 
 def obfuscatefile(root, filepath):
     filename = os.path.basename(filepath)

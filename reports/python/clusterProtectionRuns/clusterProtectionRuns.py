@@ -4,6 +4,7 @@
 # import pyhesity wrapper module
 from pyhesity import *
 from datetime import datetime
+import os
 import codecs
 
 # command line arguments
@@ -21,6 +22,11 @@ parser.add_argument('-x', '--unit', type=str, choices=['KiB', 'MiB', 'GiB', 'TiB
 parser.add_argument('-t', '--objecttype', type=str, default=None)
 parser.add_argument('-l', '--includelogs', action='store_true')
 parser.add_argument('-n', '--numruns', type=int, default=500)
+parser.add_argument('-o', '--outputpath', type=str, default='.')
+parser.add_argument('-f', '--outputfile', type=str, default=None)
+parser.add_argument('-on', '--objectname', action='append', type=str)
+parser.add_argument('-ol', '--objectlist', type=str)
+
 args = parser.parse_args()
 
 vips = args.vip
@@ -35,6 +41,29 @@ unit = args.unit
 objecttype = args.objecttype
 includelogs = args.includelogs
 numruns = args.numruns
+outputpath = args.outputpath
+outputfile = args.outputfile
+objectnames = args.objectname
+objectlist = args.objectlist
+
+
+# gather server list
+def gatherList(param=None, filename=None, name='items', required=True):
+    items = []
+    if param is not None:
+        for item in param:
+            items.append(item)
+    if filename is not None:
+        f = open(filename, 'r')
+        items += [s.strip() for s in f.readlines() if s.strip() != '']
+        f.close()
+    if required is True and len(items) == 0:
+        print('no %s specified' % name)
+        exit()
+    return items
+
+
+objectnames = gatherList(objectnames, objectlist, name='servers', required=False)
 
 tail = ''
 if days is not None:
@@ -53,8 +82,10 @@ now = datetime.now()
 nowUsecs = dateToUsecs(now.strftime("%Y-%m-%d %H:%M:%S"))
 
 # output file
-dateString = now.strftime("%Y-%m-%d")
-outfile = 'protectionRunsReport-%s.tsv' % dateString
+if outputfile is None:
+    dateString = now.strftime("%Y-%m-%d")
+    outputfile = 'protectionRunsReport-%s.tsv' % dateString
+outfile = os.path.join(outputpath, outputfile)
 f = codecs.open(outfile, 'w')
 f.write('Start Time\tEnd Time\tDuration\tstatus\tslaStatus\tsnapshotStatus\tobjectName\tsourceName\tgroupName\tpolicyName\tObject Type\tbackupType\tSystem Name\tLogical Size %s\tData Read %s\tData Written %s\tOrganization Name\tTag\n' % (unit, unit, unit))
 
@@ -133,31 +164,32 @@ for vip in vips:
                                         localSources[object['object']['id']] = object['object']['name']
                                 for object in run['objects']:
                                     objectName = object['object']['name']
-                                    registeredSourceName = objectName
-                                    if environment not in ['kOracle', 'kSQL'] or object['object']['objectType'] != 'kHost':
-                                        if 'sourceId' in object['object']:
-                                            if environment in ['kOracle', 'kSQL']:
-                                                registeredSourceName = localSources.get(object['object']['sourceId'], objectName)
-                                            else:
+                                    if len(objectnames) == 0 or objectName.lower() in [o.lower() for o in objectnames]:
+                                        registeredSourceName = objectName
+                                        if environment not in ['kOracle', 'kSQL'] or object['object']['objectType'] != 'kHost':
+                                            if 'sourceId' in object['object']:
+                                                if environment in ['kOracle', 'kSQL']:
+                                                    registeredSourceName = localSources.get(object['object']['sourceId'], objectName)
+                                                else:
 
-                                                registeredSource = [s for s in sources['rootNodes'] if s['rootNode']['id'] == object['object']['sourceId']]
-                                                if registeredSource is not None and len(registeredSource) > 0:
-                                                    registeredSourceName = registeredSource[0]['rootNode']['name']
+                                                    registeredSource = [s for s in sources['rootNodes'] if s['rootNode']['id'] == object['object']['sourceId']]
+                                                    if registeredSource is not None and len(registeredSource) > 0:
+                                                        registeredSourceName = registeredSource[0]['rootNode']['name']
 
-                                        objectStatus = object[snapshotInfo]['snapshotInfo']['status']
-                                        if objectStatus == 'kSuccessful':
-                                            objectStatus = 'kSuccess'
-                                        objectStartTime = usecsToDate(object[snapshotInfo]['snapshotInfo']['startTimeUsecs'])
-                                        objectEndTime = None
-                                        objectDurationSeconds = int((nowUsecs - object[snapshotInfo]['snapshotInfo']['startTimeUsecs']) / 1000000)
-                                        if 'endTimeUsecs' in object[snapshotInfo]['snapshotInfo']:
-                                            objectEndTime = usecsToDate(object[snapshotInfo]['snapshotInfo']['endTimeUsecs'])
-                                            objectDurationSeconds = int((object[snapshotInfo]['snapshotInfo']['endTimeUsecs'] - object[snapshotInfo]['snapshotInfo']['startTimeUsecs']) / 1000000)
-                                        objectLogicalSizeBytes = round(object[snapshotInfo]['snapshotInfo']['stats'].get('logicalSizeBytes', 0) / multiplier, 1)
-                                        objectBytesWritten = round(object[snapshotInfo]['snapshotInfo']['stats'].get('bytesWritten', 0) / multiplier, 1)
-                                        objectBytesRead = round(object[snapshotInfo]['snapshotInfo']['stats'].get('bytesRead', 0) / multiplier, 1)
-                                        print('        %s' % objectName)
-                                        f.write('%s\t%s\t%s\t%s\t%s\tActive\t%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\n' % (objectStartTime, objectEndTime, objectDurationSeconds, objectStatus, slaStatus, objectName, registeredSourceName, job['name'], policyName, environment, runType, cluster['name'], objectLogicalSizeBytes, objectBytesRead, objectBytesWritten, tenant, tag))
+                                            objectStatus = object[snapshotInfo]['snapshotInfo']['status']
+                                            if objectStatus == 'kSuccessful':
+                                                objectStatus = 'kSuccess'
+                                            objectStartTime = usecsToDate(object[snapshotInfo]['snapshotInfo']['startTimeUsecs'])
+                                            objectEndTime = None
+                                            objectDurationSeconds = int((nowUsecs - object[snapshotInfo]['snapshotInfo']['startTimeUsecs']) / 1000000)
+                                            if 'endTimeUsecs' in object[snapshotInfo]['snapshotInfo']:
+                                                objectEndTime = usecsToDate(object[snapshotInfo]['snapshotInfo']['endTimeUsecs'])
+                                                objectDurationSeconds = int((object[snapshotInfo]['snapshotInfo']['endTimeUsecs'] - object[snapshotInfo]['snapshotInfo']['startTimeUsecs']) / 1000000)
+                                            objectLogicalSizeBytes = round(object[snapshotInfo]['snapshotInfo']['stats'].get('logicalSizeBytes', 0) / multiplier, 1)
+                                            objectBytesWritten = round(object[snapshotInfo]['snapshotInfo']['stats'].get('bytesWritten', 0) / multiplier, 1)
+                                            objectBytesRead = round(object[snapshotInfo]['snapshotInfo']['stats'].get('bytesRead', 0) / multiplier, 1)
+                                            print('        %s' % objectName)
+                                            f.write('%s\t%s\t%s\t%s\t%s\tActive\t%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\n' % (objectStartTime, objectEndTime, objectDurationSeconds, objectStatus, slaStatus, objectName, registeredSourceName, job['name'], policyName, environment, runType, cluster['name'], objectLogicalSizeBytes, objectBytesRead, objectBytesWritten, tenant, tag))
                     except Exception:
                         pass
 f.close()

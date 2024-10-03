@@ -29,7 +29,7 @@ Place both files in a folder together and run the main script like so:
 # end example
 ```
 
-## Parameters
+## Authentication Parameters
 
 * -v, --vip: one or more DNS or IP of the Cohesity cluster to connect to (repeat for multiple)
 * -u, --username: username to authenticate to Cohesity cluster
@@ -38,8 +38,16 @@ Place both files in a folder together and run the main script like so:
 * -pwd, --password: (optional) specify password or API key
 * -np, --noprompt: (optional) do not prompt for password
 * -m, --mfacode: (optional) mfa code (only works for one cluster)
+
+## Other Parameters
+
 * -y, --days: (optional) days back to search
 * -x, --unit: (optional) KiB, MiB, GiB, or TiB] (default is GiB)
 * -t, --objecttype: (optional) filter by type (e.g. kSQL)
 * -l, --includelogs: (optional) include log runs
 * -n, --numruns: (optional) number of runs per API query (default is 500)
+
+* -o, --outputpath: (optional) default is '.'
+* -f, --outputfile: (optional) default is protectionRunsReport-date.tsv
+* -on, --objectname: (optional) name of server/view to include in report (repeat for multiple)
+* -ol, --objectlist: (optional) text file of servers/views to include in report (one per line)

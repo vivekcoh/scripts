@@ -2,7 +2,7 @@
 
 Warning: this code is provided on a best effort basis and is not in any way officially supported or sanctioned by Cohesity. The code is intentionally kept simple to retain value as example code. The code in this repository is provided as-is and the author accepts no liability for damages resulting from its use.
 
-This powershell script clones a VM.
+This powershell script clones one or more VMware VMs.
 
 ## Download the script
 
@@ -53,7 +53,8 @@ Place the files in a folder together and run the main script like so:
 
 ## Other Parameters
 
-* -vmName: Name of VM to clone
+* -vmName: (optional) one or more names of VMs to clone (comma separated)
+* -vmList: (optional) text file of VM names to clone (one per line)
 * -viewName: (optional) view to host cloned VM (default is 'cloneVMs')
 * -prefix: (optional) add a prefix to the VM name during cloning (default is 'clone-')
 * -vCenterName: vCenter to clone to

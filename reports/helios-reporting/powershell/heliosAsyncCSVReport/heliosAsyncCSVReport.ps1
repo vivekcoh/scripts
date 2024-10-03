@@ -210,7 +210,7 @@ if(! $request.PSObject.Properties['id']){
 $finishedStates = @('Succeeded', 'Canceled', 'Failed', 'Warning', 'SucceededWithWarning')
 
 # Wait for report to generate
-Write-Host "Waiting to report to generate..."
+Write-Host "Waiting for report to generate..."
 while($True){   
     Start-Sleep $sleepTimeSeconds
     $thisRequest = (api get -reportingV2 "reports/requests").requests | Where-Object id -eq $request.id
@@ -220,7 +220,7 @@ while($True){
 }
 
 # Download CSV
-Write-Host "Report generation status: $($thisRequest.status)"
+Write-Host "Report generation $($thisRequest.status)"
 if($thisRequest.status -ne 'Succeeded'){
     exit 1
 }
@@ -237,7 +237,15 @@ if($excludeEnvironment){
 }
 
 # Convert timestamps to dates
-$epochColumns = @('lastRunTime', 'lastSuccessfulBackup', 'endTimeUsecs', 'runStartTimeUsecs')
+$epochColumns = @('lastRunTime', 
+                  'lastSuccessfulBackup', 
+                  'endTimeUsecs',
+                  'startTimeUsecs', 
+                  'runStartTimeUsecs', 
+                  'recoveryPointUsecs',
+                  'lastFailedRunUsecs',
+                  'lastRunTimeUsecs',
+                  'lastDisconnectionTimestampUsecs')
 foreach($epochColumn in $epochColumns){
     $csv | Where-Object {$_.PSObject.Properties[$epochColumn] -and $_.$epochColumn -ne $null -and $_.$epochColumn -ne 0} | ForEach-Object{
         $_.$epochColumn = usecsToDate $($_.$epochColumn)
@@ -245,7 +253,7 @@ foreach($epochColumn in $epochColumns){
 }
 
 # convert usecs to seconds
-$usecColumns = @('durationUsecs')
+$usecColumns = @('durationUsecs', 'totalDisconnectedTimeUsecs')
 $usecColumnRenames = @{'durationUsecs' = 'durationSeconds'}
 foreach($usecColumn in $usecColumns){
     $csv | Where-Object {$_.PSObject.Properties[$usecColumn]} | ForEach-Object{

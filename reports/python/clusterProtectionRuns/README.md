@@ -46,7 +46,6 @@ Place both files in a folder together and run the main script like so:
 * -t, --objecttype: (optional) filter by type (e.g. kSQL)
 * -l, --includelogs: (optional) include log runs
 * -n, --numruns: (optional) number of runs per API query (default is 500)
-
 * -o, --outputpath: (optional) default is '.'
 * -f, --outputfile: (optional) default is protectionRunsReport-date.tsv
 * -on, --objectname: (optional) name of server/view to include in report (repeat for multiple)

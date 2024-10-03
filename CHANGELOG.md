@@ -1,5 +1,9 @@
 # Change Log for cohesity/community-automation-samples
 
+## 2024-10-03
+
+* [clusterProtectionRuns.py](https://github.com/cohesity/community-automation-samples/tree/main/reports/python/clusterProtectionRuns) [`Update`] added output file/path parameters, object name filters, tag column
+
 ## 2024-10-02
 
 * [updateLocalUserPassword.py](https://github.com/cohesity/community-automation-samples/tree/main/python/updateLocalUserPassword) [`New`] update a local user's password

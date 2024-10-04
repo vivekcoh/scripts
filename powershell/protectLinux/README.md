@@ -95,7 +95,6 @@ Processing servers...
 * -exclusions: (optional) one or more exclusion paths (comma separated)
 * -exclusionList: (optional) a text file list of exclusion paths (one per line)
 * -metadataFile: (optional) path to directive file (e.g. /home/myuser/directive.txt)
-* -skipNestedMountPoints: (optional) (6.3 and below) if omitted, nested mount points will not be skipped
 * -skipNestedMountPointTypes: (optional) (6.4 and above) comma separated list of mount point types to skip (e.g. nfs, xfs)
 * -replaceRules: (optional) if omitted, inclusions/exclusions are appended to existing server rules (if any)
 * -allServers: (optional) inclusions/exclusions are applied to all servers in the job

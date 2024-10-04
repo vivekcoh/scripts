@@ -21,7 +21,6 @@ param (
     [Parameter()][array]$exclusions,  # optional name of one server protect
     [Parameter()][string]$exclusionList = '',  # required list of exclusions
     [Parameter(Mandatory = $True)][string]$jobName,  # name of the job to add server to
-    [Parameter()][switch]$skipNestedMountPoints,  # 6.3 and below - skip all nested mount points
     [Parameter()][array]$skipNestedMountPointTypes = @(),  # 6.4 and above - skip listed mount point types
     [Parameter()][switch]$replaceRules,
     [Parameter()][switch]$allServers,
@@ -105,13 +104,6 @@ if('' -ne $exclusionList){
         Write-Warning "Exclusions file $exclusionList not found!"
         exit
     }
-}
-
-# skip nested mount points
-if($skipNestedMountPoints){
-    $skip = $True
-}else{
-    $skip = $false
 }
 
 # source the cohesity-api helper code
@@ -336,7 +328,6 @@ foreach($sourceId in @([array]$sourceIds + [array]$newSourceIds) | Sort-Object -
                 if(($null -eq $filePath) -or $replaceRules){
                     $filePath = @{
                         "includedPath" = $includePath;
-                        "skipNestedVolumes" = $skip;
                         "excludedPaths" = @()
                     }
                 }

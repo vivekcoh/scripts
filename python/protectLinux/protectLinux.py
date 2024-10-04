@@ -26,7 +26,6 @@ parser.add_argument('-i', '--include', action='append', type=str)
 parser.add_argument('-n', '--includefile', type=str)
 parser.add_argument('-e', '--exclude', action='append', type=str)
 parser.add_argument('-x', '--excludefile', type=str)
-parser.add_argument('-m', '--skipnestedmountpoints', action='store_true')
 parser.add_argument('-t', '--skipnestedmountpointtypes', action='append', type=str)
 parser.add_argument('-sd', '--storagedomain', type=str, default='DefaultStorageDomain')
 parser.add_argument('-p', '--policyname', type=str, default=None)
@@ -67,7 +66,6 @@ includes = args.include               # include path
 includefile = args.includefile        # file with include paths
 excludes = args.exclude               # exclude path
 excludefile = args.excludefile        # file with exclude paths
-skipmountpoints = args.skipnestedmountpoints                # skip nested mount points (6.3 and below)
 skipnestedmountpointtypes = args.skipnestedmountpointtypes  # skip nester mount point types (6.4 and above)
 storagedomain = args.storagedomain    # storage domain for new job
 policyname = args.policyname          # policy name for new job
@@ -317,8 +315,7 @@ for servername in servernames:
             for include in includes:
                 filePath = {
                     "includedPath": include,
-                    "excludedPaths": [],
-                    "skipNestedVolumes": skipmountpoints
+                    "excludedPaths": []
                 }
                 thisobject['filePaths'].append(filePath)
 

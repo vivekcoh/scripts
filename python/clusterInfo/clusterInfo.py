@@ -13,9 +13,11 @@ import os.path
 ### command line arguments
 import argparse
 parser = argparse.ArgumentParser()
-parser.add_argument('-v', '--vip', type=str, required=True)
-parser.add_argument('-u', '--username', type=str, required=True)
+parser.add_argument('-v', '--vip', type=str, default='helios.cohesity.com')
+parser.add_argument('-u', '--username', type=str, default='helios')
 parser.add_argument('-d', '--domain', type=str, default='local')
+parser.add_argument('-c', '--clustername', type=str, default=None)
+parser.add_argument('-mcm', '--mcm', action='store_true')
 parser.add_argument('-i', '--useApiKey', action='store_true')
 parser.add_argument('-pwd', '--password', type=str, default=None)
 parser.add_argument('-np', '--noprompt', action='store_true')
@@ -29,6 +31,8 @@ args = parser.parse_args()
 vip = args.vip
 username = args.username
 domain = args.domain
+clustername = args.clustername
+mcm = args.mcm
 useApiKey = args.useApiKey
 password = args.password
 noprompt = args.noprompt
@@ -44,16 +48,25 @@ def output(mystring):
     f.write(mystring + '\n')
 
 # authentication =========================================================
-apiauth(vip=vip, username=username, domain=domain, password=password, useApiKey=useApiKey, prompt=(not noprompt), mfaCode=mfacode, emailMfaCode=emailmfacode)
+# demand clustername if connecting to helios or mcm
+if (mcm or vip.lower() == 'helios.cohesity.com') and clustername is None:
+    print('-c, --clustername is required when connecting to Helios or MCM')
+    exit(1)
+
+# authenticate
+apiauth(vip=vip, username=username, domain=domain, password=password, useApiKey=useApiKey, helios=mcm, prompt=(not noprompt), mfaCode=mfacode, emailMfaCode=emailmfacode)
 
 # exit if not authenticated
 if apiconnected() is False:
     print('authentication failed')
     exit(1)
-# end authentication =====================================================
 
-if password is None:
-    password = pw(vip=vip, username=username, domain=domain)
+# if connected to helios or mcm, select access cluster
+if mcm or vip.lower() == 'helios.cohesity.com':
+    heliosCluster(clustername)
+    if LAST_API_ERROR() != 'OK':
+        exit(1)
+# end authentication =====================================================
 
 cluster = api('get', 'cluster?fetchStats=true')
 version = cluster['clusterSoftwareVersion'].split('_')[0]
@@ -117,8 +130,6 @@ for chassis in chassisList:
         else:
             nodeipmi = [{}]
         # node info
-        apiauth(node['ip'].split(':')[-1], username, domain, password=password, quiet=True, useApiKey=useApiKey)
-        nodeInfo = api('get', '/nexus/node/hardware_info')
         output('\n            Node ID: %s' % node['id'])
         output('            Node IP: %s' % node['ip'].split(':')[-1])
         if len(nodeipmi) > 0:
@@ -126,13 +137,8 @@ for chassis in chassisList:
         else:
             output('            IPMI IP: n/a')
         output('            Slot No: %s' % node.get('slotNumber', 0))
-        if nodeInfo is not None:
-            output('          Serial No: %s' % nodeInfo.get('cohesityNodeSerial', 'Unknown'))
-            output('      Product Model: %s' % nodeInfo.get('productModel', 'Unknown'))
-        else:
-            output('          Serial No: Unknown')
-            output('      Product Model: Unknown')
-        
+        output('          Serial No: %s' % node.get('cohesityNodeSerial', 'Unknown'))
+        output('      Product Model: %s' % node.get('productModel', 'Unknown'))                
         output('         SW Version: %s' % node['nodeSoftwareVersion'])
         for stat in nodeStatus:
             if stat['nodeId'] == node['id']:

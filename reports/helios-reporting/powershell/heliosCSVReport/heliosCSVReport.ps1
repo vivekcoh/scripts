@@ -18,7 +18,8 @@ param (
     [Parameter()][array]$environment,
     [Parameter()][array]$excludeEnvironment,
     [Parameter()][switch]$replicationOnly,
-    [Parameter()][int]$timeoutSeconds = 600
+    [Parameter()][int]$timeoutSeconds = 600,
+    [Parameter()][switch]$dbg
 )
 
 # gather list from command line params and file
@@ -222,6 +223,9 @@ foreach($cluster in ($selectedClusters)){
         if($replicationOnly){
             $reportParams.filters = @($reportParams.filters + $replicationFilter)
         }
+        if($dbg){
+            $reportParams | toJson
+        }
         $preview = api post -reportingV2 "components/$reportNumber/preview" $reportParams -TimeoutSec $timeoutSeconds
         Write-Host "($($preview.component.data.Count) rows)" 
         if($preview.component.data.Count -eq 50000){
@@ -278,6 +282,60 @@ foreach($epochColum in ($epochColums | Sort-Object -Unique)){
 foreach($usecColumn in ($usecColumns | Sort-Object -Unique)){
     $csv | ForEach-Object{
         $_.$usecColumn = [int]($_.$usecColumn / 1000000)
+    }
+}
+
+# merge ranges
+if($ranges.Count -gt 1){
+    # merge protected objects
+    if($reportName -eq 'protected objects'){
+        $newCSV = @()
+        $groups = $csv | Group-Object -Property {$_.system}, {$_.sourceName}, {$_.objectType}, {$_.objectName}, {$_.groupName}
+        foreach($group in $groups){
+            $records = $group.group | Sort-Object -Property lastRunTime
+            $primaryRecord = $records[-1]
+            $primaryRecord.numSuccessfulBackups = ($records.numSuccessfulBackups | Measure-Object -sum).sum
+            $primaryRecord.numUnsuccessfulBackups = ($records.numUnsuccessfulBackups | Measure-Object -sum).sum
+            $newCSV = @($newCSV + $primaryRecord)
+        }
+        $csv = $newCSV
+    }
+    # merge failures
+    if($reportName -eq 'failures'){
+        $newCSV = @()
+        $groups = $csv | Group-Object -Property {$_.system}, {$_.sourceName}, {$_.objectType}, {$_.objectName}, {$_.groupName}
+        foreach($group in $groups){
+            $records = $group.group | Sort-Object -Property lastFailedRunUsecs
+            $primaryRecord = $records[-1]
+            $primaryRecord.failedBackups = ($records.failedBackups | Measure-Object -sum).sum
+            $newCSV = @($newCSV + $primaryRecord)
+        }
+        $csv = $newCSV
+    }
+    # merge protected / unprotected objects
+    if($reportName -eq 'protected / unprotected objects'){
+        $newCSV = @()
+        $groups = $csv | Group-Object -Property {$_.systems}, {$_.sourceName}, {$_.objectType}, {$_.environment}, {$_.objectName}
+        foreach($group in $groups){
+            $records = $group.group
+            $primaryRecord = $records[0]
+            $newCSV = @($newCSV + $primaryRecord)
+        }
+        $csv = $newCSV
+    }
+    # merge protection group summary
+    if($reportName -eq 'protection group summary'){
+        $newCSV = @()
+        $groups = $csv | Group-Object -Property {$_.system}, {$_.sourceEnvironment}, {$_.groupName}
+        foreach($group in $groups){
+            $records = $group.group | Sort-Object -Property lastRunTimeUsecs
+            $primaryRecord = $records[-1]
+            $primaryRecord.successfulBackups = ($records.successfulBackups | Measure-Object -sum).sum
+            $primaryRecord.failedBackups = ($records.failedBackups | Measure-Object -sum).sum
+            $primaryRecord.dataIngestBytes = ($records.dataIngestBytes | Measure-Object -sum).sum
+            $newCSV = @($newCSV + $primaryRecord)
+        }
+        $csv = $newCSV
     }
 }
 

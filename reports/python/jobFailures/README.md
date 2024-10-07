@@ -31,15 +31,26 @@ Place both files in a folder together and run the main script like so:
                  -f mycluster@mydomain.net
 ```
 
-## Parameters
+## Authentication Parameters
 
-* -v, --vip: DNS or IP of the Cohesity cluster to connect to
-* -u, --username: username to authenticate to Cohesity cluster
-* -d, --domain: (optional) domain of username (default is local)
-* -s, --mailserver: SMTP gateway to forward email through
-* -p, --mailport: (optional) defaults to 25
-* -f, --sendfrom: email address to show in the from field
-* -t, --sendto: email addresses to send report to (use repeatedly to add recipients)
+* -v, --vip: (optional) DNS or IP of the Cohesity cluster to connect to (default is helios.cohesity.com)
+* -u, --username: (optional) username to authenticate to Cohesity cluster (default is helios)
+* -d, --domain: (optional) domain of username (defaults to local)
+* -t, --tenant: (optional) multi-tenancy tenant name
+* -i, --useApiKey: (optional) use API key for authentication
+* -pwd, --password: (optional) password or API key
+* -np, --noprompt: (optional) do not prompt for password
+* -mcm, --mcm: (optional) connect through MCM
+* -c, --clustername: (optional) helios/mcm cluster to connect to
+* -m, --mfacode: (optional) MFA code for authentication
+* -e, --emailmfacode: (optional) send MFA code via email
+
+## Other Parameters
+
+* -ms, --mailserver: SMTP gateway to forward email through
+* -mp, --mailport: (optional) defaults to 25
+* -sf, --sendfrom: email address to show in the from field
+* -st, --sendto: email addresses to send report to (use repeatedly to add recipients)
 
 ## The Python Helper Module - pyhesity.py
 

@@ -225,8 +225,10 @@ for server in servernames:
             }
         else:
             thisObject = thisObject[0]
+        foundDBs = []
         for dbNode in serverSource['applicationNodes']:
             if len(dbnames) == 0 or dbNode['protectionSource']['name'].lower() in dbnames:
+                foundDBs.append(dbNode['protectionSource']['name'].lower())
                 print("Adding %s to %s" % (dbNode['protectionSource']['name'], jobname))
                 thisDB = [o for o in thisObject['dbParams'] if o['databaseId'] == dbNode['protectionSource']['id']]
                 thisObject['dbParams'] = [o for o in thisObject['dbParams'] if o['databaseId'] != dbNode['protectionSource']['id']]
@@ -294,6 +296,14 @@ for server in servernames:
                                     }
                                 )
                 thisObject['dbParams'].append(thisDB)
+            if len(dbnames) > 0:
+                for dbname in dbnames:
+                    if dbname.lower() not in foundDBs:
+                        print('Database %s not found on server %s' % (dbname, server))
+                        exit(1)
+        if 'dbParams' not in thisObject or len(thisObject['dbParams']) == 0:
+            print('No databases protected for server %s not found' % server)
+            exit(1)
         job['oracleParams']['objects'].append(thisObject)
 
 if newJob is True:

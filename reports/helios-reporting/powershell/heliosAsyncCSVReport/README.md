@@ -39,6 +39,7 @@ Place all files in a folder together, then run the main script like so:
 * -thisCalendarMonth: (optional) set date range to this month
 * -lastCalendarMonth: (optional) set date range to last month
 * -days: (optional) set date range to last X days (default is 7)
+* -dayRange: (optional) page results by number of days (default is 180)
 * -reportName: name of Helios report to generate
 * -clusterNames: (optional) limit report to one or more cluster names (comma separated)
 * -timeZone: (optional) default is 'America/New_York',

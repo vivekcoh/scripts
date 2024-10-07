@@ -8,8 +8,9 @@ param (
     [Parameter()][switch]$thisCalendarMonth,
     [Parameter()][switch]$lastCalendarMonth,
     [Parameter()][int]$days = 7,
+    [Parameter()][int]$dayRange = 180,
     [Parameter()][array]$clusterNames,
-    [Parameter()][string]$reportName = 'Protection Runs',
+    [Parameter(Mandatory = $True)][string]$reportName = 'Protection Runs',
     [Parameter()][string]$timeZone = 'America/New_York',
     [Parameter()][string]$outputPath = '.',
     [Parameter()][switch]$includeCCS,
@@ -88,6 +89,24 @@ if($startDate -ne '' -and $endDate -ne ''){
 $start = (usecsToDate $uStart).ToString('yyyy-MM-dd')
 $end = (usecsToDate $uEnd).ToString('yyyy-MM-dd')
 
+$dayRangeUsecs = $dayRange * 86400000000
+
+# build time ranges
+$ranges = @()
+$gotAllRanges = $False
+$thisUend = $uEnd
+$thisUstart = $uStart
+while($gotAllRanges -eq $False){
+    if(($thisUend - $uStart) -gt $dayRangeUsecs){
+        $thisUstart = $thisUend - $dayRangeUsecs
+        $ranges = @($ranges + @{'start' = $thisUstart; 'end' = $thisUend})
+        $thisUend = $thisUstart - 1
+    }else{
+        $ranges = @($ranges + @{'start' = $uStart; 'end' = $thisUend})
+        $gotAllRanges = $True
+    }
+}
+
 $excludeLogsFilter = @{
     "attribute" = "backupType";
     "filterType" = "In";
@@ -134,6 +153,17 @@ $replicationFilter = @{
     }
 }
 
+# Convert timestamps to dates
+$epochColumns = @('lastRunTime', 
+                  'lastSuccessfulBackup', 
+                  'endTimeUsecs',
+                  'startTimeUsecs', 
+                  'runStartTimeUsecs', 
+                  'recoveryPointUsecs',
+                  'lastFailedRunUsecs',
+                  'lastRunTimeUsecs',
+                  'lastDisconnectionTimestampUsecs')
+
 # get list of available reports
 $reports = api get -reportingV2 reports
 $report = $reports.reports | Where-Object {$_.title -eq $reportName}
@@ -149,118 +179,170 @@ $title = $report.title
 # output files
 $csvFileName = $(Join-Path -Path $outputPath -ChildPath "$($title.replace('/','-').replace('\','-'))_$($start)_$($end).csv")
 
-$systemIds = @()
-$systemNames = @()
-
+$x = 0
 foreach($cluster in ($selectedClusters)){
+    $csv = @()
     if($cluster.name -in @($regions.regions.name)){
-        $systemIds = @($systemIds + $cluster.id)
+        $systemId = $cluster.id
     }else{
-        $systemIds = @($systemIds + "$($cluster.clusterId):$($cluster.clusterIncarnationId)")
+        $systemId = "$($cluster.clusterId):$($cluster.clusterIncarnationId)"
     }
-    $systemNames = @($systemNames + $cluster.name)
-}
-
-$reportParams = @{
-    "reportId" = $report.id;
-    "name" = $report.title;
-    "reportFormats" = @(
-        "CSV"
-    );
-    "filters" = @(
-        @{
-            "attribute"             = "date";
-            "filterType"            = "TimeRange";
-            "timeRangeFilterParams" = @{
-                "lowerBound" = [int64]$uStart;
-                "upperBound" = [int64]$uEnd
+    Write-Host "$($cluster.name) " -NoNewline
+  
+    foreach($range in $ranges){
+        $reportParams = @{
+            "reportId" = $report.id;
+            "name" = $report.title;
+            "reportFormats" = @(
+                "CSV"
+            );
+            "filters" = @(
+                @{
+                    "attribute"             = "date";
+                    "filterType"            = "TimeRange";
+                    "timeRangeFilterParams" = @{
+                        "lowerBound" = [int64]$range.start;
+                        "upperBound" = [int64]$range.end
+                    }
+                }
+                @{
+                    "attribute" = "systemId";
+                    "filterType" = "Systems";
+                    "systemsFilterParams" = @{
+                        "systemIds" = @("$systemId");
+                        "systemNames" = @("$($cluster.name)")
+                    }
+                }
+            );
+            "timezone" = $timeZone;
+            "notificationParams" = $null
+        }
+        
+        if($excludeLogs){
+            $reportParams.filters = @($reportParams.filters + $excludeLogsFilter)
+        }
+        if($environment){
+            $reportParams.filters = @($reportParams.filters + $environmentFilter)
+        }
+        if($replicationOnly){
+            $reportParams.filters = @($reportParams.filters + $replicationFilter)
+        }
+        if($dbg){
+            $reportParams | toJson
+        }
+        
+        $request = api post -reportingV2 "reports/requests" $reportParams
+        if(! $request.PSObject.Properties['id']){
+            exit 1
+        }
+        
+        $finishedStates = @('Succeeded', 'Canceled', 'Failed', 'Warning', 'SucceededWithWarning')
+        
+        # Wait for report to generate
+        while($True){   
+            Start-Sleep $sleepTimeSeconds
+            $thisRequest = (api get -reportingV2 "reports/requests").requests | Where-Object id -eq $request.id
+            if($thisRequest.status -in $finishedStates){
+                break
             }
         }
-        @{
-            "attribute" = "systemId";
-            "filterType" = "Systems";
-            "systemsFilterParams" = @{
-                "systemIds" = @($systemIds);
-                "systemNames" = @($systemNames)
-            }
+        
+        # Download CSV
+        
+        if($thisRequest.status -ne 'Succeeded'){
+            Write-Host " ** Report generation $($thisRequest.status)"
+            continue
         }
-    );
-    "timezone" = $timeZone;
-    "notificationParams" = $null
-}
+        fileDownload -fileName "report-tmp.zip" -uri "https://helios.cohesity.com/heliosreporting/api/v1/public/reports/requests/$($thisRequest.id)/artifacts/CSV"
+        Expand-Archive -Path "report-tmp.zip" -force
+        Remove-Item -Path "report-tmp.zip" -force
+        $thisCsv = Import-CSV -Path "report-tmp/$($report.id)_$(usecsToDate $thisRequest.submittedAtTimestampUsecs -format "yyyy-MM-d_Hm").csv"
+        $csv = @($csv + $thisCsv)
+        Write-Host "($($thisCsv.Count) rows)"
+        Remove-Item -Path "report-tmp" -Recurse
+    }
 
-if($excludeLogs){
-    $reportParams.filters = @($reportParams.filters + $excludeLogsFilter)
-}
-if($environment){
-    $reportParams.filters = @($reportParams.filters + $environmentFilter)
-}
-if($replicationOnly){
-    $reportParams.filters = @($reportParams.filters + $replicationFilter)
-}
-if($dbg){
-    $reportParams | toJson
-}
+    $columns = $csv[0].PSObject.properties.name 
 
-$request = api post -reportingV2 "reports/requests" $reportParams
-if(! $request.PSObject.Properties['id']){
-    exit 1
-}
+    # exclude environments
+    if($excludeEnvironment){
+        $csv = $csv | Where-Object environment -notin $excludeEnvironment
+    }
 
-$finishedStates = @('Succeeded', 'Canceled', 'Failed', 'Warning', 'SucceededWithWarning')
+    foreach($epochColumn in $epochColumns){
+        $csv | Where-Object {$_.PSObject.Properties[$epochColumn] -and $_.$epochColumn -ne $null -and $_.$epochColumn -ne 0} | ForEach-Object{
+            $_.$epochColumn = usecsToDate $($_.$epochColumn)
+        }
+    }
 
-# Wait for report to generate
-Write-Host "Waiting for report to generate..."
-while($True){   
-    Start-Sleep $sleepTimeSeconds
-    $thisRequest = (api get -reportingV2 "reports/requests").requests | Where-Object id -eq $request.id
-    if($thisRequest.status -in $finishedStates){
-        break
+    # convert usecs to seconds
+    $usecColumns = @('durationUsecs', 'totalDisconnectedTimeUsecs')
+    $usecColumnRenames = @{'durationUsecs' = 'durationSeconds'}
+    foreach($usecColumn in $usecColumns){
+        $csv | Where-Object {$_.PSObject.Properties[$usecColumn]} | ForEach-Object{
+            $_.$usecColumn = [int]($_.$usecColumn / 1000000)
+        }
+    }
+
+    # merge ranges
+    if($ranges.Count -gt 1){
+        # merge protected objects
+        if($reportName -eq 'protected objects'){
+            $newCSV = @()
+            $groups = $csv | Group-Object -Property {$_.system}, {$_.sourceName}, {$_.objectType}, {$_.objectName} # , {$_.groupName}
+            foreach($group in $groups){
+                $records = $group.group | Sort-Object -Property lastRunTime
+                $primaryRecord = $records[-1]
+                $primaryRecord.numSuccessfulBackups = ($records.numSuccessfulBackups | Measure-Object -sum).sum
+                $primaryRecord.numUnsuccessfulBackups = ($records.numUnsuccessfulBackups | Measure-Object -sum).sum
+                $newCSV = @($newCSV + $primaryRecord)
+            }
+            $csv = $newCSV
+        }
+        # merge failures
+        if($reportName -eq 'failures'){
+            $newCSV = @()
+            $groups = $csv | Group-Object -Property {$_.system}, {$_.sourceName}, {$_.objectType}, {$_.objectName} # , {$_.groupName}
+            foreach($group in $groups){
+                $records = $group.group | Sort-Object -Property lastFailedRunUsecs
+                $primaryRecord = $records[-1]
+                $primaryRecord.failedBackups = ($records.failedBackups | Measure-Object -sum).sum
+                $newCSV = @($newCSV + $primaryRecord)
+            }
+            $csv = $newCSV
+        }
+        # merge protected / unprotected objects
+        if($reportName -eq 'protected / unprotected objects'){
+            $newCSV = @()
+            $groups = $csv | Group-Object -Property {$_.systems}, {$_.sourceName}, {$_.objectType}, {$_.environment}, {$_.objectName}
+            foreach($group in $groups){
+                $records = $group.group
+                $primaryRecord = $records[0]
+                $newCSV = @($newCSV + $primaryRecord)
+            }
+            $csv = $newCSV
+        }
+        # merge protection group summary
+        if($reportName -eq 'protection group summary'){
+            $newCSV = @()
+            $groups = $csv | Group-Object -Property {$_.system}, {$_.sourceEnvironment}, {$_.groupName}
+            foreach($group in $groups){
+                $records = $group.group | Sort-Object -Property lastRunTimeUsecs
+                $primaryRecord = $records[-1]
+                $primaryRecord.successfulBackups = ($records.successfulBackups | Measure-Object -sum).sum
+                $primaryRecord.failedBackups = ($records.failedBackups | Measure-Object -sum).sum
+                $primaryRecord.dataIngestBytes = ($records.dataIngestBytes | Measure-Object -sum).sum
+                $newCSV = @($newCSV + $primaryRecord)
+            }
+            $csv = $newCSV
+        }
+    }
+    if($x -eq 0){
+        $csv | Export-CSV -Path $csvFileName
+        $x = 1
+    }else{
+        $csv | Export-CSV -Path $csvFileName -Append
     }
 }
 
-# Download CSV
-Write-Host "Report generation $($thisRequest.status)"
-if($thisRequest.status -ne 'Succeeded'){
-    exit 1
-}
-fileDownload -fileName "report-tmp.zip" -uri "https://helios.cohesity.com/heliosreporting/api/v1/public/reports/requests/$($thisRequest.id)/artifacts/CSV"
-Expand-Archive -Path "report-tmp.zip"
-Remove-Item -Path "report-tmp.zip"
-
-$csv = Import-CSV -Path "report-tmp/$($report.id)_$(usecsToDate $thisRequest.submittedAtTimestampUsecs -format "yyyy-MM-d_Hm").csv"
-$columns = $csv[0].PSObject.properties.name 
-
-# exclude environments
-if($excludeEnvironment){
-    $csv = $csv | Where-Object environment -notin $excludeEnvironment
-}
-
-# Convert timestamps to dates
-$epochColumns = @('lastRunTime', 
-                  'lastSuccessfulBackup', 
-                  'endTimeUsecs',
-                  'startTimeUsecs', 
-                  'runStartTimeUsecs', 
-                  'recoveryPointUsecs',
-                  'lastFailedRunUsecs',
-                  'lastRunTimeUsecs',
-                  'lastDisconnectionTimestampUsecs')
-foreach($epochColumn in $epochColumns){
-    $csv | Where-Object {$_.PSObject.Properties[$epochColumn] -and $_.$epochColumn -ne $null -and $_.$epochColumn -ne 0} | ForEach-Object{
-        $_.$epochColumn = usecsToDate $($_.$epochColumn)
-    }
-}
-
-# convert usecs to seconds
-$usecColumns = @('durationUsecs', 'totalDisconnectedTimeUsecs')
-$usecColumnRenames = @{'durationUsecs' = 'durationSeconds'}
-foreach($usecColumn in $usecColumns){
-    $csv | Where-Object {$_.PSObject.Properties[$usecColumn]} | ForEach-Object{
-        $_.$usecColumn = [int]($_.$usecColumn / 1000000)
-    }
-}
-
-$csv | Export-CSV -Path $csvFileName
 Write-Host "`nCSV output saved to $csvFileName`n"
-Remove-Item -Path "report-tmp" -Recurse

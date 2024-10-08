@@ -10,7 +10,7 @@ param (
     [Parameter()][int]$days = 7,
     [Parameter()][int]$dayRange = 180,
     [Parameter()][array]$clusterNames,
-    [Parameter()][string]$reportName = 'Protection Runs',
+    [Parameter(Mandatory = $True)][string]$reportName = 'Protection Runs',
     [Parameter()][string]$timeZone = 'America/New_York',
     [Parameter()][string]$outputPath = '.',
     [Parameter()][switch]$includeCCS,
@@ -49,10 +49,12 @@ function gatherList($Param=$null, $FilePath=$null, $Required=$True, $Name='items
 # authenticate
 apiauth -vip $vip -username $username -domain 'local' -helios -entraIdAuthentication $EntraId
 
-$allClusters = heliosClusters
+# $allClusters = heliosClusters
+$allClusters = (api get -mcmv2 cluster-mgmt/info).cohesityClusters
 $regions = api get -mcmv2 dms/regions
 if($includeCCS){
     foreach($region in $regions.regions){
+        setApiProperty -object $region -name 'clusterName' -Value $region.name
         $allClusters = @($allClusters + $region)
     }
 }
@@ -60,8 +62,8 @@ if($includeCCS){
 # select clusters to include
 $selectedClusters = $allClusters
 if($clusterNames.length -gt 0){
-    $selectedClusters = $allClusters | Where-Object {$_.name -in $clusterNames -or $_.id -in $clusterNames}
-    $unknownClusters = $clusterNames | Where-Object {$_ -notin @($allClusters.name) -and $_ -notin @($allClusters.id)}
+    $selectedClusters = $allClusters | Where-Object {$_.clusterName -in $clusterNames -or $_.clusterId -in $clusterNames}
+    $unknownClusters = $clusterNames | Where-Object {$_ -notin @($allClusters.clusterName) -and $_ -notin @($allClusters.clusterId)}
     if($unknownClusters){
         Write-Host "Clusters not found:`n $($unknownClusters -join ', ')" -ForegroundColor Yellow
         exit
@@ -166,6 +168,7 @@ $title = $report.title
 
 # output files
 $csvFileName = $(Join-Path -Path $outputPath -ChildPath "$($title.replace('/','-').replace('\','-'))_$($start)_$($end).csv")
+$tmpCsv =  $(Join-Path -Path $outputPath -ChildPath "tmpCsv")
 
 $gotHeadings = $False
 $headings = @()
@@ -178,17 +181,16 @@ $sortColumn = ''
 $sortDecending = $False
 
 $x = 0
-foreach($cluster in ($selectedClusters)){
-    $csv = @()
-    if($cluster.name -in @($regions.regions.name)){
+foreach($cluster in $selectedClusters | Sort-Object -Property clusterName){
+    $y = 0
+    if($cluster.clusterName -in @($regions.regions.name)){
         $systemId = $cluster.id
     }else{
         $systemId = "$($cluster.clusterId):$($cluster.clusterIncarnationId)"
     }
-    Write-Host "$($cluster.name) " -NoNewline
+    Write-Host "$($cluster.clusterName) " -NoNewline
   
     foreach($range in $ranges){
-        $csvlines = @()
         $reportParams = @{
             "filters"  = @(
                 @{
@@ -204,14 +206,14 @@ foreach($cluster in ($selectedClusters)){
                     "filterType" = "Systems";
                     "systemsFilterParams" = @{
                         "systemIds" = @("$systemId");
-                        "systemNames" = @("$($cluster.name)")
+                        "systemNames" = @("$($cluster.clusterName)")
                     }
                 }
             );
             "sort"     = $null;
             "timezone" = $timeZone;
             "limit"    = @{
-                "size" = 50000;
+                "size" = 100000;
             }
         }
         if($excludeLogs){
@@ -228,7 +230,7 @@ foreach($cluster in ($selectedClusters)){
         }
         $preview = api post -reportingV2 "components/$reportNumber/preview" $reportParams -TimeoutSec $timeoutSeconds
         Write-Host "($($preview.component.data.Count) rows)" 
-        if($preview.component.data.Count -eq 50000){
+        if($preview.component.data.Count -eq 100000){
             Write-Host "Hit limit of records. Try reducing -dayRange (e.g. -dayRange 1)" -ForegroundColor Yellow
             exit
         }
@@ -250,8 +252,20 @@ foreach($cluster in ($selectedClusters)){
         if(!$gotHeadings -and $x -eq 0){
             $attributes.attributeName -join ',' | Out-File -FilePath $csvFileName
         }
-        $csv = @($csv + $preview.component.data)
+
+        if($y -eq 0){
+            $preview.component.data | Export-CSV -Path $tmpCsv
+            $y = 1
+        }else{
+            $preview.component.data | Export-CSV -Path $tmpCsv -Append
+        }
     }
+    $csv = Import-CSV -Path $tmpCsv
+    Remove-Item -Path $tmpCsv -force
+    if($csv.Count -eq 0){
+        continue
+    }
+
     foreach($column in $attributes.attributeName){
         $csv | ForEach-Object{
             if($_.$column -is [System.Array]){

@@ -19,7 +19,6 @@
 
 * [protectLinux.ps1](https://github.com/cohesity/community-automation-samples/tree/main/powershell/protectLinux) [`Fix`] removed deprecated properties
 * [protectLinux.py](https://github.com/cohesity/community-automation-samples/tree/main/python/protectLinux) [`Fix`] removed deprecated properties
-* [protectLinux.py]()
 
 ## 2024-10-03
 

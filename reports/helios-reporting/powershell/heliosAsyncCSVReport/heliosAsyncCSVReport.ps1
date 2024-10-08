@@ -48,10 +48,11 @@ function gatherList($Param=$null, $FilePath=$null, $Required=$True, $Name='items
 # authenticate
 apiauth -vip $vip -username $username -domain 'local' -helios -entraIdAuthentication $EntraId
 
-$allClusters = heliosClusters
+$allClusters = (api get -mcmv2 cluster-mgmt/info).cohesityClusters
 $regions = api get -mcmv2 dms/regions
 if($includeCCS){
     foreach($region in $regions.regions){
+        setApiProperty -object $region -name 'clusterName' -Value $region.name
         $allClusters = @($allClusters + $region)
     }
 }
@@ -59,11 +60,11 @@ if($includeCCS){
 # select clusters to include
 $selectedClusters = $allClusters
 if($clusterNames.length -gt 0){
-    $selectedClusters = $allClusters | Where-Object {$_.name -in $clusterNames -or $_.id -in $clusterNames}
-    $unknownClusters = $clusterNames | Where-Object {$_ -notin @($allClusters.name) -and $_ -notin @($allClusters.id)}
+    $selectedClusters = $allClusters | Where-Object {$_.clusterName -in $clusterNames -or $_.clusterId -in $clusterNames}
+    $unknownClusters = $clusterNames | Where-Object {$_ -notin @($allClusters.clusterName) -and $_ -notin @($allClusters.clusterId)}
     if($unknownClusters){
         Write-Host "Clusters not found:`n $($unknownClusters -join ', ')" -ForegroundColor Yellow
-        exit 1
+        exit
     }
 }
 
@@ -181,12 +182,12 @@ $tmpCsv =  $(Join-Path -Path $outputPath -ChildPath "tmpCsv")
 $x = 0
 foreach($cluster in ($selectedClusters)){
     $y = 0
-    if($cluster.name -in @($regions.regions.name)){
+    if($cluster.clusterName -in @($regions.regions.name)){
         $systemId = $cluster.id
     }else{
         $systemId = "$($cluster.clusterId):$($cluster.clusterIncarnationId)"
     }
-    Write-Host "$($cluster.name) " -NoNewline
+    Write-Host "$($cluster.clusterName) " -NoNewline
   
     foreach($range in $ranges){
         $reportParams = @{
@@ -209,7 +210,7 @@ foreach($cluster in ($selectedClusters)){
                     "filterType" = "Systems";
                     "systemsFilterParams" = @{
                         "systemIds" = @("$systemId");
-                        "systemNames" = @("$($cluster.name)")
+                        "systemNames" = @("$($cluster.clusterName)")
                     }
                 }
             );

@@ -1,7 +1,29 @@
 # Change Log for cohesity/community-automation-samples
 
+## 2024-10-08
+
+* [heliosAsyncCSVReport.ps1] [`New`] async reporting script
+* [heliosCSVReport.ps1] [`Update`] scalability improvements
+* [deployCCSWindowsAgent.ps1] [`Update`] set default install to agaent only (no CBT drivers)
+
+## 2024-10-07
+
+* [jobFailures.py](https://github.com/cohesity/community-automation-samples/tree/main/reports/python/jobFailures) [`Update`] added support for Helios authentication
+* [protectOracle.py](https://github.com/cohesity/community-automation-samples/tree/main/oracle/python/protectOracle) [`Fix`] catch DB not found errors
+
+## 2024-10-05
+
+* [clusterInfo.py](https://github.com/cohesity/community-automation-samples/tree/main/python/clusterInfo) [`Update`] added support for Helios authentication
+
+## 2024-10-04
+
+* [protectLinux.ps1](https://github.com/cohesity/community-automation-samples/tree/main/powershell/protectLinux) [`Fix`] removed deprecated properties
+* [protectLinux.py](https://github.com/cohesity/community-automation-samples/tree/main/python/protectLinux) [`Fix`] removed deprecated properties
+* [protectLinux.py]()
+
 ## 2024-10-03
 
+* [cloneVM.ps1](https://github.com/cohesity/community-automation-samples/tree/main/powershell/cloneVM) [`Update`] added support for multiple VMs
 * [clusterProtectionRuns.py](https://github.com/cohesity/community-automation-samples/tree/main/reports/python/clusterProtectionRuns) [`Update`] added output file/path parameters, object name filters, tag column
 
 ## 2024-10-02

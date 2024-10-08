@@ -18,7 +18,8 @@ param (
     [Parameter()][switch]$sqlCluster,
     [Parameter()][string]$serviceAccount = $null,
     [Parameter()][string]$filePath,
-    [Parameter()][string]$saasConnector = $null
+    [Parameter()][string]$saasConnector = $null,
+    [Parameter()][string]$installType = 'onlyagent'
 )
 
 if($register -and !$saasConnector){
@@ -116,7 +117,7 @@ foreach ($server in $servers){
         $null = Invoke-Command -Computername $server -ArgumentList $remoteFilePath -ScriptBlock {
             param($remoteFilePath)
             if (! $(Get-Service | Where-Object { $_.Name -eq 'CohesityAgent' })) {
-                ([WMICLASS]"\\localhost\ROOT\CIMV2:win32_process").Create("$remoteFilePath /verySilent /norestart /type=onlyagent")
+                ([WMICLASS]"\\localhost\ROOT\CIMV2:win32_process").Create("$remoteFilePath /verySilent /norestart /type=$installType")
                 New-NetFirewallRule -DisplayName 'Cohesity Agent' -Profile 'Domain' -Direction Inbound -Action Allow -Protocol TCP -LocalPort 50051
             }
         }

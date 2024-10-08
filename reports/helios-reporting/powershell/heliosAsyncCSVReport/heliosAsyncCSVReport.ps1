@@ -16,10 +16,11 @@ param (
     [Parameter()][switch]$includeCCS,
     [Parameter()][array]$environment,
     [Parameter()][array]$excludeEnvironment,
+    [Parameter()][switch]$excludeLogs,
     [Parameter()][int]$timeoutSeconds = 300,
     [Parameter()][int]$sleepTimeSeconds = 15,
     [Parameter()][switch]$dbg
-) # [Parameter()][switch]$excludeLogs, [Parameter()][switch]$replicationOnly,
+) #  [Parameter()][switch]$replicationOnly,
 
 # gather list from command line params and file
 function gatherList($Param=$null, $FilePath=$null, $Required=$True, $Name='items'){
@@ -180,7 +181,7 @@ $csvFileName = $(Join-Path -Path $outputPath -ChildPath "$($title.replace('/','-
 $tmpCsv =  $(Join-Path -Path $outputPath -ChildPath "tmpCsv")
 
 $x = 0
-foreach($cluster in ($selectedClusters)){
+foreach($cluster in ($selectedClusters | Sort-Object -Property clusterName)){
     $y = 0
     if($cluster.clusterName -in @($regions.regions.name)){
         $systemId = $cluster.id
@@ -254,7 +255,7 @@ foreach($cluster in ($selectedClusters)){
         
         if($thisRequest.status -ne 'Succeeded'){
             Write-Host " ** Report generation $($thisRequest.status)"
-            $thisRequest | toJson
+            # $thisRequest | toJson
             continue
         }
         fileDownload -fileName "report-tmp.zip" -uri "https://helios.cohesity.com/heliosreporting/api/v1/public/reports/requests/$($thisRequest.id)/artifacts/CSV"
@@ -272,6 +273,9 @@ foreach($cluster in ($selectedClusters)){
         Remove-Item -Path "report-tmp" -Recurse
     }
 
+    if(!(Test-Path -Path $tmpCsv -PathType Leaf)){
+        continue
+    }
     $csv = Import-CSV -Path $tmpCsv
     Remove-Item -Path $tmpCsv -force
     if($csv.Count -eq 0){

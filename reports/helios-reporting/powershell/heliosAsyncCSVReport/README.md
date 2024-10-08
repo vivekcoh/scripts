@@ -45,11 +45,14 @@ Place all files in a folder together, then run the main script like so:
 * -timeZone: (optional) default is 'America/New_York',
 * -outputPath: (optional) path to write output files (default is '.')
 * -includeCCS: (optional) include CCS region data
-* -excludeLogs: (optional) skip backup type kLog
 * -environment: (optional) one or more (comma separated) environments to include (e.g. kSQL, kO365)
 * -excludeEnvironment: (optional) one or more (comma separated) environments to exclude (e.g. kSQL, kO365)
-* -replicationOnly: (optional) filter protection activities report to show replication tasks only
 * -timeoutSeconds: (optional) time to wait for API response before timeout (default is 600)
+
+## Deprecated Parameters (no longer included)
+
+* -excludeLogs: (optional) skip backup type kLog
+* -replicationOnly: (optional) filter protection activities report to show replication tasks only
 
 ## Authenticating to Helios
 

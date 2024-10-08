@@ -14,14 +14,12 @@ param (
     [Parameter()][string]$timeZone = 'America/New_York',
     [Parameter()][string]$outputPath = '.',
     [Parameter()][switch]$includeCCS,
-    [Parameter()][switch]$excludeLogs,
     [Parameter()][array]$environment,
     [Parameter()][array]$excludeEnvironment,
-    [Parameter()][switch]$replicationOnly,
     [Parameter()][int]$timeoutSeconds = 300,
     [Parameter()][int]$sleepTimeSeconds = 15,
     [Parameter()][switch]$dbg
-)
+) # [Parameter()][switch]$excludeLogs, [Parameter()][switch]$replicationOnly,
 
 # gather list from command line params and file
 function gatherList($Param=$null, $FilePath=$null, $Required=$True, $Name='items'){
@@ -178,10 +176,11 @@ $title = $report.title
 
 # output files
 $csvFileName = $(Join-Path -Path $outputPath -ChildPath "$($title.replace('/','-').replace('\','-'))_$($start)_$($end).csv")
+$tmpCsv =  $(Join-Path -Path $outputPath -ChildPath "tmpCsv")
 
 $x = 0
 foreach($cluster in ($selectedClusters)){
-    $csv = @()
+    $y = 0
     if($cluster.name -in @($regions.regions.name)){
         $systemId = $cluster.id
     }else{
@@ -215,7 +214,10 @@ foreach($cluster in ($selectedClusters)){
                 }
             );
             "timezone" = $timeZone;
-            "notificationParams" = $null
+            "notificationParams" = $null;
+            "limit"    = @{
+                "size" = 100000;
+            }
         }
         
         if($excludeLogs){
@@ -251,17 +253,29 @@ foreach($cluster in ($selectedClusters)){
         
         if($thisRequest.status -ne 'Succeeded'){
             Write-Host " ** Report generation $($thisRequest.status)"
+            $thisRequest | toJson
             continue
         }
         fileDownload -fileName "report-tmp.zip" -uri "https://helios.cohesity.com/heliosreporting/api/v1/public/reports/requests/$($thisRequest.id)/artifacts/CSV"
         Expand-Archive -Path "report-tmp.zip" -force
         Remove-Item -Path "report-tmp.zip" -force
         $thisCsv = Import-CSV -Path "report-tmp/$($report.id)_$(usecsToDate $thisRequest.submittedAtTimestampUsecs -format "yyyy-MM-d_Hm").csv"
+        if($y -eq 0){
+            $thisCsv | Export-CSV -Path $tmpCsv
+            $y = 1
+        }else{
+            $thisCsv | Export-CSV -Path $tmpCsv -Append
+        }
         $csv = @($csv + $thisCsv)
         Write-Host "($($thisCsv.Count) rows)"
         Remove-Item -Path "report-tmp" -Recurse
     }
 
+    $csv = Import-CSV -Path $tmpCsv
+    Remove-Item -Path $tmpCsv -force
+    if($csv.Count -eq 0){
+        continue
+    }
     $columns = $csv[0].PSObject.properties.name 
 
     # exclude environments

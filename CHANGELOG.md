@@ -1,5 +1,9 @@
 # Change Log for cohesity/community-automation-samples
 
+## 2024-10-09
+
+* [vssSnapshot](https://github.com/cohesity/community-automation-samples/tree/main/windows/vssSnapshot) [`New`] Pre and Post scripts to create VSS snapshots for physical file-based protection groups
+
 ## 2024-10-08
 
 * [heliosAsyncCSVReport.ps1] [`New`] async reporting script

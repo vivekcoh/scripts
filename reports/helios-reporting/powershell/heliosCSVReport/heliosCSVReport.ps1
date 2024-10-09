@@ -180,6 +180,7 @@ $epochColums = @()
 $sortColumn = ''
 $sortDecending = $False
 
+$date1 = Get-Date
 $x = 0
 foreach($cluster in $selectedClusters | Sort-Object -Property clusterName){
     $y = 0
@@ -228,8 +229,11 @@ foreach($cluster in $selectedClusters | Sort-Object -Property clusterName){
         if($dbg){
             $reportParams | toJson
         }
+        $dt1 = Get-Date
         $preview = api post -reportingV2 "components/$reportNumber/preview" $reportParams -TimeoutSec $timeoutSeconds
-        Write-Host "($($preview.component.data.Count) rows)" 
+        $dt2 = Get-Date
+        $seconds = [math]::Round(($dt2 - $dt1).totalSeconds)
+        Write-Host " ($($preview.component.data.Count) rows - $seconds secs)" 
         if($preview.component.data.Count -eq 100000){
             Write-Host "Hit limit of records. Try reducing -dayRange (e.g. -dayRange 1)" -ForegroundColor Yellow
             exit
@@ -359,5 +363,8 @@ foreach($cluster in $selectedClusters | Sort-Object -Property clusterName){
         $csv | Export-CSV -Path $csvFileName -Append
     }
 }
+$date2 = Get-Date
+$reportSeconds = ($date2 - $date1).totalSeconds
+Write-Host "`nTotal time: $([math]::Round($reportSeconds)) seconds"
 
 Write-Host "`nCSV output saved to $csvFileName`n"

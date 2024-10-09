@@ -17,7 +17,7 @@ Note: free space must be present on the volumes for snapshots to be created.
 
 1. Install the Cohesity Agent.
 
-2. If a local firewall is running on the Linux host, ensure that port 50051/tcp is open for inbound connections from the Cohesity cluster.
+2. If a local firewall is running on the Linux host, ensure that port `50051/tcp` is open for inbound connections from the Cohesity cluster.
 
 3. Copy the scripts into the user_scripts directory under the installation directory of the Cohesity agent, typically `C:\Program Files\Cohesity\user_scripts`.
 
@@ -33,8 +33,8 @@ Note: free space must be present on the volumes for snapshots to be created.
 
 4. Under the Additional Settings section of the protection group configuration, enable pre and post scripts, with the following settings:
 
-   * Pre Script: Enabled
-   * Pre Script Path: prescript.cmd
-   * Continue Backup if Script Fails: Disabled
-   * Post Script: Enabled
-   * Post Script Path: postscript.cmd
+   * Pre Script: `Enabled`
+   * Pre Script Path: `prescript.cmd`
+   * Continue Backup if Script Fails: `Disabled`
+   * Post Script: `Enabled`
+   * Post Script Path: `postscript.cmd`

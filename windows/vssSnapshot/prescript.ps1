@@ -1,4 +1,5 @@
-$volumes = Get-Volume | Where-Object {$_.DriveLetter -ne $null -and $_.DriveType -eq 'Fixed'}
+$excludedVolumes = @('D', 'E')
+$volumes = Get-Volume | Where-Object {$_.DriveLetter -ne $null -and $_.DriveType -eq 'Fixed' -and $_.DriveLetter -notin $excludedVolumes}
 
 foreach($volume in $volumes){
     $driveLetter = $volume.DriveLetter

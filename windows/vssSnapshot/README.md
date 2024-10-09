@@ -15,13 +15,15 @@ Note: free space must be present on the volumes for snapshots to be created.
 
 ## On the Windows Host
 
-1. Install the Cohesity Agent.
+1. Install the Cohesity Agent
 
-2. If a local firewall is running on the Linux host, ensure that port `50051/tcp` is open for inbound connections from the Cohesity cluster.
+2. If a local firewall is running on the Linux host, ensure that port `50051/tcp` is open for inbound connections from the Cohesity cluster
 
-3. Copy the scripts into the user_scripts directory under the installation directory of the Cohesity agent, typically `C:\Program Files\Cohesity\user_scripts`.
+3. Copy the scripts into the user_scripts directory under the installation directory of the Cohesity agent, typically `C:\Program Files\Cohesity\user_scripts`
 
-4. Modify the scripts if necessary to correct the paths if different from the typical path mentioned above.
+4. Modify the cmd scripts if necessary to correct the paths if different from the typical path mentioned above
+
+5. Modify the ps1 scripts if necessary to exclude any drives that you do not want to snapshot
 
 ## On the Cohesity Cluster
 

@@ -217,9 +217,6 @@ foreach($cluster in ($selectedClusters | Sort-Object -Property clusterName)){
             );
             "timezone" = $timeZone;
             "notificationParams" = $null;
-            "limit"    = @{
-                "size" = 100000;
-            }
         }
         
         if($excludeLogs){
@@ -255,7 +252,7 @@ foreach($cluster in ($selectedClusters | Sort-Object -Property clusterName)){
         
         if($thisRequest.status -ne 'Succeeded'){
             Write-Host " ** Report generation $($thisRequest.status)"
-            # $thisRequest | toJson
+            $thisRequest | toJson
             continue
         }
         fileDownload -fileName "report-tmp.zip" -uri "https://helios.cohesity.com/heliosreporting/api/v1/public/reports/requests/$($thisRequest.id)/artifacts/CSV"

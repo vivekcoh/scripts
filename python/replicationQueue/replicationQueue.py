@@ -138,7 +138,7 @@ for job in sorted(jobs, key=lambda job: job['name'].lower()):
                                         runningTask['transferred'] = round(float(copyRun['stats']['physicalBytesTransferred']) / multiplier, 2)
                                     if 'copySnapshotTasks' in copyRun and copyRun['copySnapshotTasks'] is not None and len(copyRun['copySnapshotTasks']) > 0:
                                         runningTask['numSnaps'] = len(copyRun['copySnapshotTasks'])
-                                runningTasks[runStartTimeUsecs] = runningTask
+                                    runningTasks[runStartTimeUsecs] = runningTask
 
 if len(runningTasks.keys()) > 0:
     print("\n\nStart Time           Job Name")

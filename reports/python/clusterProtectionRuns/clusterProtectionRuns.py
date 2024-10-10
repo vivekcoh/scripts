@@ -10,13 +10,15 @@ import codecs
 # command line arguments
 import argparse
 parser = argparse.ArgumentParser()
-parser.add_argument('-v', '--vip', type=str, required=True, action='append')
+parser.add_argument('-v', '--vip', type=str, action='append')
 parser.add_argument('-u', '--username', type=str, required=True)
 parser.add_argument('-d', '--domain', type=str, default='local')
+parser.add_argument('-mcm', '--mcm', action='store_true')
 parser.add_argument('-i', '--useApiKey', action='store_true')
 parser.add_argument('-pwd', '--password', type=str, default=None)
 parser.add_argument('-np', '--noprompt', action='store_true')
 parser.add_argument('-m', '--mfacode', type=str, default=None)
+parser.add_argument('-c', '--clustername', action='append', type=str)
 parser.add_argument('-y', '--days', type=int, default=None)
 parser.add_argument('-x', '--unit', type=str, choices=['KiB', 'MiB', 'GiB', 'TiB'], default='GiB')
 parser.add_argument('-t', '--objecttype', type=str, default=None)
@@ -32,10 +34,12 @@ args = parser.parse_args()
 vips = args.vip
 username = args.username
 domain = args.domain
+mcm = args.mcm
 useApiKey = args.useApiKey
 password = args.password
 noprompt = args.noprompt
 mfacode = args.mfacode
+clusternames = args.clustername
 days = args.days
 unit = args.unit
 objecttype = args.objecttype
@@ -65,6 +69,9 @@ def gatherList(param=None, filename=None, name='items', required=True):
 
 objectnames = gatherList(objectnames, objectlist, name='servers', required=False)
 
+if vips is None or len(vips) == 0:
+    vips = ['helios.cohesity.com']
+
 tail = ''
 if days is not None:
     daysBackUsecs = timeAgo(days, 'days')
@@ -89,14 +96,16 @@ outfile = os.path.join(outputpath, outputfile)
 f = codecs.open(outfile, 'w')
 f.write('Start Time\tEnd Time\tDuration\tstatus\tslaStatus\tsnapshotStatus\tobjectName\tsourceName\tgroupName\tpolicyName\tObject Type\tbackupType\tSystem Name\tLogical Size %s\tData Read %s\tData Written %s\tOrganization Name\tTag\n' % (unit, unit, unit))
 
-for vip in vips:
-    # authenticate
-    apiauth(vip=vip, username=username, domain=domain, password=password, useApiKey=useApiKey, prompt=(not noprompt), mfaCode=mfacode)
+def getCluster():
 
-    # exit if not authenticated
-    if apiconnected() is False:
-        print('authentication failed')
-        continue
+    #   for vip in vips:
+    # authenticate
+    # apiauth(vip=vip, username=username, domain=domain, password=password, useApiKey=useApiKey, prompt=(not noprompt), mfaCode=mfacode)
+
+    # # exit if not authenticated
+    # if apiconnected() is False:
+    #     print('authentication failed')
+    #     continue
 
     cluster = api('get', 'cluster')
     jobs = api('get', 'data-protect/protection-groups?isDeleted=false&includeTenants=true', v=2)
@@ -104,7 +113,7 @@ for vip in vips:
     policies = api('get', 'data-protect/policies', v=2)
 
     if jobs['protectionGroups'] is None:
-        continue
+        return
 
     for job in sorted(jobs['protectionGroups'], key=lambda job: job['name'].lower()):
 
@@ -192,5 +201,28 @@ for vip in vips:
                                             f.write('%s\t%s\t%s\t%s\t%s\tActive\t%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\n' % (objectStartTime, objectEndTime, objectDurationSeconds, objectStatus, slaStatus, objectName, registeredSourceName, job['name'], policyName, environment, runType, cluster['name'], objectLogicalSizeBytes, objectBytesRead, objectBytesWritten, tenant, tag))
                     except Exception:
                         pass
+
+for vip in vips:
+
+    # authentication =========================================================
+    apiauth(vip=vip, username=username, domain=domain, password=password, useApiKey=useApiKey, helios=mcm, prompt=(not noprompt), mfaCode=mfacode, quiet=True)
+
+    # exit if not authenticated
+    if apiconnected() is False:
+        print('authentication failed')
+        continue
+
+    # if connected to helios or mcm, select access cluster
+    if mcm or vip.lower() == 'helios.cohesity.com':
+        if clusternames is None or len(clusternames) == 0:
+            clusternames = [c['name'] for c in heliosClusters()]
+        for clustername in clusternames:
+            heliosCluster(clustername)
+            if LAST_API_ERROR() != 'OK':
+                continue
+            getCluster()
+    else:
+        getCluster()
+
 f.close()
 print('\nOutput saved to %s\n' % outfile)

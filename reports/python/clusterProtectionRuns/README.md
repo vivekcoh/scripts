@@ -29,11 +29,21 @@ Place both files in a folder together and run the main script like so:
 # end example
 ```
 
+Or via Helios
+
+```bash
+# example
+./clusterProtectionRuns.py -u myusername
+# end example
+```
+
 ## Authentication Parameters
 
 * -v, --vip: one or more DNS or IP of the Cohesity cluster to connect to (repeat for multiple)
 * -u, --username: username to authenticate to Cohesity cluster
 * -d, --domain: (optional) domain of username, defaults to local
+* -mcm, --mcm: (optional) connect through MCM
+* -c, --clustername: (optional) helios/mcm cluster to connect to (repeat for multiple)
 * -i, --useApiKey: (optional) use API Key authentication
 * -pwd, --password: (optional) specify password or API key
 * -np, --noprompt: (optional) do not prompt for password

@@ -39,6 +39,7 @@ Place both files in a folder together and run the main script like so:
 * -policyName: name of protection policy to use
 * -objectNames: (optional) one or more site names or web URLs (comma separated)
 * -objectList: (optional) text file of site names or web URLs (one per line)
+* -objectMatch: (optional) regex pattern match sites to protect e.g. '.*-Team-Site'
 * -autoselect: (optional) protect first X unprotected sites (unspecified)
 * -startTime: (optional) e.g. '18:30' (defaults to 8PM)
 * -timeZone: (optional) e.g. 'America/New_York' (default is 'America/New_York')

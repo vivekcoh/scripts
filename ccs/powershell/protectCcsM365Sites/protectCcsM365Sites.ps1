@@ -1,12 +1,13 @@
 # process commandline arguments
 [CmdletBinding()]
 param (
-    [Parameter()][string]$username = 'Ccs',
+    [Parameter()][string]$username = 'DMaaS',
     [Parameter(Mandatory = $True)][string]$region,
     [Parameter(Mandatory = $True)][string]$policyName = '',  # protection policy name
     [Parameter(Mandatory = $True)][string]$sourceName,  # name of registered O365 source
     [Parameter()][array]$objectNames,  # optional names of sites protect
     [Parameter()][string]$objectList = '',  # optional textfile of sites to protect
+    [Parameter()][string]$objectMatch,
     [Parameter()][int]$autoselect = 0,
     [Parameter()][string]$startTime = '20:00',  # e.g. 23:30 for 11:30 PM
     [Parameter()][string]$timeZone = 'America/New_York', # e.g. 'America/New_York'
@@ -38,7 +39,7 @@ function gatherList($Param=$null, $FilePath=$null, $Required=$True, $Name='items
 
 $objectsToAdd = @(gatherList -Param $objectNames -FilePath $objectList -Name 'sites' -Required $False)
 
-if($objectsToAdd.Count -eq 0 -and $autoselect -eq 0){
+if($objectsToAdd.Count -eq 0 -and $autoselect -eq 0 -and ! $objectMatch){
     Write-Host "No sites specified" -ForegroundColor Yellow
     exit
 }
@@ -108,14 +109,23 @@ while(1){
     }
 }
 
-$useIds = $false
 if($objectsToAdd.Count -eq 0){
     $useIds = $True
-    if($autoselect -gt $unprotectedIndex.Count){
-        $autoselect = $unprotectedIndex.Count
-    }
-    0..($autoselect - 1) | ForEach-Object {
-        $objectsToAdd = @($objectsToAdd + $unprotectedIndex[$_])
+    if($objectMatch){
+        $webUrlIndex.Keys | Where-Object {$_ -match $objectMatch -and $webUrlIndex[$_] -in $unprotectedIndex} | ForEach-Object{
+            $objectsToAdd = @($objectsToAdd + $webUrlIndex[$_])
+        }
+        $nameIndex.Keys | Where-Object {$_ -match $objectMatch -and $webUrlIndex[$_] -in $unprotectedIndex} | ForEach-Object{
+            $objectsToAdd = @($objectsToAdd + $nameIndex[$_])
+        }
+        $objectsToAdd = @($objectsToAdd | Sort-Object -Unique)
+    }else{
+        if($autoselect -gt $unprotectedIndex.Count){
+            $autoselect = $unprotectedIndex.Count
+        }
+        0..($autoselect - 1) | ForEach-Object {
+            $objectsToAdd = @($objectsToAdd + $unprotectedIndex[$_])
+        }
     }
 }
 
@@ -126,7 +136,7 @@ foreach($objName in $objectsToAdd){
         $objName = $idIndex["$objId"]
     }else{
         if($webUrlIndex.ContainsKey($objName)){
-            $objId = $wevUrlIndex[$objName]
+            $objId = $webUrlIndex[$objName]
         }elseif($nameIndex.ContainsKey($objName)){
             $objId = $nameIndex[$objName]
         }
@@ -177,7 +187,7 @@ foreach($objName in $objectsToAdd){
             )
         }
         Write-Host "Protecting $objName"
-        $null = api post -v2 data-protect/protected-objects $protectionParams # -region $regionId
+        # $null = api post -v2 data-protect/protected-objects $protectionParams # -region $regionId
     }elseif($objId -and $objId -notin $unprotectedIndex){
         Write-Host "Site $objName already protected" -ForegroundColor Magenta
     }else{

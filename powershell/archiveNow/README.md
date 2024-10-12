@@ -2,7 +2,7 @@
 
 Warning: this code is provided on a best effort basis and is not in any way officially supported or sanctioned by Cohesity. The code is intentionally kept simple to retain value as example code. The code in this repository is provided as-is and the author accepts no liability for damages resulting from its use.
 
-This powershell script archives the oldest local snapshot that matches the specified criteria to an external target.
+This powershell script archives the latest snapshot of all (or selected) jobs to the specified criteria to an external target.
 
 ## Download the script
 
@@ -26,38 +26,48 @@ Place both files in a folder together, then we can run the script like so:
 
 ```powershell
 ./archiveNow.ps1 -vip mycluster `
-                 -username myuser `
-                 -domain mydomain.net `
-                 -jobNames 'NAS Backup', 'SQL Backup' `
-                 -vault s3 `
-                 -keepFor 180 `
-                 -commit
+                        -username myuser `
+                        -domain mydomain.net `
+                        -jobNames 'NAS Backup', 'SQL Backup' `
+                        -vault s3 `
+                        -keepFor 180 `
+                        -commit
 ```
 
-```text
-Connected!
-NAS Backup (04/18/2020 01:20:02) --> S3 (07/17/2020 01:20:02)
-SQL Backup (04/17/2020 23:00:01) --> S3 (07/16/2020 23:00:01)
+Connecting via Helios:
+
+```powershell
+./archiveNow.ps1 -clusterName mycluster `
+                        -jobNames 'NAS Backup', 'SQL Backup' `
+                        -vault s3 `
+                        -keepFor 180 `
+                        -commit
 ```
 
-## Parameters
+## Authentication Parameters
 
-* -vip: Cohesity Cluster to connect to
-* -username: Cohesity username
-* -domain: (optional) Active Directory domain of user (defaults to local)
-* -jobNames: one or more job names (comma separated)
+* -vip: (optional) name or IP of Cohesity cluster (defaults to helios.cohesity.com)
+* -username: (optional) name of user to connect to Cohesity (defaults to helios)
+* -domain: (optional) your AD domain (defaults to local)
+* -useApiKey: (optional) use API key for authentication
+* -password: (optional) will use cached password or will be prompted
+* -noPrompt: (optional) do not prompt for password
+* -tenant: (optional) organization to impersonate
+* -mcm: (optional) connect through MCM
+* -mfaCode: (optional) TOTP MFA code
+* -clusterName: (optional) cluster to connect to when connecting through Helios or MCM
+
+## Other Parameters
+
+* -commit: (optional) execute the archive tasks (default is to show what would happen)
+* -keepFor: number of days (from original backup date) to retain the archive
 * -vault: name of external target to archive to
 * -vaultType: (optional) type of archive target (kCloud, kTape, kNas - defaults to kCloud)
-* -dayOfYear: (optional) day of year for yearly snapshot (1 = Jan 1, -1 = Dec 31)
-* -dayOfMonth: (optional) day of month for monthly snapshot (1 = 1st day of month, -1 = last day of month)
-* -dayOfWeek: (optional) day of Week for weekly snapshot (e.g. Sunday)
-* -firstOfMonth: (optional) only archive on the first dayOfWeek of the month (e.g. first Saturday)
-* -runId: (optional) archive a specific job run ID
-* -keepFor: number of days (from original backup date) to retain the archive
-* -pastSearchDays: (optional) number of days back to seach for snapshots to archive (default is 31)
-* -maxDrift: (optional) if snapshot failed on desired day, try the next X days (default is 3)
+* -jobName: (optional) one or more job names (comma separated), default is all jobs
+* -jobList: (optional) text file of job names (one per line), default is all jobs
 * -localOnly: (optional) archive only jobs local to this cluster
-* -commit: (optional) execute the archive tasks (default is to show what would happen)
+* -fullOnly: (optional) only archive full protection runs (not incremental)
+* -numRuns: (optional) number of runs to review per job (default is 20)
 
 ## Running and Scheduling PowerShell Scripts
 

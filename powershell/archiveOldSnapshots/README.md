@@ -2,7 +2,7 @@
 
 Warning: this code is provided on a best effort basis and is not in any way officially supported or sanctioned by Cohesity. The code is intentionally kept simple to retain value as example code. The code in this repository is provided as-is and the author accepts no liability for damages resulting from its use.
 
-This powershell script archives local snapshots older than x days. This is useful if you have created an archive target (e.g. AWS S3) and want to programatically archive existing local snapshots.
+This powershell script archives local snapshots. This is useful if you have created an archive target (e.g. AWS S3) and want to programatically archive existing local snapshots.
 
 ## Download the script
 
@@ -35,17 +35,6 @@ First, run the script WITHOUT the -archive switch to see what would be archived.
                           -keepFor 365
 ```
 
-```text
-searching for old SQL Backup snapshots...
-SQL Backup: would archive 12/11/2019 01:00:01 until 2019-12-16
-SQL Backup: would archive 12/12/2019 01:00:01 until 2019-12-17
-SQL Backup: would archive 12/13/2019 01:00:01 until 2019-12-18
-searching for old NAS Backup snapshots...
-NAS Backup: would archive 12/11/2019 01:20:00 until 2019-12-16
-NAS Backup: would archive 12/12/2019 01:20:01 until 2019-12-17
-NAS Backup: would archive 12/13/2019 01:20:01 until 2019-12-18
-```
-
 Then, if you're happy with the list of snapshots that will be archived, run the script again and include the -archive switch. This will execute the archive tasks
 
 ```powershell
@@ -59,11 +48,21 @@ Then, if you're happy with the list of snapshots that will be archived, run the 
                           -includeLogs
 ```
 
-## Parameters
+## Authentication Parameters
 
-* -vip: Cohesity Cluster to connect to
-* -username: Cohesity username
-* -domain: (optional) Cohesity logon domain (defaults to local)
+* -vip: (optional) name or IP of Cohesity cluster (defaults to helios.cohesity.com)
+* -username: (optional) name of user to connect to Cohesity (defaults to helios)
+* -domain: (optional) your AD domain (defaults to local)
+* -useApiKey: (optional) use API key for authentication
+* -password: (optional) will use cached password or will be prompted
+* -noPrompt: (optional) do not prompt for password
+* -tenant: (optional) organization to impersonate
+* -mcm: (optional) connect through MCM
+* -mfaCode: (optional) TOTP MFA code
+* -clusterName: (optional) cluster to connect to when connecting through Helios or MCM
+
+## Other Parameters
+
 * -vault: Name of archive target
 * -jobName: (optional) One or more job names to archive (comma separated)
 * -jobList: (optional) text file of job names (one per line)

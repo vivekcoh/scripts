@@ -1,5 +1,19 @@
 # Change Log for cohesity/community-automation-samples
 
+## 2024-10-14
+
+* [cohesity-api.ps1](https://github.com/cohesity/community-automation-samples/tree/main/powershell/cohesity-api) [`Fix`] fixed PowerShell Core date formatting issue
+
+## 2024-10-11
+
+* [protectCcsM365Sites.ps1](https://github.com/cohesity/community-automation-samples/tree/main/ccs/powershell/protectCcsM365Sites) [`Update`] added -objectMatch parameter
+* [cancelRunningJob.ps1](https://github.com/cohesity/community-automation-samples/tree/main/powershell/cancelRunningJob) [`Update`] modernized authentication
+
+## 2024-10-10
+
+* [replicationQueue.py](https://github.com/cohesity/community-automation-samples/tree/main/python/replicationQueue) [`Fix`] fixed systax error
+* [clusterProtectionRuns.py](https://github.com/cohesity/community-automation-samples/tree/main/reports/python/clusterProtectionRuns) [`Update`] added support for Helios authenticatioon
+
 ## 2024-10-09
 
 * [vssSnapshot](https://github.com/cohesity/community-automation-samples/tree/main/windows/vssSnapshot) [`New`] Pre and Post scripts to create VSS snapshots for physical file-based protection groups

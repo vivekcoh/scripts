@@ -45,7 +45,7 @@ apiauth(vip, username, domain, password=password, useApiKey=useApiKey)
 users = [user for user in api('get', 'users') if user['username'].lower() == newusername.lower() and user['domain'].lower() == 'local']
 if len(users) == 0:
     roles = api('get', 'roles')
-    thisrole = [r for r in roles if r['name'].lower() == role.lower() or r['label'] == role.lower()]
+    thisrole = [r for r in roles if r['name'].lower() == role.lower() or r['label'].lower() == role.lower()]
     if len(thisrole) == 0:
         print('Role %s not found' % role)
         exit(1)

@@ -2,6 +2,8 @@
 
 ## 2024-10-14
 
+* [archiveOldSnapshots.ps1](https://github.com/cohesity/community-automation-samples/tree/main/powershell/archiveOldSnapshots) [`Fix`] date format bug
+* [archiveNow.ps1](https://github.com/cohesity/community-automation-samples/tree/main/powershell/archiveNow) [`Update`] made -keepFor optional
 * [cohesity-api.ps1](https://github.com/cohesity/community-automation-samples/tree/main/powershell/cohesity-api) [`Fix`] fixed PowerShell Core date formatting issue
 
 ## 2024-10-11

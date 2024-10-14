@@ -20,9 +20,9 @@
 
 ## 2024-10-08
 
-* [heliosAsyncCSVReport.ps1] [`New`] async reporting script
-* [heliosCSVReport.ps1] [`Update`] scalability improvements
-* [deployCCSWindowsAgent.ps1] [`Update`] set default install to agaent only (no CBT drivers)
+* [heliosAsyncCSVReport.ps1](https://github.com/cohesity/community-automation-samples/tree/main/reports/helios-reporting/powershell/heliosAsyncCSVReport) [`New`] async reporting script
+* [heliosCSVReport.ps1](https://github.com/cohesity/community-automation-samples/tree/main/reports/helios-reporting/powershell/heliosCSVReport) [`Update`] scalability improvements
+* [deployCCSWindowsAgent.ps1](https://github.com/cohesity/community-automation-samples/tree/main/ccs/powershell/deployCCSWindowsAgent) [`Update`] set default install to agaent only (no CBT drivers)
 
 ## 2024-10-07
 

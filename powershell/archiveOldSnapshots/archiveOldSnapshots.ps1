@@ -11,11 +11,19 @@
 # process commandline arguments
 [CmdletBinding()]
 param (
-    [Parameter(Mandatory = $True)][string]$vip, #the cluster to connect to (DNS name or IP)
-    [Parameter(Mandatory = $True)][string]$username, #username (local or AD)
-    [Parameter()][string]$domain = 'local', #local or AD domain
+    [Parameter()][string]$vip='helios.cohesity.com',
+    [Parameter()][string]$username = 'helios',
+    [Parameter()][string]$domain = 'local',
+    [Parameter()][string]$tenant,
+    [Parameter()][switch]$useApiKey,
+    [Parameter()][string]$password,
+    [Parameter()][switch]$noPrompt,
+    [Parameter()][switch]$mcm,
+    [Parameter()][string]$mfaCode,
+    [Parameter()][switch]$emailMfaCode,
+    [Parameter()][string]$clusterName,
     [Parameter()][array]$jobName, # jobs to archive
-    [Parameter()][string]$jobList = '',
+    [Parameter()][string]$jobList,
     [Parameter(Mandatory = $True)][string]$vault, #name of archive target
     [Parameter()][string]$olderThan = 0, #archive snapshots older than x days
     [Parameter()][string]$ifExpiringAfter = 0, #do not archve if the snapshot is going to expire within x days
@@ -30,29 +38,53 @@ param (
 # source the cohesity-api helper code
 . $(Join-Path -Path $PSScriptRoot -ChildPath cohesity-api.ps1)
 
-# authenticate
-apiauth -vip $vip -username $username -domain $domain
-
-# gather list of jobs
-$jobNames = @()
-foreach($j in $jobName){
-    $jobNames += $j
+# authentication =============================================
+# demand clusterName for Helios/MCM
+if(($vip -eq 'helios.cohesity.com' -or $mcm) -and ! $clusterName){
+    Write-Host "-clusterName required when connecting to Helios/MCM" -ForegroundColor Yellow
+    exit 1
 }
-if ('' -ne $jobList){
-    if(Test-Path -Path $jobList -PathType Leaf){
-        $jobs = Get-Content $jobList
-        foreach($j in $jobs){
-            $jobNames += [string]$j
-        }
-    }else{
-        Write-Host "Job list $jobList not found!" -ForegroundColor Yellow
-        exit
+
+# authenticate
+apiauth -vip $vip -username $username -domain $domain -passwd $password -apiKeyAuthentication $useApiKey -mfaCode $mfaCode -sendMfaCode $emailMfaCode -heliosAuthentication $mcm -regionid $region -tenant $tenant -noPromptForPassword $noPrompt
+
+# exit on failed authentication
+if(!$cohesity_api.authorized){
+    Write-Host "Not authenticated" -ForegroundColor Yellow
+    exit 1
+}
+
+# select helios/mcm managed cluster
+if($USING_HELIOS){
+    $thisCluster = heliosCluster $clusterName
+    if(! $thisCluster){
+        exit 1
     }
 }
-if($jobNames.Length -eq 0){
-    Write-Host "No jobs specified" -ForegroundColor Yellow
-    exit
+# end authentication =========================================
+
+# gather list from command line params and file
+function gatherList($Param=$null, $FilePath=$null, $Required=$True, $Name='items'){
+    $items = @()
+    if($Param){
+        $Param | ForEach-Object {$items += $_}
+    }
+    if($FilePath){
+        if(Test-Path -Path $FilePath -PathType Leaf){
+            Get-Content $FilePath | ForEach-Object {$items += [string]$_}
+        }else{
+            Write-Host "Text file $FilePath not found!" -ForegroundColor Yellow
+            exit
+        }
+    }
+    if($Required -eq $True -and $items.Count -eq 0){
+        Write-Host "No $Name specified" -ForegroundColor Yellow
+        exit
+    }
+    return ($items | Sort-Object -Unique)
 }
+
+$jobNames = @(gatherList -Param $jobName -FilePath $jobList -Name 'jobs' -Required $false)
 
 # get archive target info
 $vaults = api get vaults | Where-Object { $_.name -eq $vault }  # ?includeFortKnoxVault=true
@@ -108,7 +140,7 @@ foreach($jobName in $jobNames | Sort-Object -Unique){
                 }
     
                 $runDate = usecsToDate $run.copyRun[0].runStartTimeUsecs
-                $runDateShort = $runDate.ToString("yyyy-MM-dd")
+                $runDateShort = ([datetime]$runDate).ToString("yyyy-MM-dd")
                 if($dates.Length -eq 0 -or $runDateShort -in $dates){
                     # local snapshots stats
                     $now = dateToUsecs $(get-date)

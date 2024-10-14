@@ -1,33 +1,8 @@
 # . . . . . . . . . . . . . . . . . . .
 #  PowerShell Module for Cohesity API
-#  Version 2024.09.20 - Brian Seltzer
+#  Version 2024.10.14 - Brian Seltzer
 # . . . . . . . . . . . . . . . . . . .
 #
-# 2023.02.10 - added -region to api function (for DMaaS)
-# 2023.03.22 - added accessCluster function
-# 2023.04.04 - exit 1 on old PowerShell version
-# 2023.04.30 - disable email MFA and add timeout parameter
-# 2023.05.18 - fixed setApiProperty function
-# 2023.05.23 - fixed setContext
-# 2023.06.01 - fixed setApiProperty function
-# 2023.07.12 - ignore write failure to pwfile
-# 2023.08.15 - enforce Tls12
-# 2023.08.28 - add offending line number to cohesity-api-log
-# 2023.09.22 - added fileUpload function
-# 2023.09.24 - web session authentication, added support for password reset. email MFA
-# 2023.10.03 - fix cosmetic error 'An item with the same key has already been added. Key: content-type'
-# 2023.10.09 - clarify password / API key prompts
-# 2023.10.11 - removed demand minimim powershell version, to support Start-Job
-# 2023.10.13 - fixed password prompt for AD user
-# 2023.10.26 - updated auth validation to use basicClusterInfo, fixed copySessionCookie function
-# 2023.11.07 - updated password storage after validation
-# 2023.11.08 - fixed toJson function duplicate output
-# 2023.11.18 - fix reportError quiet mode
-# 2023.11.27 - fix useApiKey for helios/mcm
-# 2023.11.30 - implemented apiauth_legacy function
-# 2023.12.01 - added -noDomain (for SaaS connector)
-# 2023.12.03 - added support for raw URL
-# 2023.12.13 - re-ordered apiauth parameters (to force first unnamed parameter to be interpreted as password)
 # 2024.01.14 - reenabled legacy access modes
 # 2024.01.25 - added support for unicode characters for REST payloads in Windows PowerShell 5.1
 # 2024.01.30 - fix - clear header before auth
@@ -38,10 +13,11 @@
 # 2024-05-17 - added support for EntraID (Open ID) authentication
 # 2024-06-24 - fixed authentication error for SaaS connectors
 # 2024-09-20 - allow posts to read-only helios cluster (for advanced queries)
+# 2024-10-14 - fixed date formatting
 #
 # . . . . . . . . . . . . . . . . . . .
 
-$versionCohesityAPI = '2024.09.20'
+$versionCohesityAPI = '2024.10.14'
 $heliosEndpoints = @('helios.cohesity.com', 'helios.gov-cohesity.com')
 
 # state cache
@@ -302,10 +278,9 @@ function apiauth($vip='helios.cohesity.com',
     }
     
     # API Key authentication
-    if($useApiKey -or $helios -or ($vip -in $heliosEndpoints)){  # -eq 'helios.cohesity.com'
+    if($useApiKey -or $helios -or ($vip -in $heliosEndpoints)){
         $header = $cohesity_api.header.Clone()
         $header['apiKey'] = $passwd
-        #$cohesity_api.header['apiKey'] = $passwd
         $cohesity_api.authorized = $true
         # validate cluster API key authorization
         if($useApiKey -and (($vip -notin $heliosEndpoints) -and $helios -ne $True)){
@@ -784,11 +759,6 @@ function api($method,
             return $null
         }
     }else{
-        # if($method -ne 'get' -and $cohesity_api.clusterReadOnly -eq $true){
-        #     $cohesity_api.last_api_error = 'invalid put/post/delete to readonly cluster'
-        #     Write-Host "Cluster connection is READ-ONLY" -ForegroundColor Yellow
-        #     return $null
-        # }
         if($method -notin $methods){
             $cohesity_api.last_api_error = "invalid api method: $method"
             if($cohesity_api.reportApiErrors){
@@ -925,7 +895,7 @@ function usecsToDate($usecs, $format=$null){
         if($format){
             return ($origin.AddSeconds($unixTime).ToLocalTime().ToString($format) -replace [char]8239, ' ')
         }else{
-            return ($origin.AddSeconds($unixTime).ToLocalTime())  # .ToString() -replace [char]8239, ' '))
+            return ($origin.AddSeconds($unixTime).ToLocalTime().ToString() -replace [char]8239, ' ')
         }
     }catch{
         Write-Host "usecsToDate: incorrect input type ($($usecs.GetType().name)) must be Int64" -ForegroundColor Yellow
@@ -1572,5 +1542,30 @@ function getViews([switch]$includeInactive){
 # 2022.09.19 - fixed log encoding
 # 2022.09.22 - fixed 404 error output format
 # 2022.09.27 - fixed error log not found error
+# 2023.02.10 - added -region to api function (for DMaaS)
+# 2023.03.22 - added accessCluster function
+# 2023.04.04 - exit 1 on old PowerShell version
+# 2023.04.30 - disable email MFA and add timeout parameter
+# 2023.05.18 - fixed setApiProperty function
+# 2023.05.23 - fixed setContext
+# 2023.06.01 - fixed setApiProperty function
+# 2023.07.12 - ignore write failure to pwfile
+# 2023.08.15 - enforce Tls12
+# 2023.08.28 - add offending line number to cohesity-api-log
+# 2023.09.22 - added fileUpload function
+# 2023.09.24 - web session authentication, added support for password reset. email MFA
+# 2023.10.03 - fix cosmetic error 'An item with the same key has already been added. Key: content-type'
+# 2023.10.09 - clarify password / API key prompts
+# 2023.10.11 - removed demand minimim powershell version, to support Start-Job
+# 2023.10.13 - fixed password prompt for AD user
+# 2023.10.26 - updated auth validation to use basicClusterInfo, fixed copySessionCookie function
+# 2023.11.07 - updated password storage after validation
+# 2023.11.08 - fixed toJson function duplicate output
+# 2023.11.18 - fix reportError quiet mode
+# 2023.11.27 - fix useApiKey for helios/mcm
+# 2023.11.30 - implemented apiauth_legacy function
+# 2023.12.01 - added -noDomain (for SaaS connector)
+# 2023.12.03 - added support for raw URL
+# 2023.12.13 - re-ordered apiauth parameters (to force first unnamed parameter to be interpreted as password)
 #
 # . . . . . . . . . . . . . . . . . . .

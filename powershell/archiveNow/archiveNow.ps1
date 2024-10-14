@@ -23,7 +23,7 @@ param (
     [Parameter()][array]$jobName, # jobs to archive
     [Parameter()][string]$jobList,
     [Parameter(Mandatory = $True)][string]$vault, #name of archive target
-    [Parameter(Mandatory = $True)][int]$keepFor, #set archive retention to x days from backup date
+    [Parameter()][int]$keepFor, #set archive retention to x days from backup date
     [Parameter()][switch]$commit,
     [Parameter()][switch]$localOnly,
     [Parameter()][ValidateSet('kCloud','kTape','kNas')][string]$vaultType = 'kCloud',

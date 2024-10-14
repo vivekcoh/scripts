@@ -60,7 +60,7 @@ Connecting via Helios:
 ## Other Parameters
 
 * -commit: (optional) execute the archive tasks (default is to show what would happen)
-* -keepFor: number of days (from original backup date) to retain the archive
+* -keepFor: (optional) number of days (from original backup date) to retain the archive
 * -vault: name of external target to archive to
 * -vaultType: (optional) type of archive target (kCloud, kTape, kNas - defaults to kCloud)
 * -jobName: (optional) one or more job names (comma separated), default is all jobs

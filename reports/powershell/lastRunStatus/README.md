@@ -25,9 +25,22 @@ $repoURL = 'https://raw.githubusercontent.com/cohesity/community-automation-samp
 Place both files in a folder together and run the main script.
 
 ```powershell
-./lastRunStatus.ps1 -vip mycluster `
+./lastRunStatus.ps1 -vip mycluster1, mycluster2 `
                     -username myuser `
                     -domain mydomain.net
+```
+
+Or via Helios (all clusters):
+
+```powershell
+./lastRunStatus.ps1 -username myuser@mydomain.net
+```
+
+Or via Helios (selected clusters):
+
+```powershell
+./lastRunStatus.ps1 -username myuser@mydomain.net `
+                    -clusterName myclustrer1, mycluster2
 ```
 
 ## Authentication Parameters

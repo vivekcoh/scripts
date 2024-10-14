@@ -16,31 +16,6 @@ param (
 # source the cohesity-api helper code
 . $(Join-Path -Path $PSScriptRoot -ChildPath cohesity-api.ps1)
 
-# # authentication =============================================
-# # demand clusterName for Helios/MCM
-# if(($vip -eq 'helios.cohesity.com' -or $mcm) -and ! $clusterName){
-#     Write-Host "-clusterName required when connecting to Helios/MCM" -ForegroundColor Yellow
-#     exit 1
-# }
-
-# # authenticate
-# apiauth -vip $vip -username $username -domain $domain -passwd $password -apiKeyAuthentication $useApiKey -mfaCode $mfaCode -heliosAuthentication $mcm -tenant $tenant -noPromptForPassword $noPrompt
-
-# # exit on failed authentication
-# if(!$cohesity_api.authorized){
-#     Write-Host "Not authenticated" -ForegroundColor Yellow
-#     exit 1
-# }
-
-# # select helios/mcm managed cluster
-# if($USING_HELIOS){
-#     $thisCluster = heliosCluster $clusterName
-#     if(! $thisCluster){
-#         exit 1
-#     }
-# }
-# # end authentication =========================================
-
 # outfile
 $dateString = (get-date).ToString('yyyy-MM-dd')
 $outfileName = "lastRunStatus-$dateString.csv"

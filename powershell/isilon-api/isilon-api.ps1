@@ -35,7 +35,11 @@ function isilonAuth($endpoint, $username, $password=$null){
     }
     $basic_api.base_url = "https://$($endpoint)"
     $basic_api.session = $session
-    $cookies = $session.Cookies.GetAllCookies()
+    if($PSVersionTable.PSEdition -eq 'Core'){
+        $cookies = $session.Cookies.GetAllCookies()
+    }else{
+        $cookies = $session.Cookies.GetCookies($uri)
+    }
     $basic_api.headers['isisessid'] = ($cookies | Where-Object name -eq 'isisessid').Value
     $basic_api.headers['X-CSRF-Token'] = ($cookies | Where-Object name -eq 'isicsrf').Value
     $basic_api.headers['referer'] = $basic_api.base_url

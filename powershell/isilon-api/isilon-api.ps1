@@ -31,7 +31,7 @@ function isilonAuth($endpoint, $username, $password=$null){
     if($PSVersionTable.PSEdition -eq 'Core'){
         $result = Invoke-RestMethod -Uri $uri -Method Post -Headers $basic_api.headers -Body $BODY -SkipCertificateCheck -SessionVariable session
     }else{
-        $result = Invoke-RestMethod -Uri $uri -Method $method -Headers $basic_api.headers -Body $BODY -SessionVariable session
+        $result = Invoke-RestMethod -Uri $uri -Method Post -Headers $basic_api.headers -Body $BODY -SessionVariable session
     }
     $basic_api.base_url = "https://$($endpoint)"
     $basic_api.session = $session

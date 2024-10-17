@@ -70,7 +70,7 @@ clusterStatsFileName = '%s/storagePerObjectReport-%s-clusterstats.csv' % (folder
 csv = codecs.open(csvfileName, 'w', 'utf-8')
 clusterStats = codecs.open(clusterStatsFileName, 'w', 'utf-8')
 csv.write('"Cluster Name","Origin","Stats Age (Days)","Protection Group","Tenant","Storage Domain ID","Storage Domain Name","Environment","Source Name","Object Name","Front End Allocated %s","Front End Used %s","%s Stored (Before Reduction)","%s Stored (After Reduction)","%s Stored (After Reduction and Resiliency)","Reduction Ratio","%s Change Last %s Days (After Reduction and Resiliency)","Snapshots","Log Backups","Oldest Backup","Newest Backup","Newest DataLock Expiry","Archive Count","Oldest Archive","%s Archived","%s per Archive Target","Description","VM Tags"\n' % (units, units, units, units, units, units, growthdays, units, units))
-clusterStats.write('"Cluster Name","Total Used %s","BookKeeper Used %s","Unaccounted Usage %s","Unaccounted Percent","Reduction Ratio","All Objects Front End Size %s","All Objects Stored (After Reduction) %s","All Objects Stored (After Reduction and Resiliency) %s","Storage Variance Factor","Script Version"\n' % (units, units, units, units, units, units))
+clusterStats.write('"Cluster Name","Total Used %s","BookKeeper Used %s","Unaccounted Usage %s","Unaccounted Percent","Reduction Ratio","All Objects Front End Size %s","All Objects Stored (After Reduction) %s","All Objects Stored (After Reduction and Resiliency) %s","Storage Variance Factor","Script Version","Cluster Software Version"\n' % (units, units, units, units, units, units))
 
 
 def getCloudStats(cluster):
@@ -661,7 +661,7 @@ def reportStorage():
     storageVarianceFactor = 1
     if sumObjectsWrittenWithResiliency > 0:
         storageVarianceFactor = round(clusterUsed / sumObjectsWrittenWithResiliency, 4)
-    clusterStats.write('"%s","%s","%s","%s","%s","%s","%s","%s","%s","%s","%s"\n' % (cluster['name'], clusterUsed, round(bookKeeperBytes / multiplier, 1), round(unaccounted / multiplier, 1), unaccountedPercent, clusterReduction, sumObjectsUsed, sumObjectsWritten, sumObjectsWrittenWithResiliency, storageVarianceFactor, scriptVersion))
+    clusterStats.write('"%s","%s","%s","%s","%s","%s","%s","%s","%s","%s","%s","%s"\n' % (cluster['name'], clusterUsed, round(bookKeeperBytes / multiplier, 1), round(unaccounted / multiplier, 1), unaccountedPercent, clusterReduction, sumObjectsUsed, sumObjectsWritten, sumObjectsWrittenWithResiliency, storageVarianceFactor, scriptVersion, cluster['clusterSoftwareVersion']))
 
 
 for vip in vips:
@@ -688,4 +688,6 @@ for vip in vips:
 
 csv.close()
 clusterStats.close()
-print('\nOutput saved to %s\n' % csvfileName)
+print('\n       Output saved to: %s' % csvfileName)
+print('Cluster stats saved to: %s\n' % clusterStatsFileName)
+

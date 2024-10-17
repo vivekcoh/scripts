@@ -1,5 +1,5 @@
 #!/usr/bin/env python
-"""Storage Per Object Report version 2024.10.02 for Python"""
+"""Storage Per Object Report version 2024.10.17 for Python"""
 
 # import pyhesity wrapper module
 from pyhesity import *
@@ -44,7 +44,7 @@ skipdeleted = args.skipdeleted
 debug = args.debug
 includearchives = args.includearchives
 
-scriptVersion = '2024-09-26'
+scriptVersion = '2024-10-17 (Python)'
 
 if vips is None or len(vips) == 0:
     vips = ['helios.cohesity.com']

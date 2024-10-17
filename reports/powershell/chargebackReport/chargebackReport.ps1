@@ -11,9 +11,17 @@
 # process commandline arguments
 [CmdletBinding()]
 param (
-    [Parameter(Mandatory = $True)][string]$vip, #the cluster to connect to (DNS name or IP)
-    [Parameter(Mandatory = $True)][string]$username, #username (local or AD)
-    [Parameter()][string]$domain = 'local', #local or AD domain
+    [Parameter()][string]$vip='helios.cohesity.com',
+    [Parameter()][string]$username = 'helios',
+    [Parameter()][string]$domain = 'local',
+    [Parameter()][string]$tenant,
+    [Parameter()][switch]$useApiKey,
+    [Parameter()][string]$password,
+    [Parameter()][switch]$noPrompt,
+    [Parameter()][switch]$mcm,
+    [Parameter()][string]$mfaCode,
+    [Parameter()][switch]$emailMfaCode,
+    [Parameter()][string]$clusterName,
     [Parameter()][string]$startDate = '',
     [Parameter()][string]$endDate = '',
     [Parameter()][switch]$lastCalendarMonth,
@@ -21,21 +29,43 @@ param (
     [Parameter()][int]$numRuns = 1000,
     [Parameter(Mandatory = $True)][string]$costPerGB,
     [Parameter()][array]$prefix = 'ALL', #report jobs with 'prefix' only
-    [Parameter(Mandatory = $True)][string]$smtpServer, #outbound smtp server '192.168.1.95'
+    [Parameter()][string]$smtpServer, #outbound smtp server '192.168.1.95'
     [Parameter()][string]$smtpPort = 25, #outbound smtp port
-    [Parameter(Mandatory = $True)][array]$sendTo, #send to address
-    [Parameter(Mandatory = $True)][string]$sendFrom #send from address
+    [Parameter()][array]$sendTo, #send to address
+    [Parameter()][string]$sendFrom #send from address
 )
 
 # source the cohesity-api helper code
 . $(Join-Path -Path $PSScriptRoot -ChildPath cohesity-api.ps1)
 
+# authentication =============================================
+# demand clusterName for Helios/MCM
+if(($vip -eq 'helios.cohesity.com' -or $mcm) -and ! $clusterName){
+    Write-Host "-clusterName required when connecting to Helios/MCM" -ForegroundColor Yellow
+    exit 1
+}
+
 # authenticate
-apiauth -vip $vip -username $username -domain $domain
+apiauth -vip $vip -username $username -domain $domain -passwd $password -apiKeyAuthentication $useApiKey -mfaCode $mfaCode -sendMfaCode $emailMfaCode -heliosAuthentication $mcm -regionid $region -tenant $tenant -noPromptForPassword $noPrompt
+
+# exit on failed authentication
+if(!$cohesity_api.authorized){
+    Write-Host "Not authenticated" -ForegroundColor Yellow
+    exit 1
+}
+
+# select helios/mcm managed cluster
+if($USING_HELIOS){
+    $thisCluster = heliosCluster $clusterName
+    if(! $thisCluster){
+        exit 1
+    }
+}
+# end authentication =========================================
 
 # get cluster info
 $cluster = api get cluster
-$clusterName = $cluster.name.ToUpper()
+$thisClusterName = $cluster.name.ToUpper()
 
 # determine start and end dates
 $today = Get-Date
@@ -54,17 +84,17 @@ if($startDate -ne '' -and $endDate -ne ''){
     $uEnd = dateToUsecs $today.Date.AddSeconds(-1)
 }
 
-$start = (usecsToDate $uStart).ToString('yyyy-MM-dd')
-$end = (usecsToDate $uEnd).ToString('yyyy-MM-dd')
+$start = usecsToDate -format 'yyyy-MM-dd' $uStart
+$end = usecsToDate -format 'yyyy-MM-dd' $uEnd
 
 $startingDate = usecsToDate (dateToUsecs $start)
 $endingDate = usecsToDate (dateToUsecs $end)
 
 # start files
-$title = "$clusterName ($([string]::Join(", ", $prefix.ToUpper()))) Chargeback Report ($start - $end)"
+$title = "$thisClusterName ($([string]::Join(", ", $prefix.ToUpper()))) Chargeback Report ($start - $end)"
 
-$csvFileName = "$($clusterName)_$([string]::Join("_", $prefix.ToUpper()))_Chargeback_Report_$start_$end.csv"
-$htmlFileName = "$($clusterName)_$([string]::Join("_", $prefix.ToUpper()))_Chargeback_Report_$start_$end.html"
+$csvFileName = "$($thisClusterName)_$([string]::Join("_", $prefix.ToUpper()))_Chargeback_Report_$start_$end.csv"
+$htmlFileName = "$($thisClusterName)_$([string]::Join("_", $prefix.ToUpper()))_Chargeback_Report_$start_$end.html"
 
 $date = (get-date).ToString()
 
@@ -308,7 +338,11 @@ $html += "<tr>
 $html | out-file $htmlFileName
 
 # send email report
-write-host "sending report to $([string]::Join(", ", $sendTo))"
-foreach($toaddr in $sendTo){
-    Send-MailMessage -From $sendFrom -To $toaddr -SmtpServer $smtpServer -Port $smtpPort -Subject $title -BodyAsHtml $html -Attachments $csvFileName -WarningAction SilentlyContinue
+if($smtpServer -and $sendFrom -and $sendTo){
+    write-host "sending report to $([string]::Join(", ", $sendTo))"
+    foreach($toaddr in $sendTo){
+        Send-MailMessage -From $sendFrom -To $toaddr -SmtpServer $smtpServer -Port $smtpPort -Subject $title -BodyAsHtml $html -Attachments $csvFileName -WarningAction SilentlyContinue
+    }
 }
+
+Write-Host "`nOutput saved to $htmlFileName`n"

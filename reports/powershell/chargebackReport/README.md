@@ -37,11 +37,21 @@ Place both files in a folder together and run the main script like so:
 # end example
 ```
 
-## Parameters
+## Authentication Parameters
 
-* -vip: Cohesity Cluster to connect to
-* -username: Cohesity username
-* -domain: Active Directory domain of user (defaults to local)
+* -vip: (optional) name or IP of Cohesity cluster (defaults to helios.cohesity.com)
+* -username: (optional) name of user to connect to Cohesity (defaults to helios)
+* -domain: (optional) your AD domain (defaults to local)
+* -useApiKey: (optional) use API key for authentication
+* -password: (optional) will use cached password or will be prompted
+* -noPrompt: (optional) do not prompt for password
+* -tenant: (optional) organization to impersonate
+* -mcm: (optional) connect through MCM
+* -mfaCode: (optional) TOTP MFA code
+* -clusterName: (optional) cluster to connect to when connecting through Helios or MCM
+
+## Other Parameters
+
 * -prefix: job name prefixes to include in the report (comma separated, defaults to all jobs if omitted)
 * -costPerGB: Cost per GB per date range (e.g. per month)
 * -numRuns: number of runs per API query (default is 1000)

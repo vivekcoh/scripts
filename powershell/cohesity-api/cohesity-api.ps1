@@ -895,7 +895,7 @@ function usecsToDate($usecs, $format=$null){
         if($format){
             return ($origin.AddSeconds($unixTime).ToLocalTime().ToString($format) -replace [char]8239, ' ')
         }else{
-            return ($origin.AddSeconds($unixTime).ToLocalTime().ToString() -replace [char]8239, ' ')
+            return ($origin.AddSeconds($unixTime).ToLocalTime()) # .ToString() -replace [char]8239, ' ')
         }
     }catch{
         Write-Host "usecsToDate: incorrect input type ($($usecs.GetType().name)) must be Int64" -ForegroundColor Yellow

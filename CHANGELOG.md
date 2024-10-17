@@ -1,7 +1,20 @@
 # Change Log for cohesity/community-automation-samples
 
+## 2024-10-17
+
+* [storagePerObjectReport.py](https://github.com/cohesity/community-automation-samples/tree/main/reports/python/storagePerObjectReport) [`Update`] include cluster software version in output
+* [storagePerObjectReport.ps1](https://github.com/cohesity/community-automation-samples/tree/main/reports/powershell/storagePerObjectReport) [`Update`] include cluster software version in output
+* [chargebackReport.ps1](https://github.com/cohesity/community-automation-samples/tree/main/reports/powershell/chargebackReport) [`Update`] modernized authentication
+* [chargebackReportV2.ps1](https://github.com/cohesity/community-automation-samples/tree/main/reports/powershell/chargebackReportV2) [`Update`] modernized authentication
+
+## 2024-10-15
+
+* [isilon-api.ps1](https://github.com/cohesity/community-automation-samples/tree/main/powershell/isilon-api) [`Fix`] fixed authentication on PowerShell 5.1
+* [datalockSnapshots.ps1](https://github.com/cohesity/community-automation-samples/tree/main/reports/powershell/datalockSnapshots) [`Fix`] updated to work with modern Cohesity versions
+
 ## 2024-10-14
 
+* [addLocalUser.py](https://github.com/cohesity/community-automation-samples/tree/main/python/addLocalUser) [`New`] add local Cohesity user
 * [archiveOldSnapshots.ps1](https://github.com/cohesity/community-automation-samples/tree/main/powershell/archiveOldSnapshots) [`Fix`] date format bug
 * [archiveNow.ps1](https://github.com/cohesity/community-automation-samples/tree/main/powershell/archiveNow) [`Update`] made -keepFor optional
 * [cohesity-api.ps1](https://github.com/cohesity/community-automation-samples/tree/main/powershell/cohesity-api) [`Fix`] fixed PowerShell Core date formatting issue

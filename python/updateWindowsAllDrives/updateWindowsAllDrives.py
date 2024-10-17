@@ -130,7 +130,7 @@ for job in sorted(jobs['protectionGroups'], key=lambda job: job['name'].lower())
                     if commit is True:
                         print('    updating %s' % object['name'])
                     else:
-                        print('    would update %s' % object['name'])
+                        print('    %s' % object['name'])
                     object['filePaths'][0]['includedPath'] = '$ALL_LOCAL_DRIVES'
                     updateJob = True
                     f.write('"%s","%s","%s","%s","%s"\n' % (job['name'], tenant, object['name'], includedPaths[0], excludedPaths))
@@ -140,8 +140,9 @@ for job in sorted(jobs['protectionGroups'], key=lambda job: job['name'].lower())
             result = api('put', 'data-protect/protection-groups/%s' % job['id'], job, v=2)
 
 if commit is not True and len(jobsToUpdate) > 0:
-    print('\nThe following jobs would be updated:\n')
-    print('`n'.join(jobsToUpdate))
+    jobsToUpdate = list(set(jobsToUpdate))
+    print('\nThe following jobs have only C: protected:\n')
+    print('    %s' % '\n    '.join(jobsToUpdate))
 
 f.close()
 print('\nOutput saved to %s\n' % outfile)

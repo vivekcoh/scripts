@@ -1,13 +1,16 @@
 # process commandline arguments
 [CmdletBinding()]
 param (
-    [Parameter(Mandatory=$True)][array]$vip,
-    [Parameter(Mandatory=$True)][string]$username,
+    [Parameter()][array]$vip,
+    [Parameter()][string]$username = 'helios',
     [Parameter()][string]$domain = 'local',
+    [Parameter()][string]$tenant = $null,
     [Parameter()][switch]$useApiKey,
     [Parameter()][string]$password = $null,
     [Parameter()][switch]$noPrompt,
+    [Parameter()][switch]$mcm,
     [Parameter()][string]$mfaCode = $null,
+    [Parameter()][array]$clusterName = $null,
     [Parameter()][double]$costPerGiB = 1.0,
     [Parameter()][int]$numRuns = 500,
     [Parameter()][string]$smtpServer, #outbound smtp server '192.168.1.95'
@@ -36,13 +39,7 @@ function toUnits($val){
     return "{0:n2}" -f ($val/($conversion[$unit]))
 }
 
-foreach($v in $vip){
-    # authenticate
-    apiauth -vip $v -username $username -domain $domain -passwd $password -apiKeyAuthentication $useApiKey -mfaCode $mfaCode -noPromptForPassword $noPrompt
-    if(!$cohesity_api.authorized){
-        Write-Host "Not authenticated to $v" -ForegroundColor Yellow
-        continue
-    }
+function reportCluster(){
 
     $cluster = api get cluster
     $jobs = api get -v2 "data-protect/protection-groups?isDeleted=false&includeTenants=true"
@@ -108,16 +105,7 @@ foreach($v in $vip){
                                     if($objectStatus -eq 'kSuccessful'){
                                         $objectStatus = 'kSuccess'
                                     }
-                                    $objectStartTime = usecsToDate $object.$snapshotInfo.snapshotInfo.startTimeUsecs
-                                    $objectEndTime = $null
-                                    $objectDurationSeconds = "{0:n0}" -f ($now - $objectStartTime).totalSeconds
-                                    if($object.$snapshotInfo.snapshotInfo.PSObject.Properties['endTimeUsecs']){
-                                        $objectEndTime = usecsToDate $object.$snapshotInfo.snapshotInfo.endTimeUsecs
-                                        $objectDurationSeconds = "{0:n0}" -f ($objectEndTime - $objectStartTime).totalSeconds
-                                    }
                                     $objectLogicalSizeBytes = toUnits $object.$snapshotInfo.snapshotInfo.stats.logicalSizeBytes
-                                    # $objectBytesWritten = toUnits $object.$snapshotInfo.snapshotInfo.stats.bytesWritten
-                                    # $objectBytesRead = toUnits $object.$snapshotInfo.snapshotInfo.stats.bytesRead
                                     "        {0}" -f $objectName
                                     $keyName = "{0}{1}" -f $objectName, $registeredSourceName
                                     if(! $seen[$keyName]){
@@ -144,6 +132,31 @@ foreach($v in $vip){
                 }
             }
         }
+    }
+}
+
+# authentication =============================================
+if(! $vip){
+    $vip = @('helios.cohesity.com')
+}
+
+foreach($v in $vip){
+    # authenticate
+    apiauth -vip $v -username $username -domain $domain -passwd $password -apiKeyAuthentication $useApiKey -mfaCode $mfaCode -heliosAuthentication $mcm -regionid $region -tenant $tenant -noPromptForPassword $noPrompt -quiet
+    if(!$cohesity_api.authorized){
+        output "`n$($v): authentication failed" -ForegroundColor Yellow
+        continue
+    }
+    if($USING_HELIOS){
+        if(! $clusterName){
+            $clusterName = @((heliosClusters).name)
+        }
+        foreach($c in $clusterName){
+            $null = heliosCluster $c
+            reportCluster
+        }
+    }else{
+        reportCluster
     }
 }
 

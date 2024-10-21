@@ -2,7 +2,7 @@
 
 Warning: this code is provided on a best effort basis and is not in any way officially supported or sanctioned by Cohesity. The code is intentionally kept simple to retain value as example code. The code in this repository is provided as-is and the author accepts no liability for damages resulting from its use.
 
-This PowerShell script generates a last run status report.
+This PowerShell script generates a last run status report in CSV and HTML formats.
 
 ## Download the script
 
@@ -53,3 +53,7 @@ Or via Helios (selected clusters):
 * -noPrompt: (optional) do not prompt for password
 * -mfaCode: (optional) TOTP MFA code
 * -clusterName: (optional) one or more clusters to connect to when connecting through Helios or MCM (comma separated)
+
+## Other Parameters
+
+* -outputPath: (optional) path to write output files (default is '.')

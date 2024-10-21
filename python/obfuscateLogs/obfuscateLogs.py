@@ -118,15 +118,15 @@ def obfuscatefile(root, filepath):
                         if len(lineparts) > 1:
                             lineparts2 = lineparts[1].split(' in dir')
                             if len(lineparts2) > 1:
-                                securefile = lineparts2[0]
-                                line = line.replace(securefile, 'xxx')
+                                securefile = f'Looking up {lineparts2[0]}'  
+                                line = line.replace(securefile, 'Looking up xxx')
 
                         lineparts = line.split('for entry=')
                         if len(lineparts) > 1:
                             lineparts2 = lineparts[1].split(' in dir=')
                             if len(lineparts2) > 1:
-                                securefile = lineparts2[0]
-                                line = line.replace(securefile, 'xxx')
+                                securefile = f'entry={lineparts2[0]}'
+                                line = line.replace(securefile, 'entry=xxx')
                                          
                     for linepart in lineparts:
                         windowspaths = re.findall(r'(\\.+[\w:|\.|-]+)', linepart)

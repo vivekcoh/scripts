@@ -33,8 +33,8 @@ parser.add_argument('-z', '--paused', action='store_true')
 parser.add_argument('-ch', '--channels', type=int, default=None)
 parser.add_argument('-cn', '--channelnode', action='append', type=str)
 parser.add_argument('-cp', '--channelport', type=int, default=1521)
-parser.add_argument('-l', '--deletelogdays', type=int, default=0)
-parser.add_argument('-lh', '--deleteloghours', type=int, default=0)
+parser.add_argument('-l', '--deletelogdays', type=int)
+parser.add_argument('-lh', '--deleteloghours', type=int)
 parser.add_argument('-pm', '--persistmounts', action='store_true')
 
 args = parser.parse_args()
@@ -239,7 +239,7 @@ for server in servernames:
                     }
                 else:
                     thisDB = thisDB[0]
-                if (channels is not None and channelnodes is not None) or deletelogdays > 0 or deleteloghours > 0:
+                if (channels is not None and channelnodes is not None) or deletelogdays is not None or deleteloghours is not None:
                     thisDB['dbChannels'] = [
                         {
                             "databaseUuid": dbNode['protectionSource']['oracleProtectionSource']['uuid'],
@@ -248,9 +248,9 @@ for server in servernames:
                             "rmanBackupType": "kImageCopy"
                         }
                     ]
-                    if deletelogdays > 0:
+                    if deletelogdays is not None:
                         thisDB['dbChannels'][0]['archiveLogRetentionDays'] = deletelogdays
-                    elif deleteloghours > 0:
+                    elif deleteloghours is not None:
                         thisDB['dbChannels'][0]['archiveLogRetentionHours'] = deleteloghours
                     if (channels is not None and channelnodes is not None):
                         physicalSource = serverSource['protectionSource']['physicalProtectionSource']

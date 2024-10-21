@@ -22,8 +22,8 @@ param (
     [Parameter()][int]$channels,
     [Parameter()][array]$channelNode,
     [Parameter()][int]$channelPort = 1521,
-    [Parameter()][int]$deleteLogDays = 0,
-    [Parameter()][int]$deleteLogHours = 0,
+    [Parameter()][int]$deleteLogDays = -1,
+    [Parameter()][int]$deleteLogHours = -1,
     [Parameter()][string]$policyname,
     [Parameter()][string]$startTime = '20:00', # e.g. 23:30 for 11:30 PM
     [Parameter()][string]$timeZone = 'America/Los_Angeles', # e.g. 'America/New_York'
@@ -197,7 +197,8 @@ foreach($servername in $serverNames){
                         "dbChannels" = @()
                     }
                 }
-                if(($channels -and $channelNode) -or $deleteLogDays -gt 0 -or $deleteLogHours -gt 0){
+                if(($channels -and $channelNode) -or $deleteLogDays -ge 0 -or $deleteLogHours -ge 0){
+                    Write-Host "$deleteLogDays"
                     $thisDB.dbChannels = @(
                         @{
                             "databaseUuid" = $dbNode.protectionSource.oracleProtectionSource.uuid;
@@ -206,9 +207,9 @@ foreach($servername in $serverNames){
                             "rmanBackupType" = "kImageCopy"
                         }
                     )
-                    if($deleteLogDays -gt 0){
+                    if($deleteLogDays -ge 0){
                         $thisDB.dbChannels[0]['archiveLogRetentionDays'] = $deleteLogDays
-                    }elseif($deleteLogHours -gt 0){
+                    }elseif($deleteLogHours -ge 0){
                         $thisDB.dbChannels[0]['archiveLogRetentionHours'] = $deleteLogHours
                     }
                     if($channels -and $channelNode){
@@ -271,7 +272,6 @@ foreach($servername in $serverNames){
         $job.oracleParams.objects = @($job.oracleParams.objects + $thisObject)
     }
 }
-$job | toJson
 
 if($newJob -eq $True){
     $null = api post -v2 data-protect/protection-groups $job

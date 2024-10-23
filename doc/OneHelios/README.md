@@ -184,9 +184,15 @@ kubectl apply -f backup-cronjob.yaml -n cohesity-onehelios-onehelios
 
 Now the backup should run on schedule.
 
+To trigger the cronjob:
+
+```bash
+kubectl create job --from=cronjob/backup backuptest1 -n cohesity-onehelios-onehelios
+```
+
 After the schedule has been triggered, You can review logs from completed backups:
 
 ```bash
 kubectl get jobs -n cohesity-onehelios-onehelios
-kubectl logs job.batch/jobname -n cohesity-onehelios-onehelios
+kubectl logs job.batch/backuptest1 -n cohesity-onehelios-onehelios
 ```

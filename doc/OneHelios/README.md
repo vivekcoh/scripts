@@ -162,7 +162,7 @@ spec:
             - /bin/bash
             - -c
             - /backup.sh
-            ...
+            ... (more not shown)
 ```
 
 Modify the schedule to specify the frequency of backups. The schedule is defined in CRON format. The example above backs up every 4 hours.

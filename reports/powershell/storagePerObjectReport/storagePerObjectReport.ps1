@@ -1,4 +1,4 @@
-# version: 2024-10-17
+# version: 2024-10-23
 
 # process commandline arguments
 [CmdletBinding()]
@@ -24,7 +24,7 @@ param (
     [Parameter()][string]$outfileName
 )
 
-$scriptversion = '2024-10-17 (PowerShell)'
+$scriptversion = '2024-10-23 (PowerShell)'
 
 # source the cohesity-api helper code
 . $(Join-Path -Path $PSScriptRoot -ChildPath cohesity-api.ps1)
@@ -66,7 +66,7 @@ foreach ($Parameter in $ParameterList) {
 
 # headings
 """Cluster Name"",""Origin"",""Stats Age (Days)"",""Protection Group"",""Tenant"",""Storage Domain ID"",""Storage Domain Name"",""Environment"",""Source Name"",""Object Name"",""Front End Allocated $unit"",""Front End Used $unit"",""$unit Stored (Before Reduction)"",""$unit Stored (After Reduction)"",""$unit Stored (After Reduction and Resiliency)"",""Reduction Ratio"",""$unit Change Last $growthDays Days (After Reduction and Resiliency)"",""Snapshots"",""Log Backups"",""Oldest Backup"",""Newest Backup"",""Newest DataLock Expiry"",""Archive Count"",""Oldest Archive"",""$unit Archived"",""$unit per Archive Target"",""Description"",""VM Tags""" | Out-File -FilePath $outfileName # -Encoding utf8
-"""Cluster Name"",""Total Used $unit"",""BookKeeper Used $unit"",""Unaccounted Usage $unit"",""Unaccounted Percent"",""Reduction Ratio"",""All Objects Front End Size $unit"",""All Objects Stored (After Reduction) $unit"",""All Objects Stored (After Reduction and Resiliency) $unit"",""Storage Variance Factor"",""Script Version"",""Cluster Software Version""" | Out-File -FilePath $clusterStatsFileName
+"""Cluster Name"",""Total Used $unit"",""BookKeeper Used $unit"",""Total Unaccounted Usage $unit"",""Total Unaccounted Percent"",""Garbage $unit"",""Garbage Percent"",""Other Unaccounted $unit"",""Other Unaccounted Percent"",""Reduction Ratio"",""All Objects Front End Size $unit"",""All Objects Stored (After Reduction) $unit"",""All Objects Stored (After Reduction and Resiliency) $unit"",""Storage Variance Factor"",""Script Version"",""Cluster Software Version""" | Out-File -FilePath $clusterStatsFileName
 
 if($secondFormat){
     $outfile2 = "customFormat2-storagePerObjectReport-$dateString.csv"
@@ -809,6 +809,7 @@ function reportStorage(){
             """$($cluster.name)"",""$monthString"",""$viewName"",""$($view.description)"",""$(toUnits $consumption)""" | Out-File -FilePath $outfile2 -Append
         }
     }
+    $garbageStart = (dateToUsecs (Get-Date -Hour 0 -Minute 0 -Second 0)) / 1000
     $bookKeeperStart = (dateToUsecs ((Get-Date -Hour 0 -Minute 0 -Second 0).AddDays(-29))) / 1000
     $bookKeeperEnd = (dateToUsecs ((Get-Date -Hour 0 -Minute 0 -Second 0).AddDays(1))) / 1000
     $bookKeeperStats = api get "statistics/timeSeriesStats?startTimeMsecs=$bookKeeperStart&schemaName=MRCounters&metricName=bytes_value&rollupIntervalSecs=180&rollupFunction=average&entityId=BookkeeperChunkBytesPhysical&endTimeMsecs=$bookKeeperEnd"
@@ -816,11 +817,18 @@ function reportStorage(){
     $clusterUsedBytes = $cluster.stats.usagePerfStats.totalPhysicalUsageBytes
     $unaccounted = $clusterUsedBytes - $bookKeeperBytes
     $unaccountedPercent = 0
+    $garbageStats = api get "statistics/timeSeriesStats?endTimeMsecs=$bookKeeperEnd&entityId=$($cluster.id)&metricName=kMorphedGarbageBytes&metricUnitType=0&range=day&rollupFunction=average&rollupIntervalSecs=360&schemaName=kBridgeClusterStats&startTimeMsecs=$garbageStart"
+    $garbageBytes = $garbageStats.dataPointVec[-1].data.int64Value
+    $garbagePercent = 0
+    $otherUnaccountedBytes = $unaccounted - $garbageBytes
+    $otherUnaccountedPercent = 0
     if($clusterUsedBytes -gt 0){
         $unaccountedPercent = [math]::Round(100 * ($unaccounted / $clusterUsedBytes), 1)
+        $garbagePercent = [math]::Round(100 * ($garbageBytes / $clusterUsedBytes), 1)
+        $otherUnaccountedPercent = $unaccountedPercent - $garbagePercent
     }
     $storageVarianceFactor = [math]::Round($clusterUsedBytes / $sumObjectsWrittenWithResiliency, 4)
-    """$($cluster.name)"",""$clusterUsed"",""$(toUnits $bookKeeperBytes)"",""$(toUnits $unaccounted)"",""$unaccountedPercent"",""$clusterReduction"",""$(toUnits $sumObjectsUsed)"",""$(toUnits $sumObjectsWritten)"",""$(toUnits $sumObjectsWrittenWithResiliency)"",""$storageVarianceFactor"",""$scriptVersion"",""$($cluster.clusterSoftwareVersion)""" | Out-File -FilePath $clusterStatsFileName -Append
+    """$($cluster.name)"",""$clusterUsed"",""$(toUnits $bookKeeperBytes)"",""$(toUnits $unaccounted)"",""$unaccountedPercent"",""$(toUnits $garbageBytes)"",""$garbagePercent"",""$(toUnits $otherUnaccountedBytes)"",""$otherUnaccountedPercent"",""$clusterReduction"",""$(toUnits $sumObjectsUsed)"",""$(toUnits $sumObjectsWritten)"",""$(toUnits $sumObjectsWrittenWithResiliency)"",""$storageVarianceFactor"",""$scriptVersion"",""$($cluster.clusterSoftwareVersion)""" | Out-File -FilePath $clusterStatsFileName -Append
 }
 
 # authentication =============================================

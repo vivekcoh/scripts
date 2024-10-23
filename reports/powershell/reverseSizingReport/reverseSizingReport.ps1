@@ -13,7 +13,7 @@ param (
     [Parameter()][string]$accessCluster,
     [Parameter()][ValidateSet('MiB','GiB')][string]$unit = 'GiB',
     [Parameter()][int]$daysBack = 7,
-    [Parameter()][Int64]$numRuns = 100,
+    [Parameter()][Int64]$numRuns = 1000,
     [Parameter()][Int64]$backDays = 0
 )
 
@@ -99,12 +99,16 @@ foreach($job in (api get -v2 "data-protect/protection-groups?includeTenants=true
         }
         $runs = api get -v2 "data-protect/protection-groups/$jobId/runs?endTimeUsecs=$endUsecs&includeTenants=true&includeObjectDetails=true&numRuns=$numRuns&runTypes=kIncremental,kFull&includeObjectDetails=True" # &includeObjectDetails=True
         if($runs.runs.Count -gt 0){
-            $endUsecs = $runs.runs[-1].localBackupInfo.startTimeUsecs - 1
+            if($runs.runs[-1].PSObject.Properties['originalBackupInfo']){
+                $endUsecs = $runs.runs[-1].originalBackupInfo.startTimeUsecs - 1
+            }else{
+                $endUsecs = $runs.runs[-1].localBackupInfo.startTimeUsecs - 1
+            }
         }else{
             break
         }
         foreach($run in $runs.runs){
-            if(! $run.PSObject.Properties['isLocalSnapshotsDeleted']){
+            if(! $run.PSObject.Properties['isLocalSnapshotsDeleted'] -or $run.isLocalSnapshotsDeleted -ne $True){
                 $runBytes = 0
                 if($run.PSObject.Properties['originalBackupInfo']){
                     if($jobType -eq 'VMware'){

@@ -84,7 +84,7 @@ Note that at this point the bucket is empty, so no items will be returned, but i
 
 ## Create the Elastic S3 Repository
 
-Review, modify and execute the create-repository.sh
+Review, and execute the create-repository.sh
 
 ```bash
 curl -X PUT -k \
@@ -135,7 +135,7 @@ Once the backup is working as expected we can shutdown the pod:
 kubectl delete pod backup-service -n cohesity-onehelios-onehelios
 ```
 
-## Schedule Backups
+## Schedule Backups Using a Cron Job
 
 Review the backup-cronjob.yaml file:
 
@@ -184,11 +184,15 @@ kubectl apply -f backup-cronjob.yaml -n cohesity-onehelios-onehelios
 
 Now the backup should run on schedule.
 
+## Testing the Cron Job
+
 To trigger the cronjob:
 
 ```bash
 kubectl create job --from=cronjob/backup backuptest1 -n cohesity-onehelios-onehelios
 ```
+
+## Reviewing Jobs and Logs
 
 After the schedule has been triggered, You can review logs from completed backups:
 
@@ -196,3 +200,36 @@ After the schedule has been triggered, You can review logs from completed backup
 kubectl get jobs -n cohesity-onehelios-onehelios
 kubectl logs job.batch/backuptest1 -n cohesity-onehelios-onehelios
 ```
+
+## Upgrading the Backup Service
+
+1. Download the latest image for the backup service here: (URL to be added later)
+2. Ask Cohesity support to enable host shell access to the OneHelios appliance
+3. scp the image to a node of the appliance:
+
+```bash
+scp -P 2222 backup-service.tar support@10.140.246.4:
+```
+
+4. ssh into the node
+
+```bash
+ssh support@10.140.246.4 -p 2222
+```
+
+5. Move the file and set permissions
+
+```bash
+sudo mv backup-service.tar /home/cohesity
+sudo chown cohesity:cohesity /home/cohesity/backup-service.tar
+```
+
+6. Distribute and load the image
+
+```bash
+sudo su - cohesity
+allscp.sh backup-service.tar /home/cohesity/backup-service.tar
+allssh.sh "sudo nerdctl -n k8s.io load -i /home/cohesity/backup-service.tar"
+```
+
+7. Test the backup (see above)

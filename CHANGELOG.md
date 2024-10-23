@@ -1,5 +1,23 @@
 # Change Log for cohesity/community-automation-samples
 
+## 2024-10-23
+
+* [reverseSizingReport.ps1](https://github.com/cohesity/community-automation-samples/tree/main/reports/powershell/reverseSizingReport) [`Fix`] fix for Cohesity version 7
+* [storagePerObjectReport.ps1](https://github.com/cohesity/community-automation-samples/tree/main/reports/powershell/storagePerObjectReport) [`Update`] added garbage stats
+* [storagePerObjectReport.py](https://github.com/cohesity/community-automation-samples/tree/main/reports/python/storagePerObjectReport) [`Update`] added garbage stats
+
+## 2024-10-22
+
+* [pauseResumeJobs.ps1](https://github.com/cohesity/community-automation-samples/tree/main/powershell/pauseResumeJobs) [`Update`] modernized authentication
+* [unprotectCcsM365Sites.ps1](https://github.com/cohesity/community-automation-samples/tree/main/ccs/powershell/unprotectCcsM365Sites) [`New`] unprotect M365 Sites from CCS
+
+## 2024-10-21
+
+* [obfuscateLogs.py](https://github.com/cohesity/community-automation-samples/tree/main/python/obfuscateLogs) [`Update`] added better masking for dir op file names
+* [lastRunStatus.ps1](https://github.com/cohesity/community-automation-samples/tree/main/reports/powershell/lastRunStatus) [`Update`] modernized authentication
+* [protectOracle.ps1](https://github.com/cohesity/community-automation-samples/tree/main/oracle/powershell/protectOracle) [`Update`] added support for instant log deletion
+* [protectOracle.py](https://github.com/cohesity/community-automation-samples/tree/main/oracle/python/protectOracle) [`Update`] added support for instant log deletion
+
 ## 2024-10-17
 
 * [storagePerObjectReport.py](https://github.com/cohesity/community-automation-samples/tree/main/reports/python/storagePerObjectReport) [`Update`] include cluster software version in output

@@ -1,0 +1,17 @@
+apiVersion: v1
+stringData:
+  accesskey: zePK3J1hf_MY_ACCESS_KEY_L9G3YLw-MeSb0q2gj5w
+  secretkey: G2W3ZVTCD_MY_SECRET_KEY_pBQonkUH5XhtlmBtHtM
+  host: MY_S3_TARGET:MY_S3_PORT
+  bucket: MY_BUCKET
+  location: US
+  retention: "7"
+  elastic-backup-repository: elastic-backups-repo
+  smtp-server: "smtp.mydomain.net"
+  smtp-port: "25"
+  send-from: "myaddress@mydomain.com"
+  send-to: "otheraddress@mydomain.com"
+kind: Secret
+metadata:
+  creationTimestamp: null
+  name: backup-config

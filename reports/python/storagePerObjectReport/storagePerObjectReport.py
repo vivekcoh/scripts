@@ -1,5 +1,5 @@
 #!/usr/bin/env python
-"""Storage Per Object Report version 2024.10.17 for Python"""
+"""Storage Per Object Report version 2024.10.23 for Python"""
 
 # import pyhesity wrapper module
 from pyhesity import *
@@ -44,7 +44,7 @@ skipdeleted = args.skipdeleted
 debug = args.debug
 includearchives = args.includearchives
 
-scriptVersion = '2024-10-17 (Python)'
+scriptVersion = '2024-10-23 (Python)'
 
 if vips is None or len(vips) == 0:
     vips = ['helios.cohesity.com']
@@ -70,7 +70,7 @@ clusterStatsFileName = '%s/storagePerObjectReport-%s-clusterstats.csv' % (folder
 csv = codecs.open(csvfileName, 'w', 'utf-8')
 clusterStats = codecs.open(clusterStatsFileName, 'w', 'utf-8')
 csv.write('"Cluster Name","Origin","Stats Age (Days)","Protection Group","Tenant","Storage Domain ID","Storage Domain Name","Environment","Source Name","Object Name","Front End Allocated %s","Front End Used %s","%s Stored (Before Reduction)","%s Stored (After Reduction)","%s Stored (After Reduction and Resiliency)","Reduction Ratio","%s Change Last %s Days (After Reduction and Resiliency)","Snapshots","Log Backups","Oldest Backup","Newest Backup","Newest DataLock Expiry","Archive Count","Oldest Archive","%s Archived","%s per Archive Target","Description","VM Tags"\n' % (units, units, units, units, units, units, growthdays, units, units))
-clusterStats.write('"Cluster Name","Total Used %s","BookKeeper Used %s","Unaccounted Usage %s","Unaccounted Percent","Reduction Ratio","All Objects Front End Size %s","All Objects Stored (After Reduction) %s","All Objects Stored (After Reduction and Resiliency) %s","Storage Variance Factor","Script Version","Cluster Software Version"\n' % (units, units, units, units, units, units))
+clusterStats.write('"Cluster Name","Total Used %s","BookKeeper Used %s","Total Unaccounted Usage %s","Total Unaccounted Percent","Garbage %s","Garbage Percent","Other Unaccounted Usage %s","Other Unaccounted Percent","Reduction Ratio","All Objects Front End Size %s","All Objects Stored (After Reduction) %s","All Objects Stored (After Reduction and Resiliency) %s","Storage Variance Factor","Script Version","Cluster Software Version"\n' % (units, units, units, units, units, units, units, units))
 
 
 def getCloudStats(cluster):
@@ -645,6 +645,8 @@ def reportStorage():
             except Exception:
                 lastDataLock = '-'
             csv.write('"%s","%s","%s","%s","%s","%s","%s","%s","%s","%s","%s","%s","%s","%s","%s","%s","%s","%s","%s","%s","%s","%s","%s","%s","%s","%s","%s","%s"\n' % (cluster['name'], origin, statsAge, jobName, tenant, view['storageDomainId'], view['storageDomainName'], 'View', sourceName, viewName, objFESize, objFESize, round(dataIn / multiplier, 1), round(jobWritten / multiplier, 1), round(consumption / multiplier, 1), jobReduction, objGrowth, numSnaps, numLogs, oldestBackup, newestBackup, lastDataLock, archiveCount, oldestArchive, totalArchived, vaultStats, viewDescription, ''))
+    
+    garbageStart = int(midnightusecs / 1000)
     bookKeeperStart = int(midnightusecs / 1000 - (29 * 86400000))
     bookKeeperEnd = int(midnightusecs / 1000 + 86400000)
     bookKeeperStats = api('get', 'statistics/timeSeriesStats?startTimeMsecs=%s&schemaName=MRCounters&metricName=bytes_value&rollupIntervalSecs=180&rollupFunction=average&entityId=BookkeeperChunkBytesPhysical&endTimeMsecs=%s' % (bookKeeperStart, bookKeeperEnd))
@@ -656,12 +658,23 @@ def reportStorage():
     clusterUsedBytes = cluster['stats']['usagePerfStats']['totalPhysicalUsageBytes']
     unaccounted = clusterUsedBytes - bookKeeperBytes
     unaccountedPercent = 0
+    garbageStats = api('get', 'statistics/timeSeriesStats?endTimeMsecs=%s&entityId=%s&metricName=kMorphedGarbageBytes&metricUnitType=0&range=day&rollupFunction=average&rollupIntervalSecs=360&schemaName=kBridgeClusterStats&startTimeMsecs=%s' % (bookKeeperEnd, cluster['id'], garbageStart))
+    garbagePercent = 0
+    try:
+        garbageBytes = garbageStats['dataPointVec'][-1]['data']['int64Value']
+    except Exception:
+        garbageBytes = 0
+    otherUnaccountedBytes = unaccounted - garbageBytes
+    otherUnaccountedPercent = 0
     if clusterUsedBytes > 0:
         unaccountedPercent = round(100 * (unaccounted / clusterUsedBytes), 1)
+        garbagePercent = round(100 * (garbageBytes / clusterUsedBytes), 1)
+        otherUnaccountedPercent = unaccountedPercent - garbagePercent
+
     storageVarianceFactor = 1
     if sumObjectsWrittenWithResiliency > 0:
         storageVarianceFactor = round(clusterUsed / sumObjectsWrittenWithResiliency, 4)
-    clusterStats.write('"%s","%s","%s","%s","%s","%s","%s","%s","%s","%s","%s","%s"\n' % (cluster['name'], clusterUsed, round(bookKeeperBytes / multiplier, 1), round(unaccounted / multiplier, 1), unaccountedPercent, clusterReduction, sumObjectsUsed, sumObjectsWritten, sumObjectsWrittenWithResiliency, storageVarianceFactor, scriptVersion, cluster['clusterSoftwareVersion']))
+    clusterStats.write('"%s","%s","%s","%s","%s","%s","%s","%s","%s","%s","%s","%s","%s","%s","%s","%s"\n' % (cluster['name'], clusterUsed, round(bookKeeperBytes / multiplier, 1), round(unaccounted / multiplier, 1), unaccountedPercent, round(garbageBytes / multiplier, 1), garbagePercent, round(otherUnaccountedBytes / multiplier, 1), otherUnaccountedPercent, clusterReduction, sumObjectsUsed, sumObjectsWritten, sumObjectsWrittenWithResiliency, storageVarianceFactor, scriptVersion, cluster['clusterSoftwareVersion']))
 
 
 for vip in vips:

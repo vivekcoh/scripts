@@ -48,5 +48,5 @@ Place the files in a folder together and then run the script like so:
 
 ## Other Parameters
 
-* -jobName: name of protection group
+* -jobName: (optional) name of protection group
 * -objectName: name of object to cancel

@@ -12,7 +12,7 @@ param (
     [Parameter()][string]$mfaCode,
     [Parameter()][switch]$emailMfaCode,
     [Parameter()][string]$clusterName,
-    [Parameter(Mandatory=$True)][string]$jobName,
+    [Parameter()][string]$jobName,
     [Parameter(Mandatory=$True)][string]$objectName
 )
 
@@ -44,37 +44,36 @@ if($USING_HELIOS){
 }
 # end authentication =========================================
 
-$jobs = api get -v2 "data-protect/protection-groups?names=$jobName&isActive=true&isDeleted=false&pruneSourceIds=true&pruneExcludedSourceIds=true"
-$job = ($jobs.protectionGroups | Where-Object name -ieq $jobName)
-if($job){
-    $runs = api get -v2 "data-protect/protection-groups/$($job.id)/runs?localBackupRunStatus=Running&includeObjectDetails=true"
-    if($runs.runs.Count -gt 0){
-        foreach($run in $runs.runs){
-            $localTaskId = $run.localBackupInfo.localTaskId
-            $object = $run.objects | Where-Object {$_.object.name -eq $objectName}
-            if($object){
-                $cancelParams = @{
-                    "action" = "Cancel";
-                    "cancelParams" = @(
-                        @{
-                            "runId" = $run.id;
-                            "localTaskId" = $localTaskId;
-                            "objectIds" = @(
-                                $object.object.id
-                            )
-                        }
-                    )
+$jobs = api get -v2 "data-protect/protection-groups?isActive=true&isDeleted=false&pruneSourceIds=true&pruneExcludedSourceIds=true"
+if($jobName){
+    $jobs.protectionGroups = $jobs.protectionGroups | Where-Object name -eq $jobName
+}
+if($jobs.protectionGroups.Count -gt 0){
+    foreach($job in $jobs.protectionGroups){
+        $runs = api get -v2 "data-protect/protection-groups/$($job.id)/runs?localBackupRunStatus=Running&includeObjectDetails=true"
+        if($runs.runs.Count -gt 0){
+            foreach($run in $runs.runs){
+                $localTaskId = $run.localBackupInfo.localTaskId
+                $object = $run.objects | Where-Object {$_.object.name -eq $objectName}
+                if($object){
+                    $cancelParams = @{
+                        "action" = "Cancel";
+                        "cancelParams" = @(
+                            @{
+                                "runId" = $run.id;
+                                "localTaskId" = $localTaskId;
+                                "objectIds" = @(
+                                    $object.object.id
+                                )
+                            }
+                        )
+                    }
+                    Write-Host "Canceling $($job.name) run for $objectName"
+                    $cancel = api post -v2 "data-protect/protection-groups/$($job.id)/runs/actions" $cancelParams
                 }
-                Write-Host "Canceling run for $objectName"
-                $cancel = api post -v2 "data-protect/protection-groups/$($job.id)/runs/actions" $cancelParams
-            }else{
-                Write-Host "$objectName not running" -ForegroundColor Yellow
             }
         }
-    }else{
-        Write-Host "Protection group $jobName is not running" -ForegroundColor Yellow
-        exit
-    }    
+    }
 }else{
     Write-Host "Protection group $jobName not found" -ForegroundColor Yellow
     exit

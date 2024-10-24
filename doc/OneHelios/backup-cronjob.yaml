@@ -101,9 +101,3 @@ spec:
                 secretKeyRef:
                   name: backup-config
                   key: send-to
-            - name: ELASTIC_BACKUP_REPOSITORY
-              valueFrom:
-                secretKeyRef:
-                  name: backup-config
-                  key: elastic-backup-repository
-          restartPolicy: Never

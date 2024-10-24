@@ -14,7 +14,7 @@ ssh support@myappliance -p 2222
 sudo su - cohesity
 ```
 
-## Create Configuration
+## Create Backup Configuration
 
 Now we must create a file backup-config.yaml. Example:
 
@@ -27,7 +27,6 @@ stringData:
   bucket: OneHelios
   location: US
   retention: "7"
-  elastic-backup-repository: elastic-backups-repo
   smtp-server: "10.1.1.200"
   smtp-port: "25"
   send-from: "fromuser@mydomain.com"
@@ -46,7 +45,6 @@ Populate the yaml file with the appropriate values:
 * Bucket name
 * location (region name for AWS, otherwise this is ignored)
 * retention (number of days to keep backups)
-* Elastic backup reporitory name (we will create this repository later)
 * SMTP relay to send email through
 * SMTP port (usually port 25)
 * Send from email address
@@ -56,6 +54,38 @@ Once complete, apply the yaml to Kubernetes:
 
 ```bash
 kubectl apply -f backup-config.yaml -n cohesity-onehelios-onehelios
+```
+
+## Create Restore Configuration
+
+Now we must create a file restore-config.yaml. Example:
+
+```yaml
+apiVersion: v1
+stringData:
+  accesskey: xHAcEUiSJYcOqD9zOQSzYE4I3QirjlWVc1mF2vjdCYh
+  secretkey: yko-e81fNMPaZdgy73AWo-D7ht6lOcz9I0Rh6dqQksR
+  host: 10.1.1.100:3000
+  bucket: OneHelios
+  location: US
+kind: Secret
+metadata:
+  creationTimestamp: null
+  name: restore-config
+```
+
+Populate the yaml file with the appropriate values:
+
+* Access Key to access the S3 bucket
+* Secret Key to access the S3 bucket
+* host where S3 bucket is located (use host:port format for non-standard port)
+* Bucket name
+* location (region name for AWS, otherwise this is ignored)
+
+Once complete, apply the yaml to Kubernetes:
+
+```bash
+kubectl apply -f restore-config.yaml -n cohesity-onehelios-onehelios
 ```
 
 ## Start the Backup Service Pod
@@ -81,27 +111,6 @@ s3cmd --host=$S3_HOST --access_key=$S3_ACCESS_KEY --secret_key=$S3_SECRET_KEY ls
 ```
 
 Note that at this point the bucket is empty, so no items will be returned, but if no error is shown, then access is working.
-
-## Create the Elastic S3 Repository
-
-Review, and execute the create-repository.sh
-
-```bash
-curl -X PUT -k \
-    --url "http://$ELASTICSEARCH_ES_HTTP_SERVICE_HOST:$ELASTICSEARCH_ES_HTTP_PORT_9200_TCP_PORT/_snapshot/$ELASTIC_BACKUP_REPOSITORY"  \
-    -H 'Content-type: application/json' \
-    -d '{
-    "type": "s3",
-    "settings": {
-        "bucket": "'${S3_BUCKET}'",
-        "access_key": "'${S3_ACCESS_KEY}'",
-        "secret_key": "'${S3_SECRET_KEY}'",
-        "endpoint": "'${S3_HOST}'",
-        "path_style_access": "true",
-        "protocol": "https"
-    }
-}'
-```
 
 ## Test the Backup
 
@@ -203,7 +212,7 @@ kubectl logs job.batch/backuptest1 -n cohesity-onehelios-onehelios
 
 ## Upgrading the Backup Service
 
-1. Download the latest image for the backup service here: (URL to be added later)
+1. Download the latest image for the backup service here: (URL will be provided)
 2. Ask Cohesity support to enable host shell access to the OneHelios appliance
 3. scp the image to a node of the appliance:
 

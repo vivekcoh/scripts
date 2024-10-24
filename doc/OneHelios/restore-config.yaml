@@ -5,12 +5,7 @@ stringData:
   host: MY_S3_TARGET:MY_S3_PORT
   bucket: MY_BUCKET
   location: US
-  retention: "7"
-  smtp-server: "smtp.mydomain.net"
-  smtp-port: "25"
-  send-from: "myaddress@mydomain.com"
-  send-to: "otheraddress@mydomain.com"
 kind: Secret
 metadata:
   creationTimestamp: null
-  name: backup-config
+  name: restore-config

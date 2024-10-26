@@ -38,8 +38,8 @@ Now we must create a file backup-config.yaml. Example:
 ```yaml
 apiVersion: v1
 stringData:
-  accesskey: xHAcEUiSJYcOqD9zOQSzYE4I3QirjlWVc1mF2vjdCYh
-  secretkey: yko-e81fNMPaZdgy73AWo-D7ht6lOcz9I0Rh6dqQksR
+  accesskey: MY_ACCESS_KEY_xHAcEUiSJYc3irjlWVc1mF2vjdCYh
+  secretkey: MY_SECRET_KEY_1fNMPao-D7ht6lOcz9I0Rh6dqQksR
   host: 10.1.1.100:3000
   bucket: OneHelios
   location: US

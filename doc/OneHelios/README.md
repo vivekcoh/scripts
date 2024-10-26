@@ -44,10 +44,14 @@ stringData:
   bucket: OneHelios
   location: US
   retention: "7"
-  smtp-server: "10.1.1.200"
+  appliance-name: "onehelios"
+  smtp-server: "smtp.mydomain.net"
   smtp-port: "25"
-  send-from: "fromuser@mydomain.com"
-  send-to: "touser@mydomain.com"
+  smtp-user: ""
+  smtp-password: ""
+  smtp-starttls: "false"
+  smtp-from: "from@cohesity.com"
+  smtp-to: "to@cohesity.com"
 kind: Secret
 metadata:
   creationTimestamp: null
@@ -56,16 +60,20 @@ metadata:
 
 Populate the yaml file with the appropriate values:
 
-* Access Key to access the S3 bucket
-* Secret Key to access the S3 bucket
-* host where S3 bucket is located (use host:port format for non-standard port)
-* Bucket name
-* location (region name for AWS, otherwise this is ignored)
-* retention (number of days to keep backups)
-* SMTP relay to send email through
-* SMTP port (usually port 25)
-* Send from email address
-* Send to enail address
+* accesskey: access Key to access the S3 bucket
+* secretkey: secret Key to access the S3 bucket
+* host: host where S3 bucket is located (use host:port format for non-standard port)
+* bucket: name of S3 bucket
+* location: region name for AWS, otherwise this is ignored
+* retention: number of days to retain backups
+* appliance-name: name of OneHelios appliance (used in email subject)
+* smtp-server: SMTP relay to send email through
+* smtp-port: SMTP port (usually port 25)
+* smtp-user: SMTP user if credentials are required (otherwise leave as "")
+* smtp-password: SMTP password if credentials are required (otherwise leave as "")
+* smtp-starttls: set to "true" if required (otherwise leave as "false")
+* smtp-from: email address to send from
+* smtp-to: email address to send to
 
 Once complete, apply the yaml to Kubernetes:
 

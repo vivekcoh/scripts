@@ -39,27 +39,27 @@ spec:
     - name: RESTORE_S3_HOST
       valueFrom:
         secretKeyRef:
-          name: backup-config
+          name: restore-config
           key: host
     - name: RESTORE_S3_ACCESS_KEY
       valueFrom:
         secretKeyRef:
-          name: backup-config
+          name: restore-config
           key: accesskey
     - name: RESTORE_S3_SECRET_KEY
       valueFrom:
         secretKeyRef:
-          name: backup-config
+          name: restore-config
           key: secretkey
     - name: RESTORE_S3_LOCATION
       valueFrom:
         secretKeyRef:
-          name: backup-config
+          name: restore-config
           key: location
     - name: RESTORE_S3_BUCKET
       valueFrom:
         secretKeyRef:
-          name: backup-config
+          name: restore-config
           key: bucket
     - name: S3_HOST
       valueFrom:
@@ -91,6 +91,11 @@ spec:
         secretKeyRef:
           name: backup-config
           key: retention
+    - name: APPLIANCE_NAME
+      valueFrom:
+        secretKeyRef:
+          name: backup-config
+          key: appliance-name
     - name: SMTP_SERVER
       valueFrom:
         secretKeyRef:
@@ -101,13 +106,28 @@ spec:
         secretKeyRef:
           name: backup-config
           key: smtp-port
+    - name: SMTP_USER
+      valueFrom:
+        secretKeyRef:
+          name: backup-config
+          key: smtp-user
+    - name: SMTP_PASSWORD
+      valueFrom:
+        secretKeyRef:
+          name: backup-config
+          key: smtp-password
+    - name: SMTP_STARTTLS
+      valueFrom:
+        secretKeyRef:
+          name: backup-config
+          key: smtp-starttls
     - name: SEND_FROM
       valueFrom:
         secretKeyRef:
           name: backup-config
-          key: send-from
+          key: smtp-from
     - name: SEND_TO
       valueFrom:
         secretKeyRef:
           name: backup-config
-          key: send-to
+          key: smtp-to

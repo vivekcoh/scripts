@@ -1,9 +1,22 @@
 # OneHelios Backup Service
 
+## Table of Contents
+
+1. [Requirements](#Requirements)
+2. [Create an S3 View](#S3View)
+3. [Backup](#Backup)
+4. [Schedule Backups](#Schedule)
+5. [Restore](#Restore)
+6. [Upgrading the Backup Service](#Upgrades)
+
+<a name="Requiremnts" id="Requirements"></a>
+
 ## Requirements
 
 * S3 Target - an S3 compatible object storage bucket. This can be an S3 view on a Cohesity cluster, an S3 bucket in AWS, etc.
 * Access Key and Secret Key to access the bucket
+
+<a name="S3View" id="S3View"></a>
 
 ## Create an S3 View on a Cohesity Cluster
 
@@ -32,6 +45,8 @@ The S3 View created above will only have one user in the ACL: the user that crea
 * Click Settings -> Access Management
 * Click on the user that created the S3 view
 * Copy the Access Key ID and the Secret Access Key to paste into the configurations below
+
+<a name="Backup" id="Backup"></a>
 
 ## Backup
 
@@ -166,6 +181,8 @@ By default, all services are backed up. You can add parameters to backup specifi
         -v key_value  (arbitrary value to store for key name)
 ```
 
+<a name="Schedule" id="Schedule"></a>
+
 ## Schedule Backups Using a Cron Job
 
 Review the backup-cronjob.yaml file:
@@ -234,6 +251,8 @@ After the schedule has been triggered, You can review logs from completed backup
 kubectl get jobs -n cohesity-onehelios-onehelios
 kubectl logs job.batch/backuptest1 -n cohesity-onehelios-onehelios
 ```
+
+<a name="Restore" id="Restore"></a>
 
 ## Restore
 
@@ -332,6 +351,8 @@ By default, all services will be restored. You can add parameters to restore spe
         -s set_name (name of backup set - required when performing restores)
         -k key_name (arbitrary key name to restore - emits value to STDOUT)
 ```
+
+<a name="Upgrades" id="Upgrades"></a>
 
 ## Upgrading the Backup Service
 

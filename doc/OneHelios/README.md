@@ -92,38 +92,6 @@ Once complete, apply the yaml to Kubernetes:
 kubectl apply -f backup-config.yaml -n cohesity-onehelios-onehelios
 ```
 
-### Create Restore Configuration
-
-Now we must create a file restore-config.yaml. Example:
-
-```yaml
-apiVersion: v1
-stringData:
-  accesskey: MY_ACCESS_KEY_xHAcEUiSJYc3irjlWVc1mF2vjdCYh
-  secretkey: MY_SECRET_KEY_1fNMPao-D7ht6lOcz9I0Rh6dqQksR
-  host: 10.1.1.100:3000
-  bucket: OneHelios
-  location: US
-kind: Secret
-metadata:
-  creationTimestamp: null
-  name: restore-config
-```
-
-Populate the yaml file with the appropriate values:
-
-* Access Key to access the S3 bucket
-* Secret Key to access the S3 bucket
-* host where S3 bucket is located (use host:port format for non-standard port)
-* Bucket name
-* location (region name for AWS, otherwise this is ignored)
-
-Once complete, apply the yaml to Kubernetes:
-
-```bash
-kubectl apply -f restore-config.yaml -n cohesity-onehelios-onehelios
-```
-
 ### Start the Backup Service Pod
 
 Find the backup-service.yaml file and apply it to Kubernetes:
@@ -198,7 +166,7 @@ By default, all services are backed up. You can add parameters to backup specifi
         -v key_value  (arbitrary value to store for key name)
 ```
 
-### Schedule Backups Using a Cron Job
+## Schedule Backups Using a Cron Job
 
 Review the backup-cronjob.yaml file:
 
@@ -269,6 +237,40 @@ kubectl logs job.batch/backuptest1 -n cohesity-onehelios-onehelios
 
 ## Restore
 
+To restore, we create a restore configuration that points to the S3 bucket where the backups are located.
+
+### Create Restore Configuration
+
+Now we must create a file restore-config.yaml. Example:
+
+```yaml
+apiVersion: v1
+stringData:
+  accesskey: MY_ACCESS_KEY_xHAcEUiSJYc3irjlWVc1mF2vjdCYh
+  secretkey: MY_SECRET_KEY_1fNMPao-D7ht6lOcz9I0Rh6dqQksR
+  host: 10.1.1.100:3000
+  bucket: OneHelios
+  location: US
+kind: Secret
+metadata:
+  creationTimestamp: null
+  name: restore-config
+```
+
+Populate the yaml file with the appropriate values:
+
+* Access Key to access the S3 bucket
+* Secret Key to access the S3 bucket
+* host where S3 bucket is located (use host:port format for non-standard port)
+* Bucket name
+* location (region name for AWS, otherwise this is ignored)
+
+Once complete, apply the yaml to Kubernetes:
+
+```bash
+kubectl apply -f restore-config.yaml -n cohesity-onehelios-onehelios
+```
+
 Start the backup-service pod:
 
 ```bash
@@ -284,7 +286,7 @@ kubectl exec --stdin --tty -n cohesity-onehelios-onehelios backup-service -- /bi
 To see the catalog of available backups run the restore script with the -c switch:
 
 ```bash
-./restore.sh
+./restore.sh -c
 ```
 
 Output should look like this:
@@ -310,11 +312,11 @@ Choose a backup set to restore from, and then run the restore script, specifying
 ./restore.sh -s 1729847662.2024-10-25_09:14:22
 ```
 
+After restore is complete, shut down the pod:
+
 ```bash
 kubectl delete pod backup-service -n cohesity-onehelios-onehelios
 ```
-
-After restore is complete, shut down the pod:
 
 ### Restore Options
 

@@ -364,11 +364,11 @@ If an updated version of the backup service is required, you can ask Cohesity Su
 
 You will need the following files to build the image (these files are provided in this repository):
 
-* backup.sh
-* restore.sh
-* Dockerfile
+* [backup.sh](https://raw.githubusercontent.com/cohesity/community-automation-samples/refs/heads/main/doc/OneHelios/backup.sh)
+* [restore.sh](https://raw.githubusercontent.com/cohesity/community-automation-samples/refs/heads/main/doc/OneHelios/restore.sh)
+* [Dockerfile](https://raw.githubusercontent.com/cohesity/community-automation-samples/refs/heads/main/doc/OneHelios/Dockerfile)
 
-Please these files together in one directory, then build and save the image:
+Place these files together in one directory, then build and save the image:
 
 ```bash
 docker build -t backup-service .

@@ -358,11 +358,27 @@ By default, all services will be restored. You can add parameters to restore spe
 
 ## Upgrade the Backup Service
 
-If an updated version of the backup service is required:
+If an updated version of the backup service is required, you can ask Cohesity Support for an updated image, or use docker to build the updated image.
 
-1. Download the latest image for the backup service here: (URL will be provided)
-2. Ask Cohesity support to enable host shell access to the OneHelios appliance
-3. scp the image to a node of the appliance:
+### Build the Updated Image Using Docker
+
+You will need the following files to build the image (these files are provided in this repository):
+
+* backup.sh
+* restore.sh
+* Dockerfile
+
+Please these files together in one directory, then build and save the image:
+
+```bash
+docker build -t backup-service .
+docker image save backup-service > backup-service.tar
+```
+
+### Import the Updated Image
+
+1. Ask Cohesity Support to enable host shell access to the OneHelios appliance
+2. scp the image to a node of the appliance:
 
 ```bash
 scp -P 2222 backup-service.tar support@10.140.246.4:

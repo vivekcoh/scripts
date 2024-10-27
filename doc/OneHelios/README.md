@@ -4,7 +4,7 @@
 
 1. [Requirements](#Requirements)
 2. [Create an S3 View](#S3View)
-3. [Backup](#Backup)
+3. [Backup Configuration and Testing](#Backup)
 4. [Schedule Backups](#Schedule)
 5. [Restore](#Restore)
 6. [Upgrading the Backup Service](#Upgrades)
@@ -48,7 +48,7 @@ The S3 View created above will only have one user in the ACL: the user that crea
 
 <a name="Backup" id="Backup"></a>
 
-## Backup
+## Backup Configuration and Testing
 
 Setup requires intervention by support, who will need to enable host shell access to the OneHelios appliance so that we can SSH into it.
 

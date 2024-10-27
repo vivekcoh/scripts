@@ -7,7 +7,7 @@
 3. [Backup Configuration and Testing](#Backup)
 4. [Schedule Backups](#Schedule)
 5. [Restore](#Restore)
-6. [Upgrading the Backup Service](#Upgrades)
+6. [Upgrade the Backup Service](#Upgrades)
 
 <a name="Requiremnts" id="Requirements"></a>
 
@@ -106,6 +106,8 @@ Once complete, apply the yaml to Kubernetes:
 ```bash
 kubectl apply -f backup-config.yaml -n cohesity-onehelios-onehelios
 ```
+
+<a name="Test" id="Test"></a>
 
 ### Start the Backup Service Pod
 
@@ -354,7 +356,9 @@ By default, all services will be restored. You can add parameters to restore spe
 
 <a name="Upgrades" id="Upgrades"></a>
 
-## Upgrading the Backup Service
+## Upgrade the Backup Service
+
+If an updated version of the backup service is required:
 
 1. Download the latest image for the backup service here: (URL will be provided)
 2. Ask Cohesity support to enable host shell access to the OneHelios appliance
@@ -385,4 +389,4 @@ allscp.sh backup-service.tar /home/cohesity/backup-service.tar
 allssh.sh "sudo nerdctl -n k8s.io load -i /home/cohesity/backup-service.tar"
 ```
 
-7. Test the backup (see above)
+7. Test the backup ([See above](#Test))

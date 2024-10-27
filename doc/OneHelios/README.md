@@ -109,7 +109,7 @@ kubectl apply -f backup-config.yaml -n cohesity-onehelios-onehelios
 
 <a name="Test" id="Test"></a>
 
-### Start the Backup Service Pod
+### Test the Backup
 
 Find the backup-service.yaml file and apply it to Kubernetes:
 
@@ -133,7 +133,7 @@ s3cmd --host=$S3_HOST --access_key=$S3_ACCESS_KEY --secret_key=$S3_SECRET_KEY ls
 
 Note that at this point the bucket is empty, so no items will be returned, but if no error is shown, then access is working.
 
-### Test the Backup
+### Run a Test Backup
 
 Now at the bash prompt inside the pod, we can test the backup:
 

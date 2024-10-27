@@ -5,7 +5,7 @@
 * S3 Target - an S3 compatible object storage bucket. This can be an S3 view on a Cohesity cluster, an S3 bucket in AWS, etc.
 * Access Key and Secret Key to access the bucket
 
-## Create an S3 View
+## Create an S3 View on a Cohesity Cluster
 
 On a Cohesity cluster that can be reached over the network by the OneHelios appliance, create an S3 View:
 
@@ -21,6 +21,15 @@ On a Cohesity cluster that can be reached over the network by the OneHelios appl
 * Click Create
 
 When using a Cohesity view as the S3 bucket, the s3 host will be cluster.fqdn:3000 (e.g. mycluster.mydomain.net:3000) or cluster.IPaddress:3000 (e.g. 10.1.1.100:3000)
+
+### Access Key and Secret Key for the S3 View on a Cohesity Cluster
+
+The S3 View created above will only have one user in the ACL: the user that created the view. So, use that user's the access key and secret key in the configurations below. To get the keys:
+
+* Log onto the Cohesity cluster
+* Click Settings -> Access Management
+* Click on the user that created the S3 view
+* Copy the Access Key ID and the Secret Access Key to paste into the configurations below
 
 ## Setup
 

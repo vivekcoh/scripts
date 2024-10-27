@@ -20,6 +20,8 @@ On a Cohesity cluster that can be reached over the network by the OneHelios appl
 * Add IP address of each node (e.g. 10.1.1.20/32) with Read/Write permissions and click Add (repeat for each node)
 * Click Create
 
+### S3 Hostname and Port
+
 When using a Cohesity view as the S3 bucket, the s3 host will be cluster.fqdn:3000 (e.g. mycluster.mydomain.net:3000) or cluster.IPaddress:3000 (e.g. 10.1.1.100:3000)
 
 ### Access Key and Secret Key
@@ -206,7 +208,7 @@ kind: CronJob
 metadata:
   name: backup
 spec:
-  schedule: "0 */4 * * *"
+  schedule: "0 */8 * * *"
   successfulJobsHistoryLimit: 7
   failedJobsHistoryLimit: 7
   concurrencyPolicy: Forbid
@@ -227,7 +229,7 @@ spec:
             ... (more not shown)
 ```
 
-Modify the schedule to specify the frequency of backups. The schedule is defined in CRON format. The example above backs up every 4 hours.
+Modify the schedule to specify the frequency of backups. The schedule is defined in CRON format. The example above backs up every 8 hours.
 
 Also note the backoffLimit. By default it is set to zero (no retries after a backup failure). If you prefer to have it retry after a failure, increase the number.
 

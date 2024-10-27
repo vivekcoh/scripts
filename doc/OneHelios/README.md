@@ -384,20 +384,20 @@ docker image save backup-service > backup-service.tar
 scp -P 2222 backup-service.tar support@10.140.246.4:
 ```
 
-4. ssh into the node
+3. ssh into the node
 
 ```bash
 ssh support@10.140.246.4 -p 2222
 ```
 
-5. Move the file and set permissions
+4. Move the file and set permissions
 
 ```bash
 sudo mv backup-service.tar /home/cohesity
 sudo chown cohesity:cohesity /home/cohesity/backup-service.tar
 ```
 
-6. Distribute and load the image
+5. Distribute and load the image
 
 ```bash
 sudo su - cohesity
@@ -405,4 +405,4 @@ allscp.sh backup-service.tar /home/cohesity/backup-service.tar
 allssh.sh "sudo nerdctl -n k8s.io load -i /home/cohesity/backup-service.tar"
 ```
 
-7. Test the backup ([See above](#Test))
+6. Test the backup ([See above](#Test))

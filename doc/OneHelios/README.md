@@ -22,7 +22,7 @@ On a Cohesity cluster that can be reached over the network by the OneHelios appl
 
 When using a Cohesity view as the S3 bucket, the s3 host will be cluster.fqdn:3000 (e.g. mycluster.mydomain.net:3000) or cluster.IPaddress:3000 (e.g. 10.1.1.100:3000)
 
-### Access Key and Secret Key for the S3 View on a Cohesity Cluster
+### Access Key and Secret Key
 
 The S3 View created above will only have one user in the ACL: the user that created the view. So, use that user's the access key and secret key in the configurations below. To get the keys:
 

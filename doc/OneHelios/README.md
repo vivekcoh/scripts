@@ -7,7 +7,7 @@
 3. [Backup Configuration and Testing](#Backup)
 4. [Schedule Backups](#Schedule)
 5. [Restore](#Restore)
-6. [Upgrade the Backup Service](#Upgrades)
+6. [Build or Upgrade the Backup Service Image](#Upgrades)
 
 <a name="Requiremnts" id="Requirements"></a>
 
@@ -356,11 +356,11 @@ By default, all services will be restored. You can add parameters to restore spe
 
 <a name="Upgrades" id="Upgrades"></a>
 
-## Upgrade the Backup Service
+## Build or Upgrade the Backup Service Image
 
-If an updated version of the backup service is required, you can ask Cohesity Support for an updated image, or use docker to build the updated image.
+If an updated version of the backup service is required, you can ask Cohesity Support for an updated image, or use docker to build the image.
 
-### Build the Updated Image Using Docker
+### Build the Image Using Docker
 
 You will need the following files to build the image (these files are provided in this repository):
 

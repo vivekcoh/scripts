@@ -33,7 +33,7 @@ The S3 View created above will only have one user in the ACL: the user that crea
 * Click on the user that created the S3 view
 * Copy the Access Key ID and the Secret Access Key to paste into the configurations below
 
-## Setup
+## Backup
 
 Setup requires intervention by support, who will need to enable host shell access to the OneHelios appliance so that we can SSH into it.
 

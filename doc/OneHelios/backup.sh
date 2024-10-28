@@ -2,7 +2,7 @@
 
 ##########################################
 #
-# OneHelios Backup - version  2024.10.26d
+# OneHelios Backup - version  2024.10.28a
 # Last Updated By: Brian Seltzer
 #
 ##########################################
@@ -69,26 +69,28 @@ if [[ -z $MAIL_TO ]]; then
 fi
 
 finish () {
-    if [[ $NO_MAIL -eq 0 ]]; then
-        echo "account email {" > ~/.mailrc
-        echo "    set from=\"$SEND_FROM\"" >> ~/.mailrc
-        echo "    set ssl-verify=ignore" >> ~/.mailrc
-        echo "    set mta=smtp://$SMTP_SERVER:$SMTP_PORT" >> ~/.mailrc
-        if [[ "$SMTP_STARTTLS" == "true" ]]; then
-            echo "    set smtp-use-starttls" >> ~/.mailrc
+    if [[ $BACKUP_POSTGRES -eq 1 ]] || [[ $BACKUP_MONGODB -eq 1 ]] || [[ $BACKUP_ELASTIC -eq 1 ]] || [[ $DO_ALL -eq 1 ]]; then
+        if [[ $NO_MAIL -eq 0 ]]; then
+            echo "account email {" > ~/.mailrc
+            echo "    set from=\"$SEND_FROM\"" >> ~/.mailrc
+            echo "    set ssl-verify=ignore" >> ~/.mailrc
+            echo "    set mta=smtp://$SMTP_SERVER:$SMTP_PORT" >> ~/.mailrc
+            if [[ "$SMTP_STARTTLS" == "true" ]]; then
+                echo "    set smtp-use-starttls" >> ~/.mailrc
+            fi
+            if [[ "$SMTP_USER" != "" ]]; then
+                echo "    set smtp-auth=login" >> ~/.mailrc
+                echo "    set smtp-auth-user=$SMTP_USER" >> ~/.mailrc
+                echo "    set smtp-auth-password=$SMTP_PASSWORD" >> ~/.mailrc
+            fi
+            echo "}"  >> ~/.mailrc
+            if [[ $1 -eq 0 ]]; then
+                cat $LOG_FILE | mailx -A email -a $LOG_FILE -s "OneHelios Successful Backup Report ($APPLIANCE_NAME)" $SEND_TO 2>/dev/null
+            else
+                cat $LOG_FILE | mailx -A email -a $LOG_FILE -s "OneHelios ** Failed ** Backup Report ($APPLIANCE_NAME)" $SEND_TO 2>/dev/null
+            fi
+            # cat $LOG_FILE | mailx -a $LOG_FILE -s "OneHelios Backup Report" -S mta=smtp://${SMTP_SERVER}:${SMTP_PORT} -S from=${SEND_FROM} ${MAIL_TO} 2>/dev/null
         fi
-        if [[ "$SMTP_USER" != "" ]]; then
-            echo "    set smtp-auth=login" >> ~/.mailrc
-            echo "    set smtp-auth-user=$SMTP_USER" >> ~/.mailrc
-            echo "    set smtp-auth-password=$SMTP_PASSWORD" >> ~/.mailrc
-        fi
-        echo "}"  >> ~/.mailrc
-        if [[ $1 -eq 0 ]]; then
-            cat $LOG_FILE | mailx -A email -a $LOG_FILE -s "OneHelios Successful Backup Report ($APPLIANCE_NAME)" $SEND_TO 2>/dev/null
-        else
-            cat $LOG_FILE | mailx -A email -a $LOG_FILE -s "OneHelios ** Failed ** Backup Report ($APPLIANCE_NAME)" $SEND_TO 2>/dev/null
-        fi
-        # cat $LOG_FILE | mailx -a $LOG_FILE -s "OneHelios Backup Report" -S mta=smtp://${SMTP_SERVER}:${SMTP_PORT} -S from=${SEND_FROM} ${MAIL_TO} 2>/dev/null
     fi
     exit $1
 }
@@ -237,7 +239,7 @@ then
     true
 else
     echo -e " --- storing $KEY_NAME"
-    echo "$KEY_VALUE" | s3cmd --host=$S3_HOST --access_key=$S3_ACCESS_KEY --secret_key=$S3_SECRET_KEY --region=$S3_LOCATION --no-check-certificate put - s3://$S3_BUCKET/DUMPS/$SET_NAME/$KEY_NAME >/dev/null
+    echo "$KEY_VALUE" | s3cmd --host=$S3_HOST --access_key=$S3_ACCESS_KEY --secret_key=$S3_SECRET_KEY --region=$S3_LOCATION --no-check-certificate put - s3://$S3_BUCKET/DUMPS/$SET_NAME/$KEY_NAME 2>/dev/null
 fi
 
 ## Exit if backup failed
@@ -248,7 +250,7 @@ fi
 
 # save backup set
 if [[ $BACKUP_POSTGRES -eq 1 ]] || [[ $BACKUP_MONGODB -eq 1 ]] || [[ $BACKUP_ELASTIC -eq 1 ]] || [[ $DO_ALL -eq 1 ]]; then
-    cat $LOG_FILE | s3cmd --host=$S3_HOST --access_key=$S3_ACCESS_KEY --secret_key=$S3_SECRET_KEY --region=$S3_LOCATION --no-check-certificate put - s3://$S3_BUCKET/BACKUP_SETS/$SET_NAME >/dev/null
+    cat $LOG_FILE | s3cmd --host=$S3_HOST --access_key=$S3_ACCESS_KEY --secret_key=$S3_SECRET_KEY --region=$S3_LOCATION --no-check-certificate put - s3://$S3_BUCKET/BACKUP_SETS/$SET_NAME 2>/dev/null
 fi
 
 ## Expire Old Backups
@@ -269,11 +271,11 @@ if [[ $EXPIRE_BACKUPS -eq 1 ]]; then
         if (( $ELAPSED_SECONDS > $RETENTION_SECONDS )); then
             echo -e "    $SET_NAME - $BACKUP_DATE ($ELAPSED_DAYS days old) --> Expiring" | tee -a $LOG_FILE
             # delete dump folder
-            s3cmd --host=$S3_HOST --access_key=$S3_ACCESS_KEY --secret_key=$S3_SECRET_KEY --region=$S3_LOCATION --no-check-certificate del -r $DUMP_PATH >/dev/null
+            s3cmd --host=$S3_HOST --access_key=$S3_ACCESS_KEY --secret_key=$S3_SECRET_KEY --region=$S3_LOCATION --no-check-certificate del -r $DUMP_PATH > /dev/null 2>&1
             # delete elastic snapshot
-            DEL_SNAP=$(curl -X 'DELETE' "http://$ELASTICSEARCH_ES_HTTP_SERVICE_HOST:$ELASTICSEARCH_ES_HTTP_SERVICE_PORT/_snapshot/$ELASTIC_BACKUP_REPOSITORY/$SET_NAME" >/dev/null)
+            DEL_SNAP=$(curl -X 'DELETE' "http://$ELASTICSEARCH_ES_HTTP_SERVICE_HOST:$ELASTICSEARCH_ES_HTTP_SERVICE_PORT/_snapshot/$ELASTIC_BACKUP_REPOSITORY/$SET_NAME" > /dev/null 2>&1)
             # delete backup set
-            s3cmd --host=$S3_HOST --access_key=$S3_ACCESS_KEY --secret_key=$S3_SECRET_KEY --region=$S3_LOCATION --no-check-certificate del $S3_PATH >/dev/null
+            s3cmd --host=$S3_HOST --access_key=$S3_ACCESS_KEY --secret_key=$S3_SECRET_KEY --region=$S3_LOCATION --no-check-certificate del $S3_PATH > /dev/null 2>&1
         else
             echo -e "    $SET_NAME - $BACKUP_DATE ($ELAPSED_DAYS days old)" | tee -a $LOG_FILE
         fi

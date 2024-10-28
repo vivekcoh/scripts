@@ -513,12 +513,12 @@ if($wait -or $progress){
                 try{
                     $percentComplete = $progressMonitor.resultGroupVec[0].taskVec[0].progress.percentFinished
                     if($percentComplete -gt $lastProgress){
-                        Write-Host "{0} percent complete" -f [math]::Round($percentComplete, 0)
+                        Write-Host $("{0} percent complete" -f [math]::Round($percentComplete, 0))
                         $lastProgress = $percentComplete
                     }
                 }catch{
                     $percentComplete = 0
-                    Write-Host "{0} percent complete" -f [math]::Round($percentComplete, 0)
+                    Write-Host $("{0} percent complete" -f [math]::Round($percentComplete, 0))
                     $lastProgress = 0
                 }
             }

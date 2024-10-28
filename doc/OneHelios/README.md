@@ -84,7 +84,7 @@ metadata:
   name: backup-config
 ```
 
-Populate the yaml file with the appropriate values:
+Populate the backup-config.yaml file with the appropriate values:
 
 * accesskey: access Key to access the S3 bucket
 * secretkey: secret Key to access the S3 bucket
@@ -131,7 +131,7 @@ You can test access to your S3 bucket using the command:
 s3cmd --host=$S3_HOST --access_key=$S3_ACCESS_KEY --secret_key=$S3_SECRET_KEY ls s3://$S3_BUCKET --no-check-certificate
 ```
 
-Note that at this point the bucket is empty, so no items will be returned, but if no error is shown, then access is working.
+`Note`: if this is your first test, the bucket will be empty, so no items will be returned, but if no error is shown, then access is working.
 
 ### Run a Test Backup
 
@@ -195,7 +195,7 @@ kind: CronJob
 metadata:
   name: backup
 spec:
-  schedule: "0 */8 * * *"
+  schedule: "0 */12 * * *"
   successfulJobsHistoryLimit: 7
   failedJobsHistoryLimit: 7
   concurrencyPolicy: Forbid
@@ -216,7 +216,7 @@ spec:
             ... (more not shown)
 ```
 
-Modify the schedule to specify the frequency of backups. The schedule is defined in CRON format. The example above backs up every 8 hours.
+Modify the schedule to specify the frequency of backups. The schedule is defined in CRON format. The example above backs up every 12 hours.
 
 Also note the backoffLimit. By default it is set to zero (no retries after a backup failure). If you prefer to have it retry after a failure, increase the number.
 

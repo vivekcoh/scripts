@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 """BackupNow for python"""
 
-# version 2024.09.06
+# version 2024.10.28
 
 # version history
 # ===============
@@ -29,6 +29,7 @@
 # 2024.06.07 - added support for Entra ID (Open ID) authentication
 # 2024.07.08 - reintroduced -k, --keepLocalFor functionality
 # 2024.09.06 - added support for Ft Knox
+# 2024-10-28 - fixed oracle log purge
 #
 # extended error codes
 # ====================
@@ -373,6 +374,7 @@ if purgeoraclelogs and environment == 'kOracle' and backupType == 'kLog':
     v2OrigJob = copy.deepcopy(v2Job)
 
 # handle run now objects
+objectIds = {}
 sourceIds = []
 selectedSources = []
 runNowParameters = []
@@ -409,6 +411,7 @@ if objectnames is not None:
                     else:
                         bail(1)
                 if len([obj for obj in runNowParameters if obj['sourceId'] == serverObjectId]) == 0:
+                    objectIds[server.lower()] = serverObjectId
                     runNowParameters.append(
                         {
                             "sourceId": serverObjectId
@@ -646,7 +649,9 @@ if purgeoraclelogs and environment == 'kOracle' and backupType == 'kLog':
                         server = parts[0]
                         instance = None
                         db = None
-                    if server.lower() == obj['sourceName'].lower():
+                    
+                    # if server.lower() == obj['sourceName'].lower():
+                    if server.lower() in objectIds:
                         if instance is None or instance.lower() == dbparam['dbChannels'][0]['databaseUniqueName'].lower():
                             for channel in dbparam['dbChannels']:
                                 if 'archiveLogRetentionDays' in channel:

@@ -2,7 +2,7 @@
 
 Warning: this code is provided on a best effort basis and is not in any way officially supported or sanctioned by Cohesity. The code is intentionally kept simple to retain value as example code. The code in this repository is provided as-is and the author accepts no liability for damages resulting from its use.
 
-These bash scripts can be used as a Pre and Post Scripts in a Cohesity Physical File-based backup of GPFS nodes to mount the latest snapshot for any protected file set to a consistent mount path.
+These bash scripts can be used as a Pre and Post Scripts in a Cohesity Physical File-based backup of GPFS nodes to mount the latest snapshot for any protected file set to a consistent mount path. The assumption is that new snapshots are being created on a schedule by another process.
 
 Note: these scripts have been tested on Linux. No testing has been done yet on AIX.
 

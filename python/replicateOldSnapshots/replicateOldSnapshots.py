@@ -109,12 +109,13 @@ for job in sorted(jobs, key=lambda job: job['name'].lower()):
         if olderthan > 0:
             endUsecs = olderthanUsecs
         while 1:
-            runs = api('get', 'data-protect/protection-groups/%s/runs?numRuns=%s&endTimeUsecs=%s&includeTenants=true' % (job['id'], numruns, endUsecs), v=2)
-            if len(runs['runs']) > 0:
-                endUsecs = int(runs['runs'][-1]['id'].split(':')[1]) - 1
-            else:
-                break
-            runs = [r for r in runs['runs'] if 'isLocalSnapshotsDeleted' not in r]
+            url='data-protect/protection-groups/%s/runs?numRuns=%s&endTimeUsecs=%s&includeTenants=true' % (job['id'], numruns, endUsecs)
+            if newerthan > 0:
+              startUsecs = newerthanUsecs
+              url='%s&startTimeUsecs%s' % (url, startUsecs)
+            jobruns = api('get', url, v=2)
+            print('Querying runs between %s-%s' % (usecsToDate(startUsecs), usecsToDate(endUsecs)))
+            runs = [r for r in jobruns['runs'] if 'isLocalSnapshotsDeleted' not in r]
             if runs is not None and len(runs) > 0:
                 runs = [r for r in runs if ('localBackupInfo' in r and 'endTimeUsecs' in r['localBackupInfo']) or ('originalBackupInfo' in r and 'endTimeUsecs' in r['originalBackupInfo'])]
             if runs is not None and len(runs) > 0 and excludelogs is True:
@@ -178,6 +179,13 @@ for job in sorted(jobs, key=lambda job: job['name'].lower()):
                         # display(run)
                     else:
                         print('  Already replicated  %s' % startdate)
+            if len(jobruns['runs']) > 0:
+                endUsecs = int(jobruns['runs'][-1]['id'].split(':')[1]) - 1
+                if endUsecs < startUsecs:
+                  break
+                print('Updating endtime to %s' % endUsecs)
+            else:
+                break
         if len(runstoreplicate.keys()) > 0:
             print('  Committing replications...')
         for rundate in sorted(runstoreplicate.keys()):

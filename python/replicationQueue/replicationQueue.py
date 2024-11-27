@@ -3,6 +3,8 @@
 # import Cohesity python module
 from pyhesity import *
 from datetime import datetime
+from datetime import timedelta
+import codecs
 
 # command line arguments
 import argparse
@@ -27,6 +29,8 @@ parser.add_argument('-k', '--daystokeep', type=int, default=0)
 parser.add_argument('-n', '--numruns', type=int, default=9999)
 parser.add_argument('-f', '--showfinished', action='store_true')
 parser.add_argument('-x', '--units', type=str, choices=['MiB', 'GiB'], default='MiB')
+parser.add_argument('-e', '--environment', type=str, default='')
+parser.add_argument("-L", "--onlylog", action='store_true')
 args = parser.parse_args()
 
 vip = args.vip
@@ -49,6 +53,8 @@ youngerthan = args.youngerthan
 daysToKeep = args.daystokeep
 showfinished = args.showfinished
 units = args.units
+environment=args.environment
+onlylog=args.onlylog
 
 if olderthan > 0:
     olderthanusecs = timeAgo(olderthan, 'days')
@@ -99,6 +105,12 @@ if units.lower() == 'gib':
 now = datetime.now()
 nowUsecs = dateToUsecs(now.strftime("%Y-%m-%d %H:%M:%S"))
 
+# outfile
+cluster = api('get', 'cluster')
+dateString = now.strftime("%Y-%m-%d")
+outfile = 'replication-tasks-%s-%s.csv' % (cluster['name'], dateString)
+f = codecs.open(outfile, 'a')
+
 runningTasks = {}
 
 # for each active job
@@ -109,15 +121,22 @@ for job in sorted(jobs, key=lambda job: job['name'].lower()):
         if len(jobnames) == 0 or job['name'].lower() in [j.lower() for j in jobnames]:
         # if jobname is None or job['name'].lower() == jobname.lower():
             jobName = job['name']
+            if environment != '' and job['environment'] != environment:
+              continue
             print("Getting tasks for %s" % jobName)
             # find runs with unfinished replication tasks
-            runs = api('get', 'protectionRuns?jobId=%s&numRuns=%s&excludeTasks=true&excludeNonRestoreableRuns=true&endTimeUsecs=%s' % (jobId, numruns, nowUsecs))
+            url='protectionRuns?jobId=%s&numRuns=%s&excludeTasks=true&excludeNonRestoreableRuns=true&endTimeUsecs=%s' % (jobId, numruns, nowUsecs)
+            if youngerthan > 0:
+              url='%s&startTimeUsecs=%s' % (url, youngerthanusecs)
+            runs = api('get', url)
             if olderthan > 0:
                 runs = [r for r in runs if r['backupRun']['stats']['startTimeUsecs'] < olderthanusecs]
             if youngerthan > 0:
                 runs = [r for r in runs if r['backupRun']['stats']['startTimeUsecs'] > youngerthanusecs]
             for run in runs:
                 runStartTimeUsecs = run['backupRun']['stats']['startTimeUsecs']
+                if onlylog and run['backupRun']['runType'][1:] != 'Log':
+                  continue
                 if 'copyRun' in run:
                     for copyRun in run['copyRun']:
                         # store run details in dictionary
@@ -132,33 +151,44 @@ for job in sorted(jobs, key=lambda job: job['name'].lower()):
                                         "remoteCluster": copyRun['target']['replicationTarget'],
                                         "status": copyRun['status'],
                                         "numSnaps": 0,
-                                        "transferred": 0
+                                        "transferred": 0,
+                                        "timeTaken": '',
+                                        "throughput": 0
                                     }
-                                    if 'stats' in copyRun and copyRun['stats'] is not None and 'physicalBytesTransferred' in copyRun['stats']:
-                                        runningTask['transferred'] = round(float(copyRun['stats']['physicalBytesTransferred']) / multiplier, 2)
+                                    if copyRun['status'] in finishedStates and 'stats' in copyRun:
+                                      if 'stats' in copyRun and copyRun['stats'] is not None:
+                                        if 'physicalBytesTransferred' in copyRun['stats']:
+                                          runningTask['transferred'] = round(float(copyRun['stats']['physicalBytesTransferred']) / multiplier, 2)
+                                        if 'startTimeUsecs' in copyRun['stats'] and 'endTimeUsecs' in copyRun['stats']:
+                                          durationTime = timedelta(microseconds=copyRun['stats']['endTimeUsecs'] - copyRun['stats']['startTimeUsecs'])
+                                          runningTask['timeTaken'] = str(durationTime)
+                                          if durationTime.total_seconds() > 0:
+                                            runningTask['throughput'] = round(runningTask['transferred']/durationTime.total_seconds())
                                     if 'copySnapshotTasks' in copyRun and copyRun['copySnapshotTasks'] is not None and len(copyRun['copySnapshotTasks']) > 0:
                                         runningTask['numSnaps'] = len(copyRun['copySnapshotTasks'])
                                     runningTasks[runStartTimeUsecs] = runningTask
 
 if len(runningTasks.keys()) > 0:
-    print("\n\nStart Time           Job Name")
+    print("\n\nJobName,JobUID,StartTime,Status,Details")
     print("----------           --------")
     # for each replicating run - sorted from oldest to newest
     for startTimeUsecs in sorted(runningTasks.keys()):
         t = runningTasks[startTimeUsecs]
+        jobUid='%s:%s:%s' % (cluster['id'], cluster['incarnationId'], t['jobId'])
         # get detailed run info
         run = api('get', '/backupjobruns?allUnderHierarchy=true&exactMatchStartTimeUsecs=%s&id=%s' % (t['startTimeUsecs'], t['jobId']))
         runStartTimeUsecs = run[0]['backupJobRuns']['protectionRuns'][0]['backupRun']['base']['startTimeUsecs']
         numSnapString = ''
         if t['numSnaps'] > 0:
-            numSnapString = '   (objects: %s)' % t['numSnaps']
+          numSnapString = ' (objects: %s)' % t['numSnaps']
         transferredString = ''
         if t['transferred'] > 0 or numSnapString != '':
-            transferredString = '   %s %s transferred' % (t['transferred'], units.upper())
+          transferredString = '   %s %s transferred' % (t['transferred'], units.upper())
+        if t['timeTaken'] != '':
+          transferredString += ',TimeTaken:%s Throughput:%sMBps' % (t['timeTaken'], t['throughput'])
         # get replication task(s)
         if 'activeTasks' in run[0]['backupJobRuns']['protectionRuns'][0]['copyRun']:
-
-            print("%s: %s%s%s" % (usecsToDate(t['startTimeUsecs']), t['jobname'], numSnapString, transferredString))
+            printStr = "%s,%s,%s(%s),%s%s" % (t['jobname'], jobUid, usecsToDate(t['startTimeUsecs']),t['startTimeUsecs'], numSnapString, transferredString)
             for task in run[0]['backupJobRuns']['protectionRuns'][0]['copyRun']['activeTasks']:
                 if task['snapshotTarget']['type'] == 2:
                     if remotecluster is None or task['snapshotTarget']['replicationTarget']['clusterName'].lower() == remotecluster.lower():
@@ -169,7 +199,7 @@ if len(runningTasks.keys()) > 0:
                         if daysToKeep > 0 and timePassed > usecsToKeep:
                             noLongerNeeded = "NO LONGER NEEDED"
                         if cancelall or (canceloutdated and noLongerNeeded == "NO LONGER NEEDED"):
-                            print('                       Replication Task ID: %s  %s (canceling)' % (task['taskUid']['objectId'], noLongerNeeded))
+                            printStr += ", %s  %s (canceling)" % (task['taskUid']['objectId'], noLongerNeeded)
                             cancelTaskParams = {
                                 "jobId": t['jobId'],
                                 "copyTaskUid": {
@@ -179,12 +209,17 @@ if len(runningTasks.keys()) > 0:
                                 }
                             }
                             try:
+                                #print('Blocked cancellation for %s' % cancelTaskParams)
                                 result = api('post', 'protectionRuns/cancel/%s' % t['jobId'], cancelTaskParams)
                             except Exception:
                                 pass
                         else:
-                            print('                       Replication Task ID: %s  %s' % (task['taskUid']['objectId'], noLongerNeeded))
+                            printStr += ", Replication Task ID %s  %s" % (task['taskUid']['objectId'], noLongerNeeded)
+            print(printStr)
+            f.write(printStr + "\n")
         elif showfinished:
-            print("%s: %s   %s%s%s" % (usecsToDate(t['startTimeUsecs']), t['jobname'], t['status'][1:], numSnapString, transferredString))
+            printStr = "%s,%s,%s(%s),%s, %s%s" % (t['jobname'], jobUid, usecsToDate(t['startTimeUsecs']), t['startTimeUsecs'], t['status'][1:], numSnapString, transferredString)
+            print(printStr)
+            f.write(printStr + "\n")
 else:
     print('\nNo active replication tasks found')
